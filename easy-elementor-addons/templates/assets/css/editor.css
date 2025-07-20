@@ -1,0 +1,485 @@
+#eead-modal-template .dialog-widget-content {
+    background-color: #f1f3f5;
+    width: 100%;
+}
+
+#eead-modal-template .dialog-header,
+#eead-modal-template .dialog-widget-header {
+    padding: 0;
+    background-color: #fff;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+#eead-modal-template .dialog-message {
+    padding: 30px 0 30px 30px;
+}
+
+#eead-modal-template .dialog-buttons-wrapper {
+    display: none;
+}
+
+#eead-modal-template a,
+#eead-modal-template a:hover {
+    color: inherit;
+}
+
+#eead-modal-template .elementor-button {
+    text-transform: uppercase;
+}
+
+/* Scroll Bar Modification */
+#eead-modal-template .eead-templates-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+#eead-modal-template .eead-templates-list::-webkit-scrollbar-button {
+    width: 0;
+    height: 10px;
+}
+
+#eead-modal-template .eead-templates-list::-webkit-scrollbar-thumb {
+    background-color: #d5dadf;
+    border-radius: 0;
+}
+
+#eead-modal-template .eead-templates-list::-webkit-scrollbar-track {
+    border: none;
+    background: #FFF;
+    border-radius: 0;
+}
+
+#eead-modal-template .eead-templates-list::-webkit-scrollbar-corner {}
+
+/* Modal Header */
+#eead-template-modal-header {
+    display: flex;
+    align-items: center;
+    height: 50px;
+}
+
+#eead-template-modal-header-logo-area {
+    padding-left: 15px;
+}
+
+#eead-template-modal-header-logo {
+    color: #6d7882;
+    display: flex;
+    align-items: center;
+}
+
+#eead-template-modal-header-logo .eead-modal-header-logo-icon {
+    margin-right: 15px;
+}
+
+#eead-template-modal-header-logo .eead-modal-header-logo-icon img {
+    width: 30px;
+    height: 30px;
+}
+
+#eead-template-modal-header-logo .eead-modal-header-logo-label {
+    font-size: 18px;
+    line-height: 1;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+#eead-template-modal-header .eead-template-modal-header-back {
+    background: none;
+    border: none;
+    border-right: 1px solid #e6e9ec;
+    padding: 15px 15px 15px 0;
+    line-height: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    outline: 0;
+    transition: all 0.2s linear;
+    cursor: pointer;
+    color: #a4afb7;
+}
+
+#eead-template-modal-header .eead-template-modal-header-back:hover {
+    color: #6d7882;
+}
+
+#eead-template-modal-header .elementor-button i {
+    margin-right: 5px;
+}
+
+#eead-template-modal-header .elementor-button.elementor-button-live-preview i {
+    margin: 0 0 0 5px;
+}
+
+#eead-template-modal-header .elementor-button {
+    padding: 8px 10px;
+    font-size: 14px;
+    color: #FFF;
+    text-shadow: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+}
+
+#eead-template-modal-header .elementor-button:hover {
+    color: #FFF;
+}
+
+#eead-template-modal-header-close-modal {
+    width: 50px;
+    height: 50px;
+    border-left: 1px solid #e6e9ec;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 15px;
+    transition: all 0.2s linear;
+}
+
+#eead-template-modal-header-tabs {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    justify-content: center;
+}
+
+#eead-template-modal-header-tabs .elementor-template-library-menu-item {
+    display: inline-block;
+    position: relative;
+    text-align: left;
+    padding: 0;
+    width: auto;
+    font-size: 13px;
+    color: #6d7882;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+#eead-template-modal-header-tabs .elementor-template-library-menu-item label {
+    display: block;
+}
+
+#eead-template-modal-header-tabs .elementor-template-library-menu-item input[type="radio"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    opacity: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+#eead-template-modal-header-tabs .elementor-template-library-menu-item input:checked + span,
+#eead-template-modal-header-tabs .elementor-template-library-menu-item:hover span {
+    background: #fafafa;
+    border-bottom: 3px solid #4b00e7;
+}
+
+#eead-template-modal-header-tabs .elementor-template-library-menu-item span {
+    display: block;
+    padding: 20px 19px 16px 19px;
+}
+
+/* Modal View */
+#eead-item-preview-wrap,
+#eead-item-preview-wrap .eead-item-preview-iframe {
+    height: 100%;
+    overflow: hidden;
+}
+
+#eead-item-preview-wrap iframe {
+    height: 150%;
+    -webkit-transform: scale(0.666) translateX(-25%) translateY(-25%);
+    -ms-transform: scale(0.666) translateX(-25%) translateY(-25%);
+    transform: scale(0.666) translateX(-25%) translateY(-25%);
+}
+
+@media (max-width: 1439px) {
+    #eead-item-preview-wrap iframe {
+        width: 1440px;
+    }
+}
+
+@media (min-width: 1440px) {
+    #eead-item-preview-wrap iframe {
+        width: 1710px;
+    }
+}
+
+#eead-template-library-content {
+    display: flex;
+    height: calc(100% - 20px);
+}
+
+
+#eead-template-library-content .eead-filters-list {
+    width: 18%;
+    padding: 0 30px 0 0;
+    height: 100%;
+    overflow: auto;
+}
+
+#eead-template-library-content .eead-modal-template-filter-item {
+    border-top: 1px solid rgba(213, 218, 223, 0.5);
+}
+
+#eead-template-library-content .eead-modal-template-filter-item:first-child {
+    border-top: none;
+}
+
+#eead-template-library-content .eead-modal-templates-wrap {
+    width: 100%;
+}
+
+#eead-template-library-content .eead-modal-template-filter-label {
+    display: block;
+    position: relative;
+    text-align: left;
+    padding: 9px 0;
+    color: #6d7882;
+}
+
+#eead-template-library-content .eead-modal-template-filter-label input[type="radio"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    opacity: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+#eead-template-library-content .eead-modal-template-filter-label input:checked + span,
+#eead-template-library-content .eead-modal-template-filter-label:hover span {
+    color: #4b00e7;
+}
+
+#eead-template-library-content .eead-templates-list {
+    height: 100%;
+    overflow: auto;
+}
+
+/* Template Listing */
+#eead-modal-templates-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 30px;
+}
+
+#eead-modal-templates-container .elementor-template-library-template {
+    position: relative;
+}
+
+#eead-modal-templates-container .eead-modal-template-pro::before {
+    position: absolute;
+    right: 20px;
+    top: 0;
+    content: "PRO";
+    z-index: 10;
+    font-size: 12px;
+    line-height: 10px;
+    color: #fff;
+    font-weight: 700;
+    background: #93003c;
+    -webkit-writing-mode: vertical-rl;
+    -ms-writing-mode: tb-rl;
+    writing-mode: vertical-rl;
+    -webkit-text-orientation: upright;
+    text-orientation: upright;
+    width: 26px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#eead-modal-templates-container .eead-modal-template-pro::after {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    right: 20px;
+    top: 60px;
+    border-left: 13px solid #93003c;
+    border-right: 13px solid #93003c;
+    border-bottom: 10px solid transparent;
+}
+
+#eead-modal-templates-container .elementor-template-library-template-remote {
+    width: calc(33.3333% - 30px);
+    margin: 0;
+}
+
+.elementor-template-library-template-remote .elementor-template-library-template-preview i {
+    font-style: normal;
+}
+
+#eead-modal-templates-container .elementor-template-library-template-name {
+    padding: 5px 5px 0;
+    display: block;
+    text-align: center;
+    background: #FFF;
+}
+
+#eead-modal-templates-container .elementor-template-library-template-controls {
+    position: absolute;
+    background-color: #fff;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    padding: 0;
+    z-index: 10;
+    transform: translateY(100%);
+    transition: all 0.3s ease;
+}
+
+#eead-modal-templates-container .elementor-template-library-template:hover .elementor-template-library-template-controls {
+    transform: translateY(0);
+}
+
+#eead-modal-templates-container .eead-template-insert,
+#eead-modal-templates-container .eead-template-go-pro {
+    padding: 10px;
+    margin: 0;
+    color: #39b54a;
+    background: #FFF;
+    font-size: 12px;
+    width: 100%;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+#eead-modal-templates-container .eead-template-go-pro {
+    color: #93003c;
+}
+
+#eead-template-library-content .eead-template-insert i,
+#eead-modal-templates-container .eead-template-go-pro i {
+    margin-right: 5px;
+}
+
+/* Keyword Filter */
+#elementor-template-library-filter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+    margin-top: -20px;
+}
+
+#elementor-template-library-filter label {
+    font-size: 14px;
+    margin-right: 10px;
+    color: #6d7882;
+}
+
+/* Notification */
+#eead-template-modal-header-close-modal i {
+    color: #a4afb7;
+    font-size: 16px;
+}
+
+#eead-template-modal-header-close-modal:hover i {
+    color: #6d7882;
+}
+
+#eead-modal-template .elementor-library-error {
+    margin: 18% 0 0;
+}
+
+#eead-modal-template .elementor-library-error-message {
+    font-size: 18px;
+    padding: 0 0 20px;
+}
+
+#eead-modal-template .elementor-library-error-link a {
+    display: inline-block;
+    color: #fff;
+    background-image: none;
+    background: #f47216;
+    font-size: 13px;
+    font-weight: 400;
+    font-style: normal;
+    text-transform: uppercase;
+    line-height: 1;
+    height: 40px;
+    line-height: 40px;
+    min-width: 170px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.5s;
+}
+
+#eead-modal-template .elementor-library-error-link a:hover {
+    opacity: 0.85;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Loader */
+#eead-modal-template .elementor-loader {
+    position: relative;
+}
+
+#eead-modal-template .elementor-loader .elementor-loader-box:first-of-type {
+    left: 40px;
+    top: 40px;
+    width: 14px;
+    height: 70px;
+}
+
+#eead-modal-template .elementor-loader .elementor-loader-box:nth-of-type(2) {
+    top: 40px;
+}
+
+#eead-modal-template .elementor-loader .elementor-loader-box:nth-of-type(3) {
+    top: 68px;
+}
+
+#eead-modal-template .elementor-loader .elementor-loader-box:nth-of-type(4) {
+    bottom: 40px;
+}
+
+#eead-modal-template .elementor-loader .elementor-loader-box:not(:first-of-type) {
+    right: 40px;
+    height: 14px;
+    width: 42px;
+}
+
+.eead-item-notice > div {
+    color: #31708f;
+    background-color: #d9edf7;
+    padding: 5px 15px;
+    border-left: 5px solid #bcdff1;
+    position: relative;
+    text-align: left;
+    margin-bottom: 8px;
+    margin-right: 30px;
+}
+
+@media (max-width: 1439px) {
+    #eead-modal-template .dialog-widget-content {
+        max-width: 990px;
+    }
+}
+
+@media (min-width: 1440px) {
+    #eead-modal-template .dialog-widget-content {
+        max-width: 1200px;
+    }
+}

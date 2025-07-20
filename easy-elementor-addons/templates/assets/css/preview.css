@@ -1,0 +1,15 @@
+.elementor-add-new-section .eead-add-section-btn {
+    background: #9012fe;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+.elementor-add-new-section .eead-editor-icon {
+    background: url('../images/eead.svg') center center no-repeat;
+    background-size: contain;
+    height: 16px;
+    width: 16px;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+}
