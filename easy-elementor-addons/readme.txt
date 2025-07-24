@@ -3,7 +3,7 @@ Contributors: hashthemes
 Tags: elementor addons, elementor, elementor widgets, elementor templates, elementor extensions
 Requires at least: 6.3
 Tested up to: 6.8
-Stable tag: 2.2.6
+Stable tag: 2.2.7
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -144,6 +144,9 @@ The easy way to install the plugin is via WordPress.org plugin directory.
 You can report security bugs through the Patchstack Vulnerability Disclosure Program. The Patchstack team help validate, triage and handle any security vulnerabilities. [Report a security vulnerability.](https://patchstack.com/database/vdp/9e5fc0df-1462-4741-acd5-e1a496cc73a5)
  
 == Changelog ==
+= 2.2.7 - Jul 24, 2025 =
+* Security bug reported by patchstack - Fixed
+
 = 2.2.6 - Jul 8, 2025 =
 * Security bug fixed
 

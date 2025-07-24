@@ -550,7 +550,7 @@ class BusinessHour extends Widget_Base {
             Group_Control_Typography::get_type(), [
                 'name' => 'footer_time_typography',
                 'label' => esc_html__('Time Typography', 'easy-elementor-addons'),
-                'selector' => '{{WRAPPER}}  .eead-business-hour .eead-bh-current-time',
+                'selector' => '{{WRAPPER}} .eead-business-hour .eead-bh-current-time',
                 'condition' => [
                     'footer_content_type' => 'date'
                 ]

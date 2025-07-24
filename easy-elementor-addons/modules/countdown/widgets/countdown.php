@@ -452,7 +452,7 @@ class Countdown extends Widget_Base {
                     'size' => 10,
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .eead-countdown-item' => 'gap:{{SIZE}}px;',
+                    '{{WRAPPER}} .eead-countdown-item' => 'gap:{{SIZE}}{{UNIT}};',
                 ]
             ]
         );

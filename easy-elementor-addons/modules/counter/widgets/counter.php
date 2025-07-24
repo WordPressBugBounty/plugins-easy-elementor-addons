@@ -484,7 +484,7 @@ class Counter extends Widget_Base {
                             </span>
                         <?php } ?>
 
-                        <span class="eead-odometer" data-count="<?php echo $counter_count; ?>" data-start="<?php echo $settings['starting_value']; ?>" data-comma="<?php echo $counter_comma; ?>">
+                        <span class="eead-odometer" data-count="<?php echo esc_attr($counter_count); ?>" data-start="<?php echo esc_attr($settings['starting_value']); ?>" data-comma="<?php echo esc_attr($counter_comma); ?>">
                             <?php echo esc_html($settings['starting_value']); ?>
                         </span>
 
