@@ -32,6 +32,9 @@ class AdminClass {
     }
 
     public function eead_settings_save() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
 
         if (isset($_POST['wp_nonce']) && wp_verify_nonce($_POST['wp_nonce'], 'eead_ajax_nonce')) {
             $data_ar = $_POST['data'];
@@ -48,6 +51,9 @@ class AdminClass {
     }
 
     public function eead_widgets_save() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
 
         if (isset($_POST['wp_nonce']) && wp_verify_nonce($_POST['wp_nonce'], 'eead_ajax_nonce')) {
             $data_ar = isset($_POST['data']) && !empty($_POST['data']) ? $_POST['data'] : array();

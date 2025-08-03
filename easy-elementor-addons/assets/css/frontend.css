@@ -851,10 +851,6 @@ Circular Progressbar
 /*--------------------------------------------------------------
 Countdown Styles
 --------------------------------------------------------------*/
-.eead-counter-layout-column .eead-countdown-items {
-    flex-direction: column;
-}
-
 .eead-countdown-items {
     display: flex;
     flex-wrap: wrap;
