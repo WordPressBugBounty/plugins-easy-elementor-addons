@@ -1452,15 +1452,45 @@ class AdvancedIconBox extends Widget_Base {
         <?php
     }
 
+    protected function valid_svg_list() {
+        return array(
+            'line',
+            'line-circle',
+            'line-cross',
+            'line-star',
+            'line-dashed',
+            'heart',
+            'dashed',
+            'floret',
+            'rectangle',
+            'leaf',
+            'slash',
+            'triangle',
+            'wave',
+            'kiss-curl',
+            'zemik',
+            'finest',
+            'furrow',
+            'peak',
+            'melody',
+            'jemik',
+            'separk',
+            'zigzag-dot',
+            'zozobe'
+        );
+    }
+
     public function render_svg_image() {
         $settings = $this->get_settings_for_display();
 
         $align = $settings['text_align'] ? $settings['text_align'] : $settings['icon_position'];
-        $svg_image = EEAD_PATH . 'assets/img/divider/' . $settings['title_separator_type'] . '-' . $align . '.svg';
+        $title_separator_type = in_array($settings['title_separator_type'], $this->valid_svg_list()) ? $settings['title_separator_type'] : 'line';
+        $svg_image = EEAD_PATH . 'assets/img/divider/' . esc_attr($title_separator_type) . '-' . $align . '.svg';
+
         if (file_exists($svg_image)) {
             $file_path = $svg_image;
         } else {
-            $file_path = EEAD_PATH . 'assets/img/divider/' . $settings['title_separator_type'] . '.svg';
+            $file_path = EEAD_PATH . 'assets/img/divider/' . esc_attr($title_separator_type) . '.svg';
         }
 
         include($file_path);

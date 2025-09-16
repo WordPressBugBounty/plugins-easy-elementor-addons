@@ -336,6 +336,8 @@
     bottom: 0;
     background: #FFF;
     z-index: 9;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .eead-admin-notificn {
