@@ -55,7 +55,7 @@ class Countdown extends Widget_Base {
             'countdown_due_time', [
                 'label' => esc_html__('Countdown Date & Time', 'easy-elementor-addons'),
                 'type' => Controls_Manager::DATE_TIME,
-                'default' => date("Y-m-d", strtotime("+ 2 day"))
+                'default' => gmdate("Y-m-d", strtotime("+ 2 day"))
             ]
         );
 
@@ -847,7 +847,7 @@ class Countdown extends Widget_Base {
 
         $settings = $this->get_settings_for_display();
         $get_due_date = esc_attr($settings['countdown_due_time']);
-        $due_date = date("M d Y G:i:s", strtotime($get_due_date));
+        $due_date = gmdate("M d Y G:i:s", strtotime($get_due_date));
         $separator = '';
 
         $this->add_render_attribute('eead-countdown', [
@@ -861,14 +861,14 @@ class Countdown extends Widget_Base {
 
         if ($settings['countdown_expire_type'] == 'text') {
             if (!empty($settings['countdown_expiry_text'])) {
-                $this->add_render_attribute('eead-countdown', 'data-expiry-text', wp_kses_post($settings['countdown_expiry_text']));
+                $this->add_render_attribute('eead-countdown', 'data-expiry-text', esc_html($settings['countdown_expiry_text']));
             }
 
             if (!empty($settings['countdown_expiry_text_title'])) {
-                $this->add_render_attribute('eead-countdown', 'data-expiry-title', wp_kses_post($settings['countdown_expiry_text_title']));
+                $this->add_render_attribute('eead-countdown', 'data-expiry-title', esc_html($settings['countdown_expiry_text_title']));
             }
         } elseif ($settings['countdown_expire_type'] == 'url') {
-            $this->add_render_attribute('eead-countdown', 'data-redirect-url', $settings['countdown_expiry_redirection']);
+            $this->add_render_attribute('eead-countdown', 'data-redirect-url', esc_url($settings['countdown_expiry_redirection']));
         }
         ?>
 
@@ -888,7 +888,7 @@ class Countdown extends Widget_Base {
                         ?>
                     </div>
                     <?php
-                    echo $separator;
+                    echo wp_kses_post($separator);
                 }
 
                 if (!empty($settings['countdown_hours'])) {
@@ -904,7 +904,7 @@ class Countdown extends Widget_Base {
                         ?>
                     </div>
                     <?php
-                    echo $separator;
+                    echo wp_kses_post($separator);
                 }
 
                 if (!empty($settings['countdown_minutes'])) {
@@ -920,7 +920,7 @@ class Countdown extends Widget_Base {
                         ?>
                     </div>
                     <?php
-                    echo $separator;
+                    echo wp_kses_post($separator);
                 }
 
                 if (!empty($settings['countdown_seconds'])) {

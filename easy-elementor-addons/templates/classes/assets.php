@@ -115,11 +115,21 @@ if (!class_exists('EEAD_Templates_Assets')) {
          */
         public function load_footer_scripts() {
             $scripts = glob(EEAD_PATH . 'templates/editor/*.php');
+
             array_map(function ($file) {
                 $name = basename($file, '.php');
+
+                // Start output buffering
                 ob_start();
                 include $file;
-                printf('<script type="text/html" id="views-eead-%1$s">%2$s</script>', $name, ob_get_clean());
+                $template_content = ob_get_clean();
+                $template_content_escaped = wp_json_encode($template_content);
+
+                printf(
+                    '<script type="text/html" id="%1$s">%2$s</script>',
+                    esc_attr('views-eead-' . $name),
+                    esc_attr(substr($template_content_escaped, 1, -1))
+                );
             }, $scripts);
         }
 

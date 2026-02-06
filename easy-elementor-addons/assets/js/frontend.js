@@ -35,6 +35,7 @@
                 'eead-slider.default': EEA.sliderBlock,
                 'eead-team-carousel.default': EEA.teamCarousel,
                 'eead-testimonial-carousel.default': EEA.testimonialCarousel,
+                'eead-twitter-feed.default': EEA.twitterFeed,
             };
 
             $.each(widgets, function (widget, callback) {
@@ -1402,6 +1403,12 @@
                 });
             }
         },
+
+        twitterFeed: function ($scope) {
+            if (typeof twttr !== 'undefined') {
+                twttr.widgets.load();
+            }
+        }
     };
 
     $(window).on('elementor/frontend/init', EEA.init);

@@ -919,7 +919,7 @@ class ImageGallery extends Widget_Base {
             'data-settings' => wp_json_encode($gallery_settings),
         ]);
         ?>
-        <div id="eead-image-gallery-container-<?php echo esc_attr($id); ?>" class="eead-image-gallery-container" <?php echo $this->get_render_attribute_string('gallery-settings'); ?>>
+        <div id="eead-image-gallery-container-<?php echo esc_attr($id); ?>" class="eead-image-gallery-container" <?php $this->print_render_attribute_string('gallery-settings'); ?>>
 
             <?php $this->render_filters(); ?>
 
@@ -1041,7 +1041,7 @@ class ImageGallery extends Widget_Base {
         <script type="text/javascript">
             jQuery(document).ready(function ($) {
                 setTimeout(function () {
-                    var $gallery_container = $('<?php echo $id; ?>');
+                    var $gallery_container = $('<?php echo esc_attr($id); ?>');
                     var $gallery = $gallery_container.find('.eead-ig-wrap');
                     var $settings = $gallery_container.data('settings');
 

@@ -57,7 +57,7 @@ class TeamCarousel extends Widget_Base {
         $this->add_control(
             'team_members',
             [
-                'label' => esc_html__('Add Team Member', 'textdomain'),
+                'label' => esc_html__('Add Team Member', 'easy-elementor-addons'),
                 'type' => Controls_Manager::REPEATER,
                 'fields' => [
                     [
@@ -1603,16 +1603,14 @@ class TeamCarousel extends Widget_Base {
             $image_html = sprintf('<a %1$s>%2$s</a>', $this->get_render_attribute_string('link'), $image_html);
         }
 
-        return $image_html;
+        echo wp_kses_post($image_html);
     }
 
     protected function get_description($item) {
         if (!empty($item['description'])) {
-            ?>
-            <div class="eead-team-member-description">
-                <?php echo parse_wisiwyg_content($item['description']); ?>
-            </div>
-            <?php
+            echo '<div class="eead-team-member-description">';
+            echo wp_kses_post(parse_wisiwyg_content($item['description']));
+            echo '</div>';
         }
     }
 
@@ -1625,7 +1623,7 @@ class TeamCarousel extends Widget_Base {
                 $member_name .= sprintf('<%1$s %2$s>%3$s</%1$s>', 'h4', 'class="eead-team-member-name"', esc_html($item['name']));
             }
         }
-        return $member_name;
+        echo wp_kses_post($member_name);
     }
 
     protected function get_member_position($item) {
@@ -1634,7 +1632,7 @@ class TeamCarousel extends Widget_Base {
         if ($item['position'] != '') {
             $position .= sprintf('<%1$s %2$s>%3$s</%1$s>', 'h5', 'class="eead-team-member-position"', esc_html($item['position']));
         }
-        return $position;
+        echo wp_kses_post($position);
     }
 
     protected function get_social_links($item, $index) {
@@ -1646,7 +1644,7 @@ class TeamCarousel extends Widget_Base {
             if (!empty($item['social_link_' . $i]['url']) && !empty($item['social_icon_' . $i])) {
                 $this->add_link_attributes('social-link-' . $i . $index, $item['social_link_' . $i]);
                 ?>
-                <a <?php echo $this->get_render_attribute_string('social-link-' . $i . $index); ?>>
+                <a <?php $this->print_render_attribute_string('social-link-' . $i . $index); ?>>
                     <?php Icons_Manager::render_icon($item['social_icon_' . $i], ['aria-hidden' => 'true']); ?>
                 </a>
                 <?php
@@ -1656,7 +1654,7 @@ class TeamCarousel extends Widget_Base {
 
         if ($social_html != '') {
             echo '<div class="eead-team-member-social-links">';
-            echo $social_html;
+            echo wp_kses_post($social_html);
             echo '</div>';
         }
     }
@@ -1735,7 +1733,7 @@ class TeamCarousel extends Widget_Base {
                             ?>
                             <div class="eead-team-member-image">
                                 <?php
-                                echo $this->get_image($team_member);
+                                $this->get_image($team_member);
 
                                 if ($settings['social_icon_display'] == 'on-image-hover') {
                                     $this->get_social_links($team_member, $index);
@@ -1749,9 +1747,9 @@ class TeamCarousel extends Widget_Base {
                         <div class="eead-team-member-content-wrapper">
                             <div class="eead-team-member-content">
                                 <?php
-                                echo $this->get_member_name($team_member);
-                                echo $this->get_member_position($team_member);
-                                echo $this->get_description($team_member);
+                                $this->get_member_name($team_member);
+                                $this->get_member_position($team_member);
+                                $this->get_description($team_member);
                                 if ($settings['social_icon_display'] !== 'on-image-hover') {
                                     $this->get_social_links($team_member, $index);
                                 }

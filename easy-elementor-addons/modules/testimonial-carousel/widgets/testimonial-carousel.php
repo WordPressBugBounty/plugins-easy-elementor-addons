@@ -52,7 +52,7 @@ class TestimonialCarousel extends Widget_Base {
         $this->add_control(
             'testimonials',
             [
-                'label' => esc_html__('Add Testimonials', 'textdomain'),
+                'label' => esc_html__('Add Testimonials', 'easy-elementor-addons'),
                 'type' => Controls_Manager::REPEATER,
                 'fields' => [
                     [
@@ -1746,7 +1746,7 @@ class TestimonialCarousel extends Widget_Base {
                 for ($i = 0; $i < $rating_count; $i++) {
                     $stars .= '<i class="icofont-star"></i>';
                 }
-                echo $stars;
+                echo wp_kses_post($stars);
                 ?>
             </div>
             <?php

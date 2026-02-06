@@ -14,7 +14,7 @@ use EEADElements\Templates;
     <div class="elementor-library-error-link">
         <?php
         printf(
-            '<a class="template-library-activate-license" href="%1$s" target="_blank">%2$s %3$s</a>', Templates\eead_elementor_templates()->config->get('license_page'), '<i class="eicon-editor-external-link" aria-hidden="true"></i>', Templates\eead_elementor_templates()->config->get('pro_message')
+            '<a class="template-library-activate-license" href="%1$s" target="_blank">%2$s %3$s</a>', esc_url(Templates\eead_elementor_templates()->config->get('license_page')), '<i class="eicon-editor-external-link" aria-hidden="true"></i>', esc_html(Templates\eead_elementor_templates()->config->get('pro_message'))
         );
         ?>
     </div>

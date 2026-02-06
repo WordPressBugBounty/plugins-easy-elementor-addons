@@ -646,17 +646,15 @@ class IconList extends Widget_Base {
                         ];
                         $this->add_render_attribute('list-item' . $count, ['class' => array_filter($classes)]);
                         ?>
-                        <li <?php echo $this->get_render_attribute_string('list-item' . $count); ?>>
-                            <?php
-                            echo '<' . $tag . ' ' . $this->get_render_attribute_string('items-' . $count) . '>';
-                            $this->render_list_icon($list, $count);
-                            ?>
-                            <span class="eead-il-text">
-                                <?php echo wp_kses_post($list['text']); ?>
-                            </span>
-                            <?php
-                            echo '</' . $tag . '>';
-                            ?>
+                        <li <?php $this->print_render_attribute_string('list-item' . $count); ?>>
+                            <<?php echo esc_attr($tag); ?>                 <?php $this->print_render_attribute_string('items-' . $count); ?>>
+                                <?php
+                                $this->render_list_icon($list, $count);
+                                ?>
+                                <span class="eead-il-text">
+                                    <?php echo wp_kses_post($list['text']); ?>
+                                </span>
+                            </<?php echo esc_attr($tag); ?>>
                         </li>
                         <?php
                     }
@@ -678,12 +676,12 @@ class IconList extends Widget_Base {
                 break;
 
             case 'image':
-                echo Group_Control_Image_Size::get_attachment_image_html($list, 'full', 'image');
+                echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($list, 'full', 'image'));
                 break;
 
             case 'number':
                 $number = $list['num_text'] ? $list['num_text'] : $count;
-                echo $number;
+                echo esc_html($number);
                 break;
         }
         echo '</span>';

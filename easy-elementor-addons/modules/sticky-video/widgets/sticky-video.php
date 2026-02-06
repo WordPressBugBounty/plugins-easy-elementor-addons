@@ -575,7 +575,7 @@ class StickyVideo extends Widget_Base {
 
         if ($settings['video_source'] === 'youtube') {
             $url = $settings['link_youtube'];
-            $link = explode('=', parse_url($url, PHP_URL_QUERY));
+            $link = explode('=', wp_parse_url($url, PHP_URL_QUERY));
             $id = $link[1];
         } else if ($settings['video_source'] === 'vimeo') {
             $url = $settings['link_vimeo'];

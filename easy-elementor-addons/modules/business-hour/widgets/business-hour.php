@@ -829,6 +829,7 @@ class BusinessHour extends Widget_Base {
 
     public function set_time_zone() {
         $settingsTimeZone = $this->get_settings_for_display();
+
         if ($settingsTimeZone['dynamic_timezone'] != 'default') { // timezone default checking
             if ($settingsTimeZone['dynamic_timezone'] == 'custom') {
                 $ct_input = $settingsTimeZone['custom_timezone_input'] ? $settingsTimeZone['custom_timezone_input'] : '+6';
@@ -842,15 +843,14 @@ class BusinessHour extends Widget_Base {
         }
     }
 
-    public function set_gmt_zone($reseive) {
+    public function set_gmt_zone($receive) {
+        // Convert hours to seconds
+        $offset_seconds = $receive * 3600;
 
-        $min = 60 * $reseive;
-        $sign = $min < 0 ? "-" : "+";
-        $absmin = abs($min);
+        // Get GMT time adjusted by offset
+        $time = gmdate("g:i:s A", time() + $offset_seconds);
 
-        $tz = sprintf("%s%02d", $sign, $absmin / 60, $absmin % 60);
-        $data = gmdate("g:i:s A", time() + 3600 * ($tz + date("I")));
-        return $data;
+        return $time;
     }
 
     /** Render Layout */
@@ -882,6 +882,7 @@ class BusinessHour extends Widget_Base {
             ],
         ]);
         ?>
+
         <div class="eead-business-hour" <?php $this->print_render_attribute_string('business-hours-data'); ?>>
 
             <?php
@@ -890,26 +891,17 @@ class BusinessHour extends Widget_Base {
                 <div class="eead-bh-header">
                     <?php
                     if ($settings['header_content_type'] == 'date') {
+                        $cur_time = strtotime($this->set_time_zone());
                         ?>
                         <div class="eead-bh-current-time">
                             <?php
-                            if ($settings['business_hour_style'] == 'default') {
-                                echo date(get_option('time_format'), current_time('timestamp'));
-                            } else {
-                                $cur_time = strtotime($this->set_time_zone());
-                                echo date('h:i a', $cur_time);
-                            }
+                            echo esc_html(date('g:i a', $cur_time));
                             ?>
                         </div>
 
                         <div class="eead-bh-current-date">
                             <?php
-                            if ($settings['business_hour_style'] == 'default') {
-                                echo date(get_option('date_format'), current_time('timestamp'));
-                            } else {
-                                $cur_time = strtotime($this->set_time_zone());
-                                echo date(get_option('date_format'), $cur_time);
-                            }
+                            echo esc_html(date(get_option('date_format'), $cur_time));
                             ?>
                         </div>
                         <?php
@@ -974,26 +966,17 @@ class BusinessHour extends Widget_Base {
                 <div class="eead-bh-footer">
                     <?php
                     if ($settings['footer_content_type'] == 'date') {
+                        $cur_time = strtotime($this->set_time_zone());
                         ?>
                         <div class="eead-bh-current-time">
                             <?php
-                            if ($settings['business_hour_style'] == 'default') {
-                                echo date(get_option('time_format'), current_time('timestamp'));
-                            } else {
-                                $cur_time = strtotime($this->set_time_zone());
-                                echo date('h:i a', $cur_time);
-                            }
+                            echo esc_html(date('g:i a', $cur_time));
                             ?>
                         </div>
 
                         <div class="eead-bh-current-date">
                             <?php
-                            if ($settings['business_hour_style'] == 'default') {
-                                echo date(get_option('date_format'), current_time('timestamp'));
-                            } else {
-                                $cur_time = strtotime($this->set_time_zone());
-                                echo date(get_option('date_format'), $cur_time);
-                            }
+                            echo esc_html(date(get_option('date_format'), $cur_time));
                             ?>
                         </div>
                         <?php

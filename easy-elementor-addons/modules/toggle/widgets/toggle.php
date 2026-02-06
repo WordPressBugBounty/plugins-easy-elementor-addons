@@ -755,9 +755,9 @@ class Toggle extends Widget_Base {
         $settings = $this->get_settings_for_display();
 
         if ($settings[$content . '_content_type'] === 'content') {
-            echo $this->parse_text_editor($settings[$content . '_content']);
+            echo wp_kses_post($this->parse_text_editor($settings[$content . '_content']));
         } else if ($settings[$content . '_content_type'] === 'image') {
-            echo Group_Control_Image_Size::get_attachment_image_html($settings, $content . '_image', $content . '_image');
+            echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, $content . '_image', $content . '_image'));
         } else if ($settings[$content . '_content_type'] === 'template') {
             if (!empty($settings[$content . '_templates'])) {
                 $template_id = $settings[$content . '_templates'];
@@ -775,7 +775,7 @@ class Toggle extends Widget_Base {
         }
         ?>
 
-        <div <?php echo $this->get_render_attribute_string('toggle-container'); ?>>
+        <div <?php $this->print_render_attribute_string('toggle-container'); ?>>
             <?php
             if ($settings['toggle_position'] === 'before' || $settings['toggle_position'] === 'before-after') {
                 $this->before_after_toggle('before');
@@ -784,11 +784,11 @@ class Toggle extends Widget_Base {
 
             <div class='eead-toggle-content'>
                 <div class="eead-toggle-section eead-toggle-primary">
-                    <?php echo $this->render_toggle_content('primary'); ?>
+                    <?php $this->render_toggle_content('primary'); ?>
                 </div>
 
                 <div class="eead-toggle-section eead-toggle-secondary">
-                    <?php echo $this->render_toggle_content('secondary'); ?>
+                    <?php $this->render_toggle_content('secondary'); ?>
                 </div>
             </div>
 
@@ -819,7 +819,7 @@ class Toggle extends Widget_Base {
         }
         ?>
 
-        <div <?php echo $this->get_render_attribute_string('toggle-switch-' . $toggle_position); ?>>
+        <div <?php $this->print_render_attribute_string('toggle-switch-' . esc_attr($toggle_position)); ?>>
             <div class="eead-toggle-switch-inner">
 
                 <?php if ($settings['primary_label']) { ?>

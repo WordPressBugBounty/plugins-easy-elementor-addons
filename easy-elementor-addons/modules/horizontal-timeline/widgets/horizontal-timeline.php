@@ -1482,7 +1482,7 @@ class HorizontalTimeline extends Widget_Base {
                                 <?php if (!empty($item['image']['url'])) { ?>
                                     <div class="eead-htl-image">
                                         <?php
-                                        echo Group_Control_Image_Size::get_attachment_image_html($item, 'item_image', 'image');
+                                        echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($item, 'item_image', 'image'));
                                         ?>
                                     </div>
                                 <?php } ?>

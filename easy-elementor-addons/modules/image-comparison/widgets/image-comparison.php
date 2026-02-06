@@ -373,8 +373,8 @@ class ImageComparison extends Widget_Base {
             'orientation' => $settings['orientation'] == 'horizontal' ? false : true,
             'smoothing' => $settings['smoothing'] == 'yes' ? true : false,
             'smoothing_amount' => $settings['smoothing_intensity']['size'] ? $settings['smoothing_intensity']['size'] : 600,
-            'before_label' => $settings['before_label'] ? $settings['before_label'] : false,
-            'after_label' => $settings['after_label'] ? $settings['after_label'] : false,
+            'before_label' => $settings['before_label'] ? esc_html($settings['before_label']) : false,
+            'after_label' => $settings['after_label'] ? esc_html($settings['after_label']) : false,
             'show_before_after_label' => ($settings['show_before_after_label'] == 'yes' || $settings['show_before_after_label'] == 'hover') ? true : false,
             'show_before_after_label_onhover' => $settings['show_before_after_label'] == 'hover' ? true : false,
             'move_slider_on_hover' => $settings['move_slider_on'] == 'hover' ? true : false,
@@ -403,8 +403,8 @@ class ImageComparison extends Widget_Base {
         <div class="eead-image-comparison">
             <div <?php $this->print_render_attribute_string('image-compare'); ?>>
                 <?php
-                echo Group_Control_Image_Size::get_attachment_image_html($settings, 'thumbnail_size', 'before_image');
-                echo Group_Control_Image_Size::get_attachment_image_html($settings, 'thumbnail_size', 'after_image');
+                echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'thumbnail_size', 'before_image'));
+                echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'thumbnail_size', 'after_image'));
                 ?>
             </div>
         </div>

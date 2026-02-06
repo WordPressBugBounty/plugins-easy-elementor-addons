@@ -129,7 +129,7 @@ if (!class_exists('EEAD_Templates_Manager')) {
                 wp_send_json_error();
             }
 
-            $tab = $_GET['tab'];
+            $tab = eead_get_var('tab');
             $tabs = $this->get_template_tabs();
             $sources = $tabs[$tab]['sources'];
 
@@ -173,7 +173,7 @@ if (!class_exists('EEAD_Templates_Manager')) {
                 wp_send_json_error();
             }
 
-            $template = isset($_REQUEST['template']) ? $_REQUEST['template'] : false;
+            $template = eead_get_request('template', 'sanitize_text_field', false);
             if (!$template) {
                 wp_send_json_error();
             }
@@ -301,11 +301,11 @@ if (!class_exists('EEAD_Templates_Manager')) {
          * @access public
          */
         public function register_ajax_actions($ajax_manager) {
-            if (!isset($_POST['actions'])) {
+            if (!eead_get_post('actions')) {
                 return;
             }
 
-            $actions = json_decode(stripslashes($_REQUEST['actions']), true);
+            $actions = json_decode(stripslashes(eead_get_request('actions')), true);
             $data = false;
 
             foreach ($actions as $id => $action_data) {
@@ -379,7 +379,11 @@ if (!class_exists('EEAD_Templates_Manager')) {
          * @access public
          */
         public function get_template_data() {
-            $template = $this->get_template_data_array($_REQUEST);
+            $template = $this->get_template_data_array(array(
+                'template_id' => eead_get_request('template_id'),
+                'source' => eead_get_request('source'),
+                'tab' => eead_get_request('tab'),
+            ));
             if (!$template) {
                 wp_send_json_error();
             }

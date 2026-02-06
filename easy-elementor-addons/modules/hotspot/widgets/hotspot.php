@@ -579,7 +579,7 @@ class Hotspot extends Widget_Base {
                     $this->add_render_attribute('image', 'src', esc_url($settings['image']['url']));
                     $this->add_render_attribute('image', 'class', 'eead-hotspot-image');
                     $this->add_render_attribute('image', 'alt', Control_Media::get_image_alt($settings['image']));
-                    echo Group_Control_Image_Size::get_attachment_image_html($settings, 'thumbnail', 'image');
+                    echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'thumbnail', 'image'));
                 }
                 ?>
 
@@ -598,7 +598,7 @@ class Hotspot extends Widget_Base {
                                 if ($item['hotspot_type'] == 'icon' && $item['icon']['value']) {
                                     Icons_Manager::render_icon($item['icon'], ['aria-hidden' => 'true']);
                                 } elseif ($item['hotspot_type'] == 'image' && $item['image']['url']) {
-                                    echo Group_Control_Image_Size::get_attachment_image_html($item, 'thumb', 'image');
+                                    echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($item, 'thumb', 'image'));
                                 }
                                 ?>
                             </a>

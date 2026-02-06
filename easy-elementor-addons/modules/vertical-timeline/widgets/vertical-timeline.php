@@ -180,7 +180,7 @@ class VerticalTimeline extends Widget_Base {
 
         $this->add_control(
             'title_html_tag', [
-                'label' => esc_html__('Title HTML Tag', 'square-plus'),
+                'label' => esc_html__('Title HTML Tag', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SELECT,
                 'default' => 'h4',
                 'options' => eead_html_tags(),
@@ -975,7 +975,7 @@ class VerticalTimeline extends Widget_Base {
                                     <?php if (!empty($item['image']['url'])) { ?>
                                         <div class="eead-vt-image">
                                             <?php
-                                            echo Group_Control_Image_Size::get_attachment_image_html($item, 'item_image', 'image');
+                                            echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($item, 'item_image', 'image'));
                                             ?>
                                         </div>
                                     <?php } ?>

@@ -877,22 +877,22 @@ class HorizontalTab extends Widget_Base {
                 if ($tab['enable'] == 'yes') {
                     $i++;
                     ?>
-                    <div class="animated <?php echo $settings['tab_content_animation']; ?> eead-ht-content eead-ht-content-<?php echo esc_attr($i) . ' ' . ($i == 1 ? 'eead-ht-active-content' : ''); ?>">
+                    <div class="animated <?php echo esc_attr($settings['tab_content_animation']); ?> eead-ht-content eead-ht-content-<?php echo esc_attr($i) . ' ' . ($i == 1 ? 'eead-ht-active-content' : ''); ?>">
                         <?php
                         if ($tab[
                             'content_type'] == 'page' && !empty($tab['page'])) {
                             $page_id = $tab['page'];
                             $elementor = get_post_meta($page_id, '_elementor_edit_mode', true);
                             if ($elementor) {
-                                echo $this->elementor()->frontend->get_builder_content_for_display($page_id);
+                                echo wp_kses_post($this->elementor()->frontend->get_builder_content_for_display($page_id));
                             } else {
                                 if (!is_wp_error($page_id)) {
                                     $content = $page_id->post_content;
                                 }
-                                echo apply_filters('the_content', $content);
+                                echo wp_kses_post(apply_filters('the_content', $content));
                             }
                         } elseif ($tab['content_type'] == 'elementor_template') {
-                            echo $this->elementor()->frontend->get_builder_content_for_display($tab['elementor_template']);
+                            echo wp_kses_post($this->elementor()->frontend->get_builder_content_for_display($tab['elementor_template']));
                         } elseif ($tab['content_type'] == 'wisiwyg' and $tab['wisiwyg_content']) {
                             echo wp_kses_post(parse_wisiwyg_content($tab['wisiwyg_content']));
                         }

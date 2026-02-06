@@ -373,39 +373,43 @@ class AnimatedHeading extends Widget_Base {
                 if (!empty($settings['heading_link']['nofollow'])) {
                     $this->add_render_attribute('url', 'rel', 'nofollow');
                 }
-                echo sprintf('<a %1$s>', $this->get_render_attribute_string('url'));
+                ?>
+                <a <?php $this->print_render_attribute_string('url'); ?>>
+                    <?php
             }
 
             if ($settings['pre_heading']) {
                 ?>
-                <span class="eead-ah-pre-heading">
-                    <?php echo esc_html($settings['pre_heading']); ?>
-                </span>
-                <?php
+                    <span class="eead-ah-pre-heading">
+                        <?php echo esc_html($settings['pre_heading']); ?>
+                    </span>
+                    <?php
             }
 
             if ($settings['animated_heading']) {
                 ?>
-                <span <?php $this->print_render_attribute_string('animated-heading'); ?>>
+                    <span <?php $this->print_render_attribute_string('animated-heading'); ?>>
+                        <?php
+                        if ($settings['layout'] != 'typed') {
+                            echo esc_attr(rtrim($settings['animated_heading'], ','));
+                        }
+                        ?>
+                    </span>
                     <?php
-                    if ($settings['layout'] != 'typed') {
-                        echo rtrim(esc_attr($settings['animated_heading']), ',');
-                    }
-                    ?>
-                </span>
-                <?php
             }
 
             if ($settings['post_heading']) {
                 ?>
-                <span class="eead-ah-post-heading">
-                    <?php echo esc_html($settings['post_heading']); ?>
-                </span>
-                <?php
+                    <span class="eead-ah-post-heading">
+                        <?php echo esc_html($settings['post_heading']); ?>
+                    </span>
+                    <?php
             }
 
             if (!empty($settings['heading_link']['url'])) {
-                echo '</a>';
+                ?>
+                </a>
+                <?php
             }
             ?>
 

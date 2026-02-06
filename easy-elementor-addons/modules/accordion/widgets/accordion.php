@@ -541,7 +541,7 @@ class Accordion extends Widget_Base {
         ?>
         <div class="eead-accordion-container">
             <?php foreach ($accordions as $key => $accordion) { ?>
-                <div class="eead-each-accordion eead-each-accordion-<?php echo $key . (($accordion['keep_open'] == 'yes') ? ' eead-open' : ''); ?>">
+                <div class="eead-each-accordion eead-each-accordion-<?php echo esc_attr($key) . (($accordion['keep_open'] == 'yes') ? ' eead-open' : ''); ?>">
                     <div class="eead-accordion-title">
                         <h3><?php echo esc_html($accordion['title']); ?></h3>
                         <div class="eead-accordion-icon">
@@ -558,9 +558,9 @@ class Accordion extends Widget_Base {
                         <div class="eead-accordion-content-scroll">
                             <?php
                             if ($accordion['content_type'] == 'wisiwyg') {
-                                echo $this->wisiwyg_text_parser($accordion['wisiwyg_content']);
+                                echo wp_kses_post($this->wisiwyg_text_parser($accordion['wisiwyg_content']));
                             } else if ($accordion['content_type'] == 'elementor_template') {
-                                echo $this->elementor()->frontend->get_builder_content_for_display($accordion['elementor_template']);
+                                echo wp_kses_post($this->elementor()->frontend->get_builder_content_for_display($accordion['elementor_template']));
                             }
                             ?>
                         </div>

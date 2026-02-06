@@ -366,8 +366,8 @@ class AdvancedButton extends Widget_Base {
             $this->add_render_attribute('button', 'class', 'elementor-animation-' . $settings['hover_animation']);
         }
         ?>
-        <div <?php echo $this->get_render_attribute_string('wrapper'); ?>>
-            <a <?php echo $this->get_render_attribute_string('button'); ?>>
+        <div <?php $this->print_render_attribute_string('wrapper'); ?>>
+            <a <?php $this->print_render_attribute_string('button'); ?>>
                 <?php $this->render_text(); ?>
             </a>
         </div>
@@ -381,7 +381,7 @@ class AdvancedButton extends Widget_Base {
         $this->add_render_attribute('text', 'class', 'eead-ab-button-text');
         $this->add_inline_editing_attributes('text', 'none');
         ?>
-        <div <?php echo $this->get_render_attribute_string('content-wrapper'); ?>>
+        <div <?php $this->print_render_attribute_string('content-wrapper'); ?>>
             <?php
             if (!empty($settings['button_icon']['value'])) {
                 ?>

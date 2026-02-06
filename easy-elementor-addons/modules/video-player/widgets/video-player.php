@@ -450,7 +450,7 @@ class VideoPlayer extends Widget_Base {
                 $this->add_render_attribute('video_player', 'class', 'eead-custom-play-button');
             }
 
-            $video_html = '<video ' . $this->get_render_attribute_string('video_player') . '></video>';
+            echo wp_kses_post('<video ' . $this->get_render_attribute_string('video_player') . '></video>');
         } else {
             $embed_params = $this->get_embed_params();
             $embed_options = $this->get_embed_options();
@@ -460,9 +460,26 @@ class VideoPlayer extends Widget_Base {
                 'allow' => 'autoplay;encrypted-media'
             ];
 
-            $video_html = Embed::get_embed_html($video_url, $embed_params, $embed_options, $embed_attr);
+            $allowed_tags = [
+                'iframe' => [
+                    'src' => true,
+                    'width' => true,
+                    'height' => true,
+                    'frameborder' => true,
+                    'allow' => true,
+                    'allowfullscreen' => true,
+                    'data-lazy-load' => true,
+                    'title' => true,
+                    'class' => true
+                ],
+                'div' => [
+                    'class' => true,
+                    'style' => true,
+                ],
+            ];
+
+            echo wp_kses(Embed::get_embed_html($video_url, $embed_params, $embed_options, $embed_attr), $allowed_tags);
         }
-        echo $video_html;
     }
 
     public function get_embed_params() {

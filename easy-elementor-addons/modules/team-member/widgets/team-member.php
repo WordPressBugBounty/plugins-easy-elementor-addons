@@ -948,12 +948,12 @@ class TeamMember extends Widget_Base {
 
         if (!empty($settings['image']['url'])) {
             if ($settings['link_type'] == 'image' && $settings['link']['url'] != '') {
-                $image = sprintf('<a %1$s>%2$s</a>', $this->get_render_attribute_string('link'), $image_html);
+                $image = sprintf('<a %1$s>%2$s</a>', $this->get_render_attribute_string('link'), wp_kses_post($image_html));
             } else {
-                $image = $image_html;
+                $image = wp_kses_post($image_html);
             }
         }
-        return $image;
+        echo wp_kses_post($image);
     }
 
     protected function get_social_links() {
@@ -970,7 +970,7 @@ class TeamMember extends Widget_Base {
                         if (!empty($item['social_link']['url']) && !empty($item['social_icon'])) {
                             $this->add_link_attributes('social-link' . $count, $item['social_link']);
                             ?>
-                            <a <?php echo $this->get_render_attribute_string('social-link' . $count); ?>>
+                            <a <?php $this->print_render_attribute_string('social-link' . $count); ?>>
                                 <?php Icons_Manager::render_icon($item['social_icon'], ['aria-hidden' => 'true']); ?>
                             </a>
                             <?php
@@ -991,8 +991,10 @@ class TeamMember extends Widget_Base {
 
         if (!empty($settings['description'])) {
             ?>
-            <div <?php echo $this->get_render_attribute_string('description'); ?>>
-                <?php echo parse_wisiwyg_content($settings['description']); ?>
+            <div <?php $this->print_render_attribute_string('description'); ?>>
+                <?php
+                echo wp_kses_post(parse_wisiwyg_content($settings['description']));
+                ?>
             </div>
             <?php
         }
@@ -1011,7 +1013,7 @@ class TeamMember extends Widget_Base {
                 $member_name .= sprintf('<%1$s %2$s>%3$s</%1$s>', 'h4', $this->get_render_attribute_string('name'), esc_html($settings['name']));
             }
         }
-        return $member_name;
+        echo wp_kses_post($member_name);
     }
 
     protected function get_member_position() {
@@ -1023,7 +1025,7 @@ class TeamMember extends Widget_Base {
         if ($settings['position'] != '') {
             $position .= sprintf('<%1$s %2$s>%3$s</%1$s>', 'h5', $this->get_render_attribute_string('position'), esc_html($settings['position']));
         }
-        return $position;
+        echo wp_kses_post($position);
     }
 
     /** Render Layout */
@@ -1054,7 +1056,7 @@ class TeamMember extends Widget_Base {
                 ?>
                 <div class="eead-team-member-image <?php echo esc_attr($custom_height_class); ?>">
                     <?php
-                    echo $this->get_image();
+                    $this->get_image();
 
                     if ($settings['social_icon_display'] == 'on-image-hover') {
                         $this->get_social_links();
@@ -1067,9 +1069,9 @@ class TeamMember extends Widget_Base {
             <div class="eead-team-member-content-wrapper">
                 <div class="eead-team-member-content">
                     <?php
-                    echo $this->get_member_name();
-                    echo $this->get_member_position();
-                    echo $this->get_description();
+                    $this->get_member_name();
+                    $this->get_member_position();
+                    $this->get_description();
                     if ($settings['social_icon_display'] !== 'on-image-hover') {
                         $this->get_social_links();
                     }

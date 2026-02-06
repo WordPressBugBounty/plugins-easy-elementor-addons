@@ -246,16 +246,16 @@ class CircularProgressbar extends Widget_Base {
         $dasharray = 2 * 3.14 * $radius;
         $svg_size = $radius * 2 + $stroke_width;
         ?>
-        <div class="eead-circular-progressbar" data-number="<?php echo esc_attr($settings['progressbar_percentage']['size']); ?>" data-radius="<?php echo $radius; ?>">
+        <div class="eead-circular-progressbar" data-number="<?php echo esc_attr($settings['progressbar_percentage']['size']); ?>" data-radius="<?php echo esc_attr($radius); ?>">
             <div class="eead-circular-progressbar-box">
                 <div class="eead-cb-percent">
-                    <svg style="height:<?php echo $svg_size; ?>px;width:<?php echo $svg_size; ?>px">
-                        <circle fill="none" cx="<?php echo $circle_size; ?>" cy="<?php echo $circle_size; ?>" r="<?php
-                              echo $radius;
-                              ?>" stroke-width="<?php echo $stroke_width; ?>"></circle>
-                        <circle fill="none" cx="<?php echo $circle_size; ?>" cy="<?php echo $circle_size; ?>" r="<?php
-                              echo $radius;
-                              ?>" stroke-dasharray="<?php echo $dasharray; ?>" stroke-dashoffset="<?php echo $dasharray; ?>" stroke-width="<?php echo $stroke_width; ?>"></circle>
+                    <svg style="height:<?php echo esc_attr($svg_size); ?>px;width:<?php echo esc_attr($svg_size); ?>px">
+                        <circle fill="none" cx="<?php echo esc_attr($circle_size); ?>" cy="<?php echo esc_attr($circle_size); ?>" r="<?php
+                              echo esc_attr($radius);
+                              ?>" stroke-width="<?php echo esc_attr($stroke_width); ?>"></circle>
+                        <circle fill="none" cx="<?php echo esc_attr($circle_size); ?>" cy="<?php echo esc_attr($circle_size); ?>" r="<?php
+                              echo esc_attr($radius);
+                              ?>" stroke-dasharray="<?php echo esc_attr($dasharray); ?>" stroke-dashoffset="<?php echo esc_attr($dasharray); ?>" stroke-width="<?php echo esc_attr($stroke_width); ?>"></circle>
                     </svg>
 
                     <div class="eead-cb-number">

@@ -1028,7 +1028,7 @@ class Testimonial extends Widget_Base {
                 for ($i = 0; $i < $rating_count; $i++) {
                     $stars .= '<i class="icofont-star"></i>';
                 }
-                echo $stars;
+                echo wp_kses_post($stars);
                 ?>
             </div>
             <?php
@@ -1039,7 +1039,7 @@ class Testimonial extends Widget_Base {
         $settings = $this->get_settings_for_display();
         ?>
         <div class="eead-testimonial-image">
-            <?php echo Group_Control_Image_Size::get_attachment_image_html($settings, 'thumb', 'image'); ?>
+            <?php echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'thumb', 'image')); ?>
         </div>
         <?php
     }

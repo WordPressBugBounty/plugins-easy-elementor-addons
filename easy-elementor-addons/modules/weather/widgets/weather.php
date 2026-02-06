@@ -768,7 +768,7 @@ class Weather extends Widget_Base {
             ]
         ];
         ?>
-        <div class="eead-weather-container eead-<?php echo $layout; ?>">
+        <div class="eead-weather-container eead-<?php echo esc_attr($layout); ?>">
             <div class="eead-weather">
                 <div class="eead-weather-header">
                     <!--<img src="<?php echo esc_url($weather_icon) ?>" alt="<?php echo esc_attr($weather_description); ?>">-->
@@ -816,7 +816,7 @@ class Weather extends Widget_Base {
                             </div>
 
                             <div class="eead-weather-like">
-                                <?php echo esc_html__('Feels Like ', 'easy-elementor-addons') . $this->get_temp($feelslike); ?>
+                                <?php echo esc_html__('Feels Like ', 'easy-elementor-addons') . esc_html($this->get_temp($feelslike)); ?>
                             </div>
                         <?php } ?>
                     </div>
@@ -847,7 +847,7 @@ class Weather extends Widget_Base {
 
     protected function render_temperature($temp) {
         echo '<div class="eead-weather-temperature">';
-        echo $this->get_temp($temp);
+        echo esc_html($this->get_temp($temp));
         echo '</div>';
     }
 
@@ -903,7 +903,7 @@ class Weather extends Widget_Base {
             113 => 'wi-day-sunny'
         );
         echo '<div class="eead-weather-icon">';
-        echo '<i class="wi ' . $icon_mapping[$weather_code] . '"></i>';
+        echo '<i class="wi ' . esc_attr($icon_mapping[$weather_code]) . '"></i>';
         echo '</div>';
     }
 
@@ -979,7 +979,7 @@ class Weather extends Widget_Base {
 
             if (isset($remote_data['error'])) {
                 if (isset($remote_data['error']['info'])) {
-                    echo $remote_data['error']['info'];
+                    echo esc_html($remote_data['error']['info']);
                 } else {
                     echo esc_html__('Weather data of this location not found.', 'easy-elementor-addons');
                 }

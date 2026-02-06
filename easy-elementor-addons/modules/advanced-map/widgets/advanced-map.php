@@ -265,6 +265,7 @@ class AdvancedMap extends Widget_Base {
                 'label' => esc_html__('Snazzy Style', 'easy-elementor-addons'),
                 'type' => Controls_Manager::TEXTAREA,
                 'separator' => 'before',
+                /* translators: 1: link start tag, 2: link end tag */
                 'description' => sprintf(esc_html__('Choose any map styles by visiting %1$sSnazzy Maps%2$s. Copy any Javascript Style Array and paste here.', 'easy-elementor-addons'), '<a target="_blank" href="https://snazzymaps.com/explore">', '</a>')
             ]
         );

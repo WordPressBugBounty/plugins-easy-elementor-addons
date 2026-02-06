@@ -963,12 +963,10 @@ class StepFlow extends Widget_Base {
             $this->add_link_attributes('link', $settings['readmore_link']);
             $this->add_inline_editing_attributes('link', 'basic', 'title');
 
-            $title = sprintf(
-                '<a %s>%s</a>', $this->get_render_attribute_string('link'), esc_html($settings['title'])
-            );
+            $title = sprintf('<a %s>%s</a>', $this->get_render_attribute_string('link'), esc_html($settings['title']));
         } else {
             $this->add_inline_editing_attributes('title', 'basic');
-            $title = esc_html($settings['title']);
+            $title = $settings['title'];
         }
         ?>
         <div class="eead-step-flow">
@@ -993,7 +991,9 @@ class StepFlow extends Widget_Base {
                 ?>
             </div>
 
-            <?php printf('<%1$s %2$s>%3$s</%1$s>', esc_attr(eead_check_allowed_html_tags($settings['title_tag'])), $this->get_render_attribute_string('title'), $title); ?>
+            <<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_tag'])); ?> <?php $this->print_render_attribute_string('title'); ?>>
+                <?php echo esc_html($title); ?>
+            </<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_tag'])); ?>>
 
             <?php if ($settings['description']) { ?>
                 <p <?php $this->print_render_attribute_string('description'); ?>><?php echo wp_kses_post($settings['description']); ?></p>

@@ -1003,11 +1003,11 @@ class LogoCarousel extends Widget_Base {
                     if (!empty($item['logo_link'])) {
                         ?>
                         <a href="<?php echo esc_url($item['logo_link']); ?>" target="<?php echo esc_attr($target); ?>">
-                            <?php echo $image_html; ?>
+                            <?php echo wp_kses_post($image_html); ?>
                         </a>
                         <?php
                     } else {
-                        echo $image_html;
+                        echo wp_kses_post($image_html);
                     }
                     if ($settings['show_title']) {
                         echo '<' . esc_attr(eead_check_allowed_html_tags($settings['title_html_tag'])) . ' class="eead-logo-title">' . esc_html($item['title']) . '</' . esc_attr(eead_check_allowed_html_tags($settings['title_html_tag'])) . '>';

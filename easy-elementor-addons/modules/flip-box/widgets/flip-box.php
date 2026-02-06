@@ -1225,7 +1225,7 @@ class FlipBox extends Widget_Base {
                     <div class="eead-fb-layer-inner">
                         <?php if ($settings['graphic_element'] === 'image' && !empty($settings['image']['url'])) { ?>
                             <div class="eead-fb-image">
-                                <?php echo Group_Control_Image_Size::get_attachment_image_html($settings, 'thumbnail', 'image'); ?>
+                                <?php echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'thumbnail', 'image')); ?>
                             </div>
                         <?php } elseif ($settings['graphic_element'] === 'icon' && !empty($settings['box_icon']['value'])) { ?>
                             <div <?php $this->print_render_attribute_string('icon-wrapper'); ?>>
@@ -1238,7 +1238,7 @@ class FlipBox extends Widget_Base {
                         <?php } ?>
 
                         <?php if (!empty($settings['front_title_text'])) { ?>
-                            <<?php echo esc_attr(eead_check_allowed_html_tags($settings['front_title_tags'])) . ' ' . $this->get_render_attribute_string('box_front_title_tags'); ?>>
+                            <<?php echo esc_attr(eead_check_allowed_html_tags($settings['front_title_tags'])); ?>             <?php $this->print_render_attribute_string('box_front_title_tags'); ?>>
                                 <?php echo wp_kses($settings['front_title_text'], eead_allow_tags('title')); ?>
                             </<?php echo esc_attr(eead_check_allowed_html_tags($settings['front_title_tags'])); ?>>
                         <?php } ?>
@@ -1256,7 +1256,7 @@ class FlipBox extends Widget_Base {
                 <div class="eead-fb-layer-overlay">
                     <div class="eead-fb-layer-inner">
                         <?php if (!empty($settings['back_title_text'])) { ?>
-                            <<?php echo esc_attr(eead_check_allowed_html_tags($settings['back_title_tags'])) . ' ' . $this->get_render_attribute_string('box_front_title_tags'); ?>>
+                            <<?php echo esc_attr(eead_check_allowed_html_tags($settings['back_title_tags'])); ?>             <?php $this->print_render_attribute_string('box_front_title_tags'); ?>>
                                 <?php echo wp_kses($settings['back_title_text'], eead_allow_tags('title')); ?>
                             </<?php echo esc_attr(eead_check_allowed_html_tags($settings['back_title_tags'])); ?>>
                         <?php } ?>
@@ -1275,7 +1275,9 @@ class FlipBox extends Widget_Base {
                     </div>
                     <?php
                     if ($settings['link_click'] === 'box') {
-                        echo '<a ' . $this->get_render_attribute_string('box_link') . '></a>';
+                        ?>
+                        <a <?php $this->print_render_attribute_string('box_link'); ?>></a>;
+                        <?php
                     }
                     ?>
                 </div>

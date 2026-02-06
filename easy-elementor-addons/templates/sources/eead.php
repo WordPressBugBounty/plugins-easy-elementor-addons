@@ -309,7 +309,7 @@ class EEAD_Templates_Source_Api extends EEAD_Templates_Source_Base {
     public function get_item($template_id, $tab = false) {
         $id = str_replace($this->id_prefix(), '', $template_id);
         if (!$tab) {
-            $tab = isset($_REQUEST['tab']) ? esc_attr($_REQUEST['tab']) : false;
+            $tab = eead_get_request('tab', 'sanitize_text_field', false);
         }
 
         $license_key = Templates\eead_elementor_templates()->config->get('key');

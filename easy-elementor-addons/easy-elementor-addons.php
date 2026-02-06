@@ -1,24 +1,24 @@
 <?php
 
 /**
- * Plugin Name: Easy Elementor Addons - Addons Pack for Elementor Page Builder Plugin
+ * Plugin Name: Easy Elementor Addons - Addons Pack for Elementor Page Builder
  * Plugin URI: https://demo.hashthemes.com/easy-elementor-addons/
  * Description: Level up with Easy Elementor Addons – adds powerful widgets and sleek design tools to your favorite Elementor page builder.
- * Version: 2.2.9
+ * Version: 2.3.3
  * Author: HashThemes
  * Author URI: https://hashthemes.com/
  * Text Domain: easy-elementor-addons
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  * Domain Path: /languages
- * Elementor tested up to: 3.3
+ * Elementor tested up to: 3.32
  */
 /* If this file is called directly, abort */
 if (!defined('WPINC')) {
     die();
 }
 
-define('EEAD_VERSION', '2.2.9');
+define('EEAD_VERSION', '2.3.3');
 
 define('EEAD_FILE', __FILE__);
 define('EEAD_PLUGIN_BASENAME', plugin_basename(EEAD_FILE));
@@ -26,7 +26,6 @@ define('EEAD_PATH', plugin_dir_path(EEAD_FILE));
 define('EEAD_URL', plugins_url('/', EEAD_FILE));
 
 define('EEAD_ASSETS_URL', EEAD_URL . 'assets/');
-// define('EEAD_API_DEBUG', true);
 
 if (!class_exists('Easy_Elementor_Addons')) {
 
@@ -44,19 +43,12 @@ if (!class_exists('Easy_Elementor_Addons')) {
 
         public function __construct() {
 
-            // Load translation files
-            add_action('init', array($this, 'load_plugin_textdomain'));
-
             // Run On Plugin Activation 
             register_activation_hook(__FILE__, array($this, 'plugin_activation'));
 
             // Load necessary files.
             add_action('plugins_loaded', array($this, 'init'));
             add_filter('plugin_action_links_' . plugin_basename(EEAD_FILE), array($this, 'add_plugin_action_link'), 10, 1);
-        }
-
-        public function load_plugin_textdomain() {
-            load_plugin_textdomain('easy-elementor-addons', false, basename(dirname(__FILE__)) . '/languages');
         }
 
         public function init() {
@@ -101,7 +93,7 @@ if (!class_exists('Easy_Elementor_Addons')) {
                 $admin_message .= '<p>' . sprintf('<a href="%s" class="button-primary">%s</a>', $install_url, esc_html__('Install Elementor Now', 'easy-elementor-addons')) . '</p>';
             }
 
-            echo '<div class="error">' . $admin_message . '</div>';
+            echo '<div class="error">' . wp_kses_post($admin_message) . '</div>';
         }
 
         /**

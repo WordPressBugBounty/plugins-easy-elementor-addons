@@ -19,7 +19,7 @@ $eead_all_widgets = eead_get_all_widgets_list();
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160.64 160.67" fill="#111">
                 <path d="M74.55 14.94A14.93 14.93 0 0 0 59.64 0H14.91A14.93 14.93 0 0 0 0 14.94v44.73a14.93 14.93 0 0 0 14.91 14.91h44.73a14.93 14.93 0 0 0 14.91-14.91Zm0 86.09a14.92 14.92 0 0 0-14.91-14.91H14.91A14.92 14.92 0 0 0 0 101v44.73a14.93 14.93 0 0 0 14.91 14.91h44.73a14.93 14.93 0 0 0 14.91-14.91Zm86.09 0a14.92 14.92 0 0 0-14.91-14.91H101A14.9 14.9 0 0 0 86.09 101v44.73A14.92 14.92 0 0 0 101 160.67h44.73a14.93 14.93 0 0 0 14.91-14.91ZM133.8 4.33a14.81 14.81 0 0 0-20.92 0l-22.5 22.5a14.79 14.79 0 0 0 0 20.91l22.5 22.5a14.79 14.79 0 0 0 20.92 0l22.49-22.5a14.77 14.77 0 0 0 0-20.9z" />
             </svg>
-            <?php echo esc_html__('Easy Elementor Addons Setttings', 'easy-elementor-addons'); ?> - V<?php echo EEAD_VERSION; ?>
+            <?php echo esc_html__('Easy Elementor Addons Setttings', 'easy-elementor-addons'); ?> - V<?php echo esc_html(EEAD_VERSION); ?>
         </h1>
         <div class="eead-version">
             <a href="https://hashthemes.com/documentation/easy-elementor-addons-documentation/" target="_blank">

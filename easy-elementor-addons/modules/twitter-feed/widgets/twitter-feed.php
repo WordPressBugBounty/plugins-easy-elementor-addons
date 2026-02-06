@@ -30,6 +30,10 @@ class TwitterFeed extends Widget_Base {
         return ['easy-elementor-addons'];
     }
 
+    public function get_script_depends() {
+        return ['twitter-widgets'];
+    }
+
     protected function register_controls() {
         $this->start_controls_section(
             'section_main', [
@@ -41,13 +45,11 @@ class TwitterFeed extends Widget_Base {
             'embed_type', [
                 'label' => esc_html__('Type', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SELECT,
-                'default' => 'handle',
+                'default' => 'hashtag',
                 'options' => [
-                    'handle' => esc_html__('Handle', 'easy-elementor-addons'),
                     'hashtag' => esc_html__('Hashtag', 'easy-elementor-addons'),
                     'post' => esc_html__('Post', 'easy-elementor-addons'),
                     'video' => esc_html__('Video', 'easy-elementor-addons'),
-                    'profile' => esc_html__('Profile', 'easy-elementor-addons'),
                 ]
             ]
         );
@@ -92,34 +94,6 @@ class TwitterFeed extends Widget_Base {
         );
 
         $this->add_control(
-            'url_profile', [
-                'label' => esc_html__('Enter URL', 'easy-elementor-addons'),
-                'label_block' => true,
-                'type' => Controls_Manager::TEXT,
-                'placeholder' => 'https://twitter.com/SpaceX',
-                'default' => 'https://twitter.com/SpaceX',
-                'condition' => [
-                    'embed_type' => 'profile',
-                ]
-            ]
-        );
-
-        $this->add_control(
-            'username', [
-                'label' => esc_html__('Enter UserName', 'easy-elementor-addons'),
-                'type' => Controls_Manager::TEXT,
-                'dynamic' => [
-                    'active' => true,
-                ],
-                'placeholder' => '@username',
-                'default' => '@x',
-                'condition' => [
-                    'embed_type' => 'handle',
-                ]
-            ]
-        );
-
-        $this->add_control(
             'hashtag', [
                 'label' => esc_html__('Enter Hashtag', 'easy-elementor-addons'),
                 'type' => Controls_Manager::TEXT,
@@ -141,139 +115,6 @@ class TwitterFeed extends Widget_Base {
                 ],
                 'condition' => [
                     'embed_type' => 'post',
-                ]
-            ]
-        );
-
-        $this->add_control(
-            'display_mode_profile', [
-                'label' => esc_html__('Display Mode', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SELECT,
-                'default' => 'timeline',
-                'options' => [
-                    'timeline' => esc_html__('Timeline', 'easy-elementor-addons'),
-                    'button' => esc_html__('Button', 'easy-elementor-addons'),
-                ],
-                'condition' => [
-                    'embed_type' => ['profile', 'handle'],
-                ]
-            ]
-        );
-
-        $this->add_control(
-            'height_profile_timeline', [
-                'label' => esc_html__('Height', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SLIDER,
-                'default' => [
-                    'size' => 500,
-                ],
-                'range' => [
-                    'px' => [
-                        'min' => 250,
-                        'max' => 1300,
-                        'step' => 10,
-                    ]
-                ],
-                'condition' => [
-                    'display_mode_profile' => 'timeline',
-                    'embed_type' => ['profile', 'handle'],
-                ]
-            ]
-        );
-
-        $this->add_control(
-            'theme_profile_timeline', [
-                'label' => esc_html__('Theme', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SELECT,
-                'default' => 'light',
-                'options' => [
-                    'light' => esc_html__('Light', 'easy-elementor-addons'),
-                    'dark' => esc_html__('Dark', 'easy-elementor-addons'),
-                ],
-                'condition' => [
-                    'display_mode_profile' => 'timeline',
-                    'embed_type' => ['profile', 'handle'],
-                ]
-            ]
-        );
-
-        $this->add_control(
-            'button_type', [
-                'label' => esc_html__('Button Type', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SELECT,
-                'default' => 'follow-button',
-                'options' => [
-                    'follow-button' => esc_html__('Follow', 'easy-elementor-addons'),
-                    'mention-button' => esc_html__('Mention', 'easy-elementor-addons'),
-                ],
-                'condition' => [
-                    'display_mode_profile' => 'button',
-                    'embed_type' => ['profile', 'handle'],
-                ]
-            ]
-        );
-
-        $this->add_control(
-            'hide_name', [
-                'label' => esc_html__('Hide Name', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SWITCHER,
-                'label_on' => esc_html__('Show', 'easy-elementor-addons'),
-                'label_off' => esc_html__('Hide', 'easy-elementor-addons'),
-                'condition' => [
-                    'display_mode_profile' => 'button',
-                    'button_type' => 'follow-button',
-                    'embed_type' => ['profile', 'handle'],
-                ]
-            ]
-        );
-
-        $this->add_control(
-            'show_count', [
-                'label' => esc_html__('Show Count', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SWITCHER,
-                'default' => 'yes',
-                'label_on' => esc_html__('Show', 'easy-elementor-addons'),
-                'label_off' => esc_html__('Hide', 'easy-elementor-addons'),
-                'condition' => [
-                    'embed_type' => ['profile', 'handle'],
-                    'display_mode_profile' => 'button',
-                    'button_type' => 'follow-button',
-                ]
-            ]
-        );
-
-        $this->add_control(
-            'prefill_text', [
-                'label' => esc_html__('Tweet Text', 'easy-elementor-addons'),
-                'type' => Controls_Manager::TEXTAREA,
-                'description' => esc_html__('Do you want to prefill the Tweet text?', 'easy-elementor-addons'),
-                'condition' => [
-                    'embed_type' => ['profile', 'handle'],
-                    'display_mode_profile' => 'button',
-                    'button_type' => 'mention-button',
-                ]
-            ]
-        );
-
-        $this->add_control(
-            'screen_name', [
-                'label' => esc_html__('Screen Name', 'easy-elementor-addons'),
-                'type' => Controls_Manager::TEXT,
-                'condition' => [
-                    'embed_type' => ['profile', 'handle'],
-                    'display_mode_profile' => 'button',
-                    'button_type' => 'mention-button',
-                ]
-            ]
-        );
-
-        $this->add_control(
-            'large_button', [
-                'label' => esc_html__('Large Button', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SWITCHER,
-                'condition' => [
-                    'embed_type' => ['profile', 'handle'],
-                    'display_mode_profile' => 'button',
                 ]
             ]
         );
@@ -387,20 +228,13 @@ class TwitterFeed extends Widget_Base {
 
     public function render() {
         $settings = $this->get_settings_for_display();
-        if ($settings['embed_type'] == 'handle') {
-            $this->get_handle_html($settings);
-        } else if ($settings['embed_type'] == 'hashtag') {
+        if ($settings['embed_type'] == 'hashtag') {
             $this->get_hashtag_html($settings);
         } else if ($settings['embed_type'] == 'post') {
             $this->get_post_html($settings);
         } else if ($settings['embed_type'] == 'video') {
             $this->get_video_html($settings);
-        } else if ($settings['embed_type'] == 'profile') {
-            $this->get_profile_html($settings);
         }
-        ?>
-        <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-        <?php
     }
 
     public function get_video_html($settings) {
@@ -433,48 +267,6 @@ class TwitterFeed extends Widget_Base {
         <?php
     }
 
-    public function get_profile_html($settings) {
-        $this->add_render_attribute('profile', [
-            'href' => $settings['url_profile'],
-            'data-lang' => $settings['language']
-        ]);
-
-        if ($settings['large_button'] === 'yes') {
-            $this->add_render_attribute('profile', 'data-size', 'large');
-        }
-
-        if ($settings['display_mode_profile'] === 'timeline') {
-            $this->add_render_attribute('profile', [
-                'class' => 'twitter-' . $settings['display_mode_profile'],
-                'data-partner' => 'twitter-deck',
-                'data-height' => $settings['height_profile_timeline']['size'],
-                'data-theme' => $settings['theme_profile_timeline']
-            ]);
-        }
-
-        if ($settings['display_mode_profile'] === 'button' && $settings['button_type'] === 'follow-button') {
-            $this->add_render_attribute('profile', 'class', 'twitter-' . $settings['button_type']);
-            if ($settings['hide_name'] === 'yes') {
-                $this->add_render_attribute('profile', 'data-show-screen-name', 'false');
-            }
-
-            if ($settings['show_count'] === '') {
-                $this->add_render_attribute('profile', 'data-show-count', 'false');
-            }
-        }
-
-        if ($settings['display_mode_profile'] === 'button' && $settings['button_type'] === 'mention-button') {
-            $this->add_render_attribute('profile', [
-                'class' => 'twitter-' . $settings['button_type'],
-                'data-text' => $settings['prefill_text'],
-                'href' => $settings['url_profile'] . '?screen_name=' . $settings['screen_name']
-            ]);
-        }
-        ?>
-        <a <?php $this->print_render_attribute_string('profile'); ?>></a>
-        <?php
-    }
-
     public function get_list_html($settings) {
         if ($settings['embed_type'] === 'list') {
             $this->add_render_attribute('list', 'class', 'twitter-timeline');
@@ -492,56 +284,11 @@ class TwitterFeed extends Widget_Base {
         <?php
     }
 
-    public function get_handle_html($settings) {
-
-        $this->add_render_attribute('handle', 'data-lang', $settings['language']);
-
-        if ($settings['large_button'] === 'yes') {
-            $this->add_render_attribute('handle', 'data-size', 'large');
-        }
-
-        if ($settings['display_mode_profile'] === 'timeline') {
-            $this->add_render_attribute('handle', [
-                'href' => 'https://www.twitter.com/' . $settings['username'],
-                'class' => 'twitter-' . $settings['display_mode_profile'],
-                'data-partner' => 'twitter-deck',
-                'data-height' => $settings['height_profile_timeline']['size'],
-                'data-theme' => $settings['theme_profile_timeline']
-            ]);
-        }
-
-        if ($settings['display_mode_profile'] === 'button' && $settings['button_type'] === 'follow-button') {
-            $this->add_render_attribute('handle', [
-                'class' => 'twitter-' . $settings['button_type'],
-                'href' => 'https://www.twitter.com/' . $settings['username']
-            ]);
-
-            if ($settings['hide_name'] === 'yes') {
-                $this->add_render_attribute('handle', 'data-show-screen-name', 'false');
-            }
-
-            if ($settings['show_count'] === '') {
-                $this->add_render_attribute('handle', 'data-show-count', 'false');
-            }
-        }
-
-        if ($settings['display_mode_profile'] === 'button' && $settings['button_type'] === 'mention-button') {
-            $this->add_render_attribute('handle', [
-                'class' => 'twitter-' . $settings['button_type'],
-                'data-text' => $settings['prefill_text'],
-                'href' => 'https://www.twitter.com/intent/tweet ?screen_name=' . $settings['screen_name']
-            ]);
-        }
-        ?>
-        <a <?php $this->print_render_attribute_string('handle'); ?>> Handle <?php echo $settings['username']; ?></a>
-        <?php
-    }
-
     public function get_hashtag_html($settings) {
 
         $this->add_render_attribute('hashtag', [
             'class' => 'twitter-hashtag-button',
-            'href' => 'https://twitter.com/intent/tweet?button_hashtag=' . $settings['hashtag'],
+            'href' => 'https://twitter.com/intent/tweet?button_hashtag=' . esc_attr($settings['hashtag']),
             'data-lang' => $settings['language']
         ]);
 
@@ -562,7 +309,7 @@ class TwitterFeed extends Widget_Base {
         }
         $this->add_render_attribute('hashtag', 'data-url', $settings['hashtag_url']);
         ?>
-        <a <?php $this->print_render_attribute_string('hashtag'); ?>>Tweet<?php echo $settings['hashtag']; ?> </a>
+        <a <?php $this->print_render_attribute_string('hashtag'); ?>>Tweet<?php echo esc_html($settings['hashtag']); ?> </a>
         <?php
     }
 

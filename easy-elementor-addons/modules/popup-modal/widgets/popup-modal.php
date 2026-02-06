@@ -620,7 +620,8 @@ class PopupModal extends Widget_Base {
 		$this->add_control(
 			'icon_radius_advanced', [
 				'label' => esc_html__('Radius', 'easy-elementor-addons'),
-				'description' => sprintf(__('For example: <b>%1s</b> or Go <a href="%2s" target="_blank">this link</a> and copy and paste the radius value.', 'easy-elementor-addons'), '75% 25% 43% 57% / 46% 29% 71% 54%', 'https://9elements.github.io/fancy-border-radius/'),
+				/* translators: 1: border radius, 2: link. */
+				'description' => sprintf(__('For example: <b>%1$s</b> or Go <a href="%2$s" target="_blank">this link</a> and copy and paste the radius value.', 'easy-elementor-addons'), '75% 25% 43% 57% / 46% 29% 71% 54%', 'https://9elements.github.io/fancy-border-radius/'),
 				'type' => Controls_Manager::TEXT,
 				'default' => '75% 25% 43% 57% / 46% 29% 71% 54%',
 				'selectors' => [
@@ -1442,7 +1443,7 @@ class PopupModal extends Widget_Base {
 		}
 		?>
 
-		<a <?php echo $this->get_render_attribute_string('popup-modal-button'); ?>>
+		<a <?php $this->print_render_attribute_string('popup-modal-button'); ?>>
 			<?php
 			if ($settings['trigger_type'] == 'button') {
 				if (!empty($settings['trigger_icon']['value'])) {
@@ -1450,7 +1451,7 @@ class PopupModal extends Widget_Base {
 				}
 				echo '<span>' . esc_html($settings['trigger_text']) . '</span>';
 			} elseif ($settings['trigger_type'] == 'image') {
-				echo Group_Control_Image_Size::get_attachment_image_html($settings, 'trigger_image_thumbnail', 'trigger_image');
+				echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'trigger_image_thumbnail', 'trigger_image'));
 				if ($settings['enable_image_trigger_icon']) {
 					echo '<span>';
 					Icons_Manager::render_icon($settings['image_trigger_icon'], ['aria-hidden' => 'true']);
@@ -1485,7 +1486,7 @@ class PopupModal extends Widget_Base {
 			<?php $this->render_button(); ?>
 		</div>
 
-		<div <?php echo $this->get_render_attribute_string('popup-modal'); ?>>
+		<div <?php $this->print_render_attribute_string('popup-modal'); ?>>
 			<div class="modal__overlay" tabindex="-1" data-micromodal-close>
 				<div class="modal__container animated animated-fast <?php echo esc_attr($settings['popup_animation']) ?>" role="dialog" aria-modal="true" aria-labelledby="modal-<?php echo esc_attr($id); ?>-title">
 					<?php if ($settings['close_button'] == 'yes') { ?>
@@ -1519,7 +1520,7 @@ class PopupModal extends Widget_Base {
 
 							case 'template':
 								$template_id = $settings['templates'];
-								echo !empty($template_id) ? Plugin::$instance->frontend->get_builder_content_for_display($template_id) : '';
+								echo Plugin::$instance->frontend->get_builder_content_for_display($template_id);
 								break;
 
 							case 'custom-html':

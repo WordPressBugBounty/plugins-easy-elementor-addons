@@ -381,8 +381,8 @@ class LinkEffect extends Widget_Base {
             $this->add_render_attribute('eead-link-text-2', 'data-hover', esc_html($link_text));
         }
         ?>
-        <a href="<?php echo esc_url($link); ?>" class="eead-link eead-link-<?php echo esc_attr($settings['effect']); ?>" <?php echo $this->get_render_attribute_string('eead-link-text-2'); ?>>
-            <span <?php echo $this->get_render_attribute_string('eead-link-text'); ?>>
+        <a href="<?php echo esc_url($link); ?>" class="eead-link eead-link-<?php echo esc_attr($settings['effect']); ?>" <?php $this->print_render_attribute_string('eead-link-text-2'); ?>>
+            <span <?php $this->print_render_attribute_string('eead-link-text'); ?>>
                 <?php echo esc_html($link_text); ?>
             </span>
 

@@ -513,12 +513,12 @@ class ImageAccordion extends Widget_Base {
                 );
                 ?>
 
-                <<?php echo esc_attr(eead_check_allowed_html_tags($tag)) . ' ' . $this->get_render_attribute_string('eead-image-accordion-' . $key); ?> >
+                <<?php echo esc_attr(eead_check_allowed_html_tags($tag)); ?> <?php $this->print_render_attribute_string('eead-image-accordion-' . $key); ?> >
                     <div class="eead-image-accordion-box">
                         <div class="eead-image-accordion-content">
                             <?php
                             if ($img_accordion['image_accordion_title']) {
-                                printf('<%1$s class="eead-image-accordion-title">%2$s</%1$s>', $settings['title_tag'], esc_html($img_accordion['image_accordion_title']));
+                                printf('<%1$s class="eead-image-accordion-title">%2$s</%1$s>', esc_attr($settings['title_tag']), esc_html($img_accordion['image_accordion_title']));
                             }
 
                             if ($img_accordion['image_accordion_content']) {

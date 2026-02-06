@@ -658,7 +658,8 @@ class PopupVideo extends Widget_Base {
         $this->add_control(
             'icon_radius_advanced', [
                 'label' => esc_html__('Radius', 'easy-elementor-addons'),
-                'description' => sprintf(__('For example: <b>%1s</b> or Go <a href="%2s" target="_blank">this link</a> and copy and paste the radius value.', 'easy-elementor-addons'), '75% 25% 43% 57% / 46% 29% 71% 54%', 'https://9elements.github.io/fancy-border-radius/'),
+                /* translators: 1: border radius, 2: link. */
+                'description' => sprintf(__('For example: <b>%1$s</b> or Go <a href="%2$s" target="_blank">this link</a> and copy and paste the radius value.', 'easy-elementor-addons'), '75% 25% 43% 57% / 46% 29% 71% 54%', 'https://9elements.github.io/fancy-border-radius/'),
                 'type' => Controls_Manager::TEXT,
                 'default' => '75% 25% 43% 57% / 46% 29% 71% 54%',
                 'selectors' => [
@@ -868,7 +869,7 @@ class PopupVideo extends Widget_Base {
             }
             echo '<span>' . esc_html($settings['play_text']) . '</span>';
         } elseif ($settings['trigger_type'] == 'image') {
-            echo Group_Control_Image_Size::get_attachment_image_html($settings, 'play_image_thumbnail', 'play_image');
+            echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'play_image_thumbnail', 'play_image'));
             if ($settings['enable_image_play_icon']) {
                 echo '<span>';
                 Icons_Manager::render_icon($settings['image_play_icon'], ['aria-hidden' => 'true']);
@@ -953,7 +954,7 @@ class PopupVideo extends Widget_Base {
         ?>
 
         <div class="eead-popup-video">
-            <a <?php echo $this->get_render_attribute_string('popup-video'); ?>>
+            <a <?php $this->print_render_attribute_string('popup-video'); ?>>
                 <?php $this->render_button(); ?>
             </a>
         </div>

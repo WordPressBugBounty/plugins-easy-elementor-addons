@@ -506,7 +506,8 @@ class FeatureList extends Widget_Base {
         $this->add_control(
             'icon_radius_advanced', [
                 'label' => esc_html__('Radius', 'easy-elementor-addons'),
-                'description' => sprintf(__('For example: <b>%1s</b> or Go <a href="%2s" target="_blank">this link</a> and copy and paste the radius value.', 'easy-elementor-addons'), '75% 25% 43% 57% / 46% 29% 71% 54%', 'https://9elements.github.io/fancy-border-radius/'),
+                /* translators: 1: border radius, 2: link. */
+                'description' => sprintf(__('For example: <b>%1$s</b> or Go <a href="%2$s" target="_blank">this link</a> and copy and paste the radius value.', 'easy-elementor-addons'), '75% 25% 43% 57% / 46% 29% 71% 54%', 'https://9elements.github.io/fancy-border-radius/'),
                 'type' => Controls_Manager::TEXT,
                 'size_units' => ['px', '%'],
                 'default' => '75% 25% 43% 57% / 46% 29% 71% 54%',
@@ -667,7 +668,7 @@ class FeatureList extends Widget_Base {
                     ?>
                     <li class="eead-fl-item elementor-repeater-item-<?php echo esc_attr($item['_id']); ?>">
                         <div class="eead-fl-icon-box">
-                            <<?php echo esc_attr($feature_icon_tag) . ' ' . $this->get_render_attribute_string('link' . $index); ?>>
+                            <<?php echo esc_attr($feature_icon_tag); ?> <?php $this->print_render_attribute_string('link' . $index); ?>>
                                 <?php
                                 if ($item['icon_type'] == 'icon' && !empty($item['icon']['value'])) {
                                     Icons_Manager::render_icon($item['icon'], ['aria-hidden' => 'true']);
@@ -679,7 +680,9 @@ class FeatureList extends Widget_Base {
                                             'alt' => esc_attr(get_post_meta($item['img']['id'], '_wp_attachment_image_alt', true)),
                                         ]
                                     );
-                                    echo '<img ' . $this->get_render_attribute_string('feature_list_image' . $index) . '/>';
+                                    ?>
+                                        <img <?php $this->print_render_attribute_string('feature_list_image' . $index); ?> />
+                                    <?php
                                 }
                                 ?>
                             </<?php echo esc_attr($feature_icon_tag); ?>>
@@ -688,7 +691,7 @@ class FeatureList extends Widget_Base {
                         <div class="eead-fl-content-box">
                             <?php if ($item['title']) { ?>
                                 <<?php echo esc_attr(eead_check_allowed_html_tags($feature_title_tag)); ?> class="eead-fl-title">
-                                    <<?php echo esc_attr($feature_icon_tag) . ' ' . $this->get_render_attribute_string('link' . $index); ?>>
+                                    <<?php echo esc_attr($feature_icon_tag); ?> <?php $this->print_render_attribute_string('link' . $index); ?>>
                                         <?php
                                         echo esc_html($item['title']);
                                         ?>

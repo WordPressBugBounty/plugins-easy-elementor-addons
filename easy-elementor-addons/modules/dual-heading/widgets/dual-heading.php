@@ -542,7 +542,7 @@ class DualHeading extends Widget_Base {
             $this->add_render_attribute('second_heading', 'class', 'eead-clipped');
         }
 
-        $heading_text = '';
+        $heading_text = $open_link = $close_link = '';
 
         if ($settings['first_heading']) {
             $heading_text = sprintf('<span %1$s>%2$s</span>', $this->get_render_attribute_string('first_heading'), esc_html($settings['first_heading']));
@@ -560,6 +560,9 @@ class DualHeading extends Widget_Base {
             if ($settings['link']['is_external']) {
                 $this->add_render_attribute('heading-link', 'target', '_blank');
             }
+
+            $open_link = sprintf('<a %1$s>', $this->get_render_attribute_string('heading-link'));
+            $close_link = sprintf('</a>');
         }
 
         if ($settings['first_heading'] || $settings['second_heading']) {
@@ -567,15 +570,9 @@ class DualHeading extends Widget_Base {
             <<?php echo esc_attr(eead_check_allowed_html_tags($settings['heading_html_tag'])); ?> class="eead-dual-heading">
 
                 <?php
-                if (!empty($settings['link']['url'])) {
-                    printf('<a %1$s>', $this->get_render_attribute_string('heading-link'));
-                }
-
+                echo wp_kses_post($open_link);
                 echo wp_kses_post($heading_text);
-
-                if (!empty($settings['link']['url'])) {
-                    printf('</a>');
-                }
+                echo wp_kses_post($close_link);
                 ?>
 
             </<?php echo esc_attr(eead_check_allowed_html_tags($settings['heading_html_tag'])); ?>>
