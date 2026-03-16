@@ -3,7 +3,7 @@ Contributors: hashthemes
 Tags: elementor addons, elementor, elementor widgets, elementor templates, elementor extensions
 Requires at least: 6.3
 Tested up to: 6.9
-Stable tag: 2.3.3
+Stable tag: 2.3.4
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -139,6 +139,9 @@ The easy way to install the plugin is via WordPress.org plugin directory.
 </ol>
 
 == Changelog ==
+= 2.3.4 - 16 Mar, 2026 =
+* Private and protected post displaying in Horizontal tab, Vertical Tab and Switcher Module - Fixed
+
 = 2.3.3 - 6 Dec, 2025 =
 * Compatibility test with WordPress version 6.9
 

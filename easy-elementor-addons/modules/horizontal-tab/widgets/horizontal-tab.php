@@ -879,21 +879,24 @@ class HorizontalTab extends Widget_Base {
                     ?>
                     <div class="animated <?php echo esc_attr($settings['tab_content_animation']); ?> eead-ht-content eead-ht-content-<?php echo esc_attr($i) . ' ' . ($i == 1 ? 'eead-ht-active-content' : ''); ?>">
                         <?php
-                        if ($tab[
-                            'content_type'] == 'page' && !empty($tab['page'])) {
+                        if (isset($tab['content_type']) && $tab['content_type'] === 'page' && !empty($tab['page'])) {
                             $page_id = $tab['page'];
-                            $elementor = get_post_meta($page_id, '_elementor_edit_mode', true);
-                            if ($elementor) {
-                                echo wp_kses_post($this->elementor()->frontend->get_builder_content_for_display($page_id));
-                            } else {
-                                if (!is_wp_error($page_id)) {
-                                    $content = $page_id->post_content;
+                            $post = get_post($page_id);
+
+                            if ($post && $post->post_status === 'publish' && !post_password_required($post)) {
+                                if (\Elementor\Plugin::$instance->db->is_built_with_elementor($page_id)) {
+                                    echo wp_kses_post(
+                                        \Elementor\Plugin::$instance->frontend->get_builder_content_for_display($page_id)
+                                    );
+                                } else {
+                                    echo wp_kses_post(apply_filters('the_content', $post->post_content));
                                 }
-                                echo wp_kses_post(apply_filters('the_content', $content));
                             }
-                        } elseif ($tab['content_type'] == 'elementor_template') {
-                            echo wp_kses_post($this->elementor()->frontend->get_builder_content_for_display($tab['elementor_template']));
-                        } elseif ($tab['content_type'] == 'wisiwyg' and $tab['wisiwyg_content']) {
+                        } elseif (isset($tab['content_type']) && $tab['content_type'] === 'elementor_template' && !empty($tab['elementor_template'])) {
+                            echo wp_kses_post(
+                                \Elementor\Plugin::$instance->frontend->get_builder_content_for_display($tab['elementor_template'])
+                            );
+                        } elseif (isset($tab['content_type']) && $tab['content_type'] === 'wisiwyg' && !empty($tab['wisiwyg_content'])) {
                             echo wp_kses_post(parse_wisiwyg_content($tab['wisiwyg_content']));
                         }
                         ?>
