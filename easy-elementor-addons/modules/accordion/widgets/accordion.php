@@ -560,7 +560,7 @@ class Accordion extends Widget_Base {
                             if ($accordion['content_type'] == 'wisiwyg') {
                                 echo wp_kses_post($this->wisiwyg_text_parser($accordion['wisiwyg_content']));
                             } else if ($accordion['content_type'] == 'elementor_template') {
-                                echo wp_kses_post($this->elementor()->frontend->get_builder_content_for_display($accordion['elementor_template']));
+                                echo $this->elementor()->frontend->get_builder_content_for_display($accordion['elementor_template']);
                             }
                             ?>
                         </div>

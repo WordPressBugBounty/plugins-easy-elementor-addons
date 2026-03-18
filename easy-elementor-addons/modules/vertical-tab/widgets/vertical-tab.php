@@ -943,17 +943,19 @@ class VerticalTab extends Widget_Base {
 
                             if ($post && $post->post_status === 'publish' && !post_password_required($post)) {
                                 if (\Elementor\Plugin::$instance->db->is_built_with_elementor($page_id)) {
-                                    echo wp_kses_post(
-                                        \Elementor\Plugin::$instance->frontend->get_builder_content_for_display($page_id)
-                                    );
+                                    echo \Elementor\Plugin::$instance->frontend->get_builder_content_for_display($page_id);
                                 } else {
-                                    echo wp_kses_post(apply_filters('the_content', $post->post_content));
+                                    if ($post && !is_wp_error($post)) {
+                                        if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+                                            echo do_shortcode($post->post_content);
+                                        } else {
+                                            echo apply_filters('the_content', $post->post_content);
+                                        }
+                                    }
                                 }
                             }
                         } elseif (isset($tab['content_type']) && $tab['content_type'] === 'elementor_template' && !empty($tab['elementor_template'])) {
-                            echo wp_kses_post(
-                                \Elementor\Plugin::$instance->frontend->get_builder_content_for_display($tab['elementor_template'])
-                            );
+                            echo \Elementor\Plugin::$instance->frontend->get_builder_content_for_display($tab['elementor_template']);
                         } elseif (isset($tab['content_type']) && $tab['content_type'] === 'wisiwyg' && !empty($tab['wisiwyg_content'])) {
                             echo wp_kses_post(parse_wisiwyg_content($tab['wisiwyg_content']));
                         }
