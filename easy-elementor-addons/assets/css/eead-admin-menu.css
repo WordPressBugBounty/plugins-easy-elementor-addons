@@ -88,6 +88,7 @@
     transition: 0.4s;
     border: 1px solid #777;
     border-radius: 20px;
+    overflow: hidden;
 }
 
 .eead-checkbox label:after {
@@ -169,17 +170,17 @@
     background: #FFF;
     margin-left: -20px;
     line-height: 1.3;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
 }
 
-.eead-admin-header-section h1 {
+.eead-admin-header-section h2 {
     font-size: 18px;
     margin: 0;
 }
 
-.eead-admin-header-section h1 {
+.eead-admin-header-section h2 {
     display: flex;
     align-items: center;
     text-transform: uppercase;
@@ -187,12 +188,12 @@
     font-weight: bold;
 }
 
-.eead-admin-header-section h1 svg {
+.eead-admin-header-section h2 svg {
     height: 16px;
     width: 16px;
 }
 
-.eead-admin-header-section .eead-version a{
+.eead-admin-header-section .eead-doc-link a{
     background: #000;
     color: #FFF;
     text-decoration: none;
@@ -203,7 +204,7 @@
     border-radius: 30px;
 }
 
-.eead-admin-header-section .eead-version a:hover{
+.eead-admin-header-section .eead-doc-link a:hover{
     background: #9c19e9;
 }
 
@@ -223,10 +224,12 @@
     outline: none;
     box-shadow: none;
     background: rgba(0, 0, 0, 0.03);
+    color: #9c19e9;
 }
 
 .eead-nav-tab-wrapper .eead-tab i {
     margin-right: 6px;
+    color: inherit;
 }
 
 .eead-nav-tab-wrapper .eead-tab.nav-tab-active {
@@ -324,6 +327,11 @@
 .eead-extender-action-buttons .eead-extender-action-btn i {
     margin-right: 6px;
     font-weight: bold;
+}
+
+.eead-widget-action-buttons .eead-widget-action-btn:hover,
+.eead-extender-action-buttons .eead-extender-action-btn:hover {
+    background: #9c19e9;
 }
 
 .eaad-save-button-wrap {
