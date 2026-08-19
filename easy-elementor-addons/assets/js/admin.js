@@ -14,7 +14,7 @@
             url: ajaxURL,
             type: 'post',
             data: {
-                action: 'admin_settings_save',
+                action: 'eead_admin_settings_save',
                 data: data,
                 wp_nonce: adminNonce
             },

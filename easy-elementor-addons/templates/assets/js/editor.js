@@ -8,6 +8,7 @@
         ModalLoadingView: null,
         ModalBodyView: null,
         ModalErrorView: null,
+        ModalConnectionErrorView: null,
         LibraryCollection: null,
         KeywordsModel: null,
         ModalCollectionView: null,
@@ -168,8 +169,14 @@
                                 dataType: "json",
                                 data: {
                                     action: "eead_inner_template",
+                                    nonce: i.nonce,
                                     template: templateAttr?.template_id ? templateAttr : {...templateAttr, template_id: a.attributes.template_id},
                                     tab: t.getTab()
+                                },
+                                error: function (e) {
+                                    // The parent template still inserts, so do not
+                                    // interrupt it; just make the failure visible.
+                                    console.warn("Easy Elementor Addons: a template dependency could not be created.", e);
                                 }
                             });
                         }
@@ -315,6 +322,9 @@
             }), a.ModalErrorView = Marionette.ItemView.extend({
                 id: "eead-modal-loading",
                 template: "#views-eead-template-modal-error"
+            }), a.ModalConnectionErrorView = Marionette.ItemView.extend({
+                id: "eead-modal-connection-error",
+                template: "#views-eead-template-modal-connection-error"
             }), a.ModalLayoutView = Marionette.LayoutView.extend({
                 el: "#eead-modal-template",
                 regions: i.modalRegions,
@@ -350,6 +360,9 @@
                 },
                 showLicenseError: function () {
                     this.modalContent.show(new a.ModalErrorView)
+                },
+                showConnectionError: function () {
+                    this.modalContent.show(new a.ModalConnectionErrorView)
                 },
                 showTemplatesView: function (e, o, n) {
                     window.EEADData.cat = o.length;
@@ -546,6 +559,7 @@
                 dataType: "json",
                 data: {
                     action: "eead_get_templates",
+                    nonce: i.nonce,
                     tab: t
                 },
                 success: function (e) {
@@ -556,6 +570,9 @@
                         categories: i,
                         widgets: e.data.widgets
                     }, o.layout.showTemplatesView(n, i, e.data.widgets)
+                },
+                error: function (e) {
+                    o.layout.showConnectionError()
                 }
             })
         },

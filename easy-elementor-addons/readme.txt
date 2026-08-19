@@ -3,7 +3,7 @@ Contributors: hashthemes
 Tags: elementor addons, elementor, elementor widgets, elementor templates, elementor extensions
 Requires at least: 6.3
 Tested up to: 7.0
-Stable tag: 2.3.7
+Stable tag: 2.3.8
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -11,7 +11,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Level up with Easy Elementor Addons – adds powerful widgets and sleek design tools to your favorite Elementor page builder.
 
 == Description ==
-Easy Elementor Addons is an all in one element pack extension for Elementor page builder. It provides 50+ creative widgets to provide an outstanding look to your Elementor based WordPress website. The elements are multi concept and contain amazing features to make your website more effective by placing the spectacular widgets and enhance the engagement rate.
+Easy Elementor Addons is an all in one element pack extension for Elementor page builder. It provides 49 creative widgets to provide an outstanding look to your Elementor based WordPress website. The elements are multi concept and contain amazing features to make your website more effective by placing the spectacular widgets and enhance the engagement rate.
 
 Easy Elementor Addons is a highly editable addon for Elementor with limitless possibilities. You can easily customize each element as per your preference and build a beautiful website beyond your imagination. The plugin has an intuitive UI where you can easily drag drop any elements of your choice and start the configuration. Also, you can follow the drag and drop process to reorder or shuffle any elements.
 
@@ -19,6 +19,30 @@ Easy Elementor Addons is built using all the modern trends and is well optimized
 
 <p><a href="https://demo.hashthemes.com/easy-elementor-addons/" target="_blank">See Demos of All Elementor Widgets</a></p>
 <p>Want to test all Elementor widgets and their settings without installing on your website? <a href="https://demo.tastewp.com/easy-elementor-addons" target="_blank">Test Dashboard Settings Here</a></p>
+
+<h3>Key Features:</h3>
+
+<p><strong>49 Elementor Widgets</strong> - A complete pack of creative widgets covering headings, buttons, galleries, sliders, tabs, timelines, pricing tables, team, testimonials, charts, maps and much more.</p>
+
+<p><strong>Enable Only the Widgets You Need</strong> - Every widget can be switched on or off from the plugin dashboard. Widgets you disable are never registered, so you only ever load what your site actually uses.</p>
+
+<p><strong>Lean Asset Loading</strong> - Third party libraries such as carousels, charts and lightboxes are pulled in only by the widgets that need them, rather than loading on every page of your site.</p>
+
+<p><strong>Ready Made Template Library</strong> - Browse and insert pre designed sections without leaving the Elementor editor, then restyle them to match your brand.</p>
+
+<p><strong>Sticky Container</strong> - Adds an Enable Sticky switch to Elementor's native Container element, so a nested container can stay in view while the visitor scrolls.</p>
+
+<p><strong>Extra Icon Libraries</strong> - Adds Material Design Icons and Iconfont icon sets to the Elementor icon picker, on top of the icons Elementor already ships with.</p>
+
+<p><strong>Central API Settings</strong> - Save your Google Maps access token and Weather API key once in the plugin dashboard and reuse them across the Advanced Map and Weather widgets.</p>
+
+<p><strong>Fully Responsive</strong> - Every widget offers responsive controls, so you can tune the layout separately for desktop, tablet and mobile.</p>
+
+<p><strong>Deep Styling Controls</strong> - Typography, colors, spacing, borders, shadows, hover effects and entrance animations are all editable from the Elementor panel without writing a line of CSS.</p>
+
+<p><strong>Works With Any Theme</strong> - Compatible with every free and premium WordPress theme that supports Elementor.</p>
+
+<p><strong>Translation Ready</strong> - All strings are translation ready.</p>
 
 <h3>Elements Available in the Extension:</h3>
 
@@ -120,7 +144,7 @@ Easy Elementor Addons is built using all the modern trends and is well optimized
 
 <p>49) <a href="https://demo.hashthemes.com/easy-elementor-addons/weather/" target="_blank">Weather Block</a> - Adds a weather report of a city with humidity, Pressure and Wind Speed.</p>
 
-<p>More Comming</p>
+<p>More widgets coming soon.</p>
 
 <h3>Compatibility:</h3>
 <p>Easy Elementor Addons is compatible with all types of free and premium WordPress themes. The only thing is that you will need to install Elementor Plugin.</p>
@@ -139,6 +163,16 @@ The easy way to install the plugin is via WordPress.org plugin directory.
 </ol>
 
 == Changelog ==
+= 2.3.8 - 19 Aug, 2026 =
+* Missing nonce verification in the template library Ajax handlers (CSRF) - Fixed
+* Featured image for an inserted template is now sideloaded with file type validation, so a non image file can no longer be written to the uploads folder - Fixed
+* Featured image is now fetched through the safe HTTP API, blocking requests to internal addresses - Fixed
+* Post type of a template dependency is now validated, and the post is only created when the user holds the rights to publish that type - Fixed
+* New taxonomy terms are only created for users who can manage them, and terms no longer leak between taxonomies - Fixed
+* Settings save Ajax action renamed with the plugin prefix to avoid clashing with other plugins - Updated
+* Template library now shows a clear message instead of loading forever when a request fails - Updated
+* Feature list added in readme.txt file - Updated
+
 = 2.3.7 - 27 Jul, 2026 =
 * CSS fixes
 

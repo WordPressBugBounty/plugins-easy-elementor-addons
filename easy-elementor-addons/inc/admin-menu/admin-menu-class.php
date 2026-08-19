@@ -8,7 +8,7 @@ namespace EasyElementorAddons;
 class AdminClass {
 
     public function __construct() {
-        add_action('wp_ajax_admin_settings_save', [$this, 'eead_settings_save']);
+        add_action('wp_ajax_eead_admin_settings_save', [$this, 'eead_settings_save']);
         add_action('wp_ajax_eead_widgets_save', [$this, 'eead_widgets_save']);
 
         add_action('admin_menu', [$this, 'eead_register_admin_menu'], 20);

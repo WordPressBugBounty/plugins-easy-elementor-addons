@@ -81,6 +81,7 @@ if (!class_exists('EEAD_Templates_Assets')) {
             $button = Templates\eead_elementor_templates()->config->get('eead_elementor_templates');
             wp_localize_script('eead-addons-editor-js', 'EEADData', apply_filters('eead-addons-core/assets/editor/localize', array(
                 'eead_image_dir' => EEAD_URL . 'templates/assets/images/hash-icon.svg',
+                'nonce' => wp_create_nonce('eead_editor_nonce'),
                 'EEADEditorBtn' => $button,
                 'modalRegions' => $this->get_modal_region(),
                 'license' => array(

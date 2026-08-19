@@ -6,6 +6,10 @@
     box-sizing: border-box;
 }
 
+.eead-wrap .wrap *{
+    box-sizing: content-box;
+}
+
 .eead-widget-section-inner-wrap,
 .eead-extender-section-inner-wrap {
     display: grid;
