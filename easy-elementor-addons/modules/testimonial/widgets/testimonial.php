@@ -30,6 +30,18 @@ class Testimonial extends Widget_Base {
         return 'eead-element-icon eead-icons-testimonial';
     }
 
+    public function get_keywords() {
+        return ['testimonial', 'review', 'quote', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -474,7 +486,7 @@ class Testimonial extends Widget_Base {
 
         $this->end_controls_tabs();
 
-        $this->add_control(
+        $this->add_responsive_control(
             'text_alignment', [
                 'label' => esc_html__('Text Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -1039,7 +1051,7 @@ class Testimonial extends Widget_Base {
         $settings = $this->get_settings_for_display();
         ?>
         <div class="eead-testimonial-image">
-            <?php echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'thumb', 'image')); ?>
+            <?php Group_Control_Image_Size::print_attachment_image_html($settings, 'thumb', 'image'); ?>
         </div>
         <?php
     }

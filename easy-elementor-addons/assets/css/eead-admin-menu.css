@@ -35,7 +35,7 @@
     counter-reset: my-sec-counter;
 }
 
-.eead-widget-section-inner-wrap .eead-widget-wrap span:before {
+.eead-widget-section-inner-wrap .eead-widget-wrap > span:first-child:before {
     counter-increment: my-sec-counter;
     content: counter(my-sec-counter);
     position: absolute;
@@ -338,6 +338,48 @@
     background: #9c19e9;
 }
 
+/* Header row above the grid: filters on the left, bulk actions on the right.
+   With no add-on supplying filters the left side collapses and the buttons
+   keep their original right-aligned position. */
+.eead-widget-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px 30px;
+    margin-bottom: 30px;
+}
+
+.eead-widget-toolbar-filters {
+    flex: 1 1 420px;
+    min-width: 0;
+}
+
+.eead-widget-toolbar .eead-widget-action-buttons {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+}
+
+.eead-widget-section-inner-wrap .eead-widget-wrap.eead-premium {
+    border-color: #E6D3F7;
+}
+
+.eead-widget-wrap .eead-widget-pro-badge {
+    position: absolute;
+    top: -9px;
+    right: 16px;
+    padding: 2px 9px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.6;
+    text-transform: uppercase;
+    color: #FFF;
+    background: #9c19e9;
+    border-radius: 16px;
+    box-shadow: 0 0 10px rgba(156, 25, 233, 0.25);
+}
+
 .eaad-save-button-wrap {
     margin-top: 50px;
     padding: 30px;
@@ -365,8 +407,8 @@
     color: #FFF;
     background: #000;
     text-align: center;
-    -webkit-animation: slide-in-top 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
-    animation: slide-in-top 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    -webkit-animation: eead-slide-in-top 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    animation: eead-slide-in-top 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
     z-index: 99;
 }
 
@@ -391,16 +433,16 @@
     background: var(--c) 50% 0, var(--c) 50% 100%, var(--c) 100% 50%, var(--c) 0 50%;
     background-size: 4px 4px;
     background-repeat: no-repeat;
-    animation: s7 0.5s infinite;
+    animation: eead-s7 0.5s infinite;
 }
 
-@keyframes s7 {
+@keyframes eead-s7 {
     to {
         transform: rotate(.5turn)
     }
 }
 
-@-webkit-keyframes slide-in-top {
+@-webkit-keyframes eead-slide-in-top {
     0% {
         -webkit-transform: translateY(-400px);
         transform: translateY(-400px);
@@ -414,7 +456,7 @@
     }
 }
 
-@keyframes slide-in-top {
+@keyframes eead-slide-in-top {
     0% {
         -webkit-transform: translateY(-400px);
         transform: translateY(-400px);

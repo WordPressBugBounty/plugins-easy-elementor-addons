@@ -261,6 +261,17 @@ class AdvancedMap extends Widget_Base {
         );
 
         $this->add_control(
+            'map_id', [
+                'label' => esc_html__('Map ID', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'separator' => 'before',
+                'label_block' => true,
+                'ai' => ['active' => false],
+                'description' => esc_html__('Optional. Overrides the Google Map ID set in the plugin settings. A Map ID enables Advanced Markers. With a Map ID, map styling is done in Google Cloud (Map Styles) and the Snazzy Style option below is ignored.', 'easy-elementor-addons'),
+            ]
+        );
+
+        $this->add_control(
             'snazzy_style', [
                 'label' => esc_html__('Snazzy Style', 'easy-elementor-addons'),
                 'type' => Controls_Manager::TEXTAREA,
@@ -295,6 +306,16 @@ class AdvancedMap extends Widget_Base {
             'data-animate' => 'animate-' . $settings['animate']
         ]);
 
+        $map_id = !empty($settings['map_id']) ? trim($settings['map_id']) : '';
+        if ($map_id === '') {
+            $eead_general_settings = get_option('eead_general_settings', []);
+            $map_id = isset($eead_general_settings['gmap_map_id']) ? trim((string) $eead_general_settings['gmap_map_id']) : '';
+        }
+
+        if ($map_id !== '') {
+            $this->add_render_attribute('wrapper', 'data-map-id', $map_id);
+        }
+
         if (count($markers) >= 1) {
             ?>
             <div class="eead-gmap-container">
@@ -302,7 +323,7 @@ class AdvancedMap extends Widget_Base {
                     <?php
                     foreach ($markers as $marker) {
                         ?>
-                        <div class="eead-gmap-marker" data-lat="<?php echo esc_attr($marker['lat']); ?>" data-lng="<?php echo esc_attr($marker['long']); ?>" data-icon-size="<?php echo esc_attr($marker['icon_size']['size']); ?>" data-icon="<?php echo esc_attr($marker['icon']['url']); ?>" data-info-window="<?php echo esc_attr($marker['info_window_onload']); ?>" data-animate="<?php echo esc_attr('animate-' . $settings['animate']) ?>">
+                        <div class="eead-gmap-marker" data-lat="<?php echo esc_attr($marker['lat']); ?>" data-lng="<?php echo esc_attr($marker['long']); ?>" data-icon-size="<?php echo esc_attr($marker['icon_size']['size']); ?>" data-icon="<?php echo esc_url($marker['icon']['url']); ?>" data-info-window="<?php echo esc_attr($marker['info_window_onload']); ?>" data-animate="<?php echo esc_attr('animate-' . $settings['animate']) ?>">
                             <?php echo wp_kses_post($marker['address']); ?>
                         </div>
                         <?php

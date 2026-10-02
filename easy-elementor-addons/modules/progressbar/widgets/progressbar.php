@@ -32,6 +32,18 @@ class Progressbar extends Widget_Base {
         return 'eead-element-icon eead-icons-progress-bar';
     }
 
+    public function get_keywords() {
+        return ['progress bar', 'progress', 'skill', 'bar', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -87,7 +99,7 @@ class Progressbar extends Widget_Base {
                         'progressbar_label' => esc_html__('Progress Bar #1', 'easy-elementor-addons'),
                     ]
                 ],
-                'title_field' => '{{{ progressbar_label }}}'
+                'title_field' => '{{ progressbar_label }}'
             ]
         );
 
@@ -113,7 +125,7 @@ class Progressbar extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'label_alignment', [
                 'label' => esc_html__('Label Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -158,7 +170,7 @@ class Progressbar extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'percentage_alignment', [
                 'label' => esc_html__('Percentage Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -461,7 +473,7 @@ class Progressbar extends Widget_Base {
                                 <label><?php echo esc_html($progressbar['progressbar_label']); ?></label>
                                 <div class="eead-progressbar-percentage"><?php echo absint($percentage) . "%"; ?></div>
                             </div>
-                            <div class="eead-progressbar" data-width="<?php echo absint($percentage); ?>">
+                            <div class="eead-progressbar" data-width="<?php echo absint($percentage); ?>" role="progressbar" aria-valuenow="<?php echo absint($percentage); ?>" aria-valuemin="0" aria-valuemax="100" aria-label="<?php echo esc_attr($progressbar['progressbar_label']); ?>">
                                 <div class="eead-progressbar-length"></div>
                             </div>
                             <?php
@@ -470,7 +482,7 @@ class Progressbar extends Widget_Base {
                         case 'style2':
                             ?>
                             <label><?php echo esc_html($progressbar['progressbar_label']); ?></label>
-                            <div class="eead-progressbar" data-width="<?php echo absint($percentage); ?>">
+                            <div class="eead-progressbar" data-width="<?php echo absint($percentage); ?>" role="progressbar" aria-valuenow="<?php echo absint($percentage); ?>" aria-valuemin="0" aria-valuemax="100" aria-label="<?php echo esc_attr($progressbar['progressbar_label']); ?>">
                                 <div class="eead-progressbar-length"></div>
                             </div>
                             <div class="eead-progressbar-percentage"><?php echo absint($percentage) . "%"; ?></div>
@@ -478,20 +490,10 @@ class Progressbar extends Widget_Base {
                             break;
 
                         case 'style3':
-                            ?>
-                            <label><?php echo esc_html($progressbar['progressbar_label']); ?></label>
-                            <div class="eead-progressbar" data-width="<?php echo absint($percentage); ?>">
-                                <div class="eead-progressbar-length">
-                                    <div class="eead-progressbar-percentage"><?php echo absint($percentage) . "%"; ?></div>
-                                </div>
-                            </div>
-                            <?php
-                            break;
-
                         case 'style4':
                             ?>
                             <label><?php echo esc_html($progressbar['progressbar_label']); ?></label>
-                            <div class="eead-progressbar" data-width="<?php echo absint($percentage); ?>">
+                            <div class="eead-progressbar" data-width="<?php echo absint($percentage); ?>" role="progressbar" aria-valuenow="<?php echo absint($percentage); ?>" aria-valuemin="0" aria-valuemax="100" aria-label="<?php echo esc_attr($progressbar['progressbar_label']); ?>">
                                 <div class="eead-progressbar-length">
                                     <div class="eead-progressbar-percentage"><?php echo absint($percentage) . "%"; ?></div>
                                 </div>

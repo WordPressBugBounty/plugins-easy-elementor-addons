@@ -7,7 +7,7 @@ use EEADElements\Templates;
 if (!defined('ABSPATH'))
     exit; // No access of directly access
 
-if (!class_exists('EEAD_Templates_API')) {
+if (!class_exists(__NAMESPACE__ . '\EEAD_Templates_API')) {
 
     /**
      * EEAD API.
@@ -140,8 +140,7 @@ if (!class_exists('EEAD_Templates_API')) {
          */
         public function request_args() {
             return array(
-                'timeout' => 60,
-                'sslverify' => false
+                'timeout' => 15
             );
         }
 

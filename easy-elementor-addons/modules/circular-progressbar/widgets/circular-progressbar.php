@@ -28,6 +28,18 @@ class CircularProgressbar extends Widget_Base {
         return 'eead-element-icon eead-icons-circular-bar';
     }
 
+    public function get_keywords() {
+        return ['circular progress', 'progress', 'circle', 'skill', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -243,7 +255,7 @@ class CircularProgressbar extends Widget_Base {
         $radius = isset($settings['circle_size']['size']) ? intval($settings['circle_size']['size']) : 200;
         $stroke_width = isset($settings['circle_stroke']['size']) ? intval($settings['circle_stroke']['size']) : 10;
         $circle_size = $radius + $stroke_width / 2;
-        $dasharray = 2 * 3.14 * $radius;
+        $dasharray = 2 * M_PI * $radius;
         $svg_size = $radius * 2 + $stroke_width;
         ?>
         <div class="eead-circular-progressbar" data-number="<?php echo esc_attr($settings['progressbar_percentage']['size']); ?>" data-radius="<?php echo esc_attr($radius); ?>">

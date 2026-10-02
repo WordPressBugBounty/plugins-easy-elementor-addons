@@ -35,6 +35,18 @@ class TeamMember extends Widget_Base {
         return 'eead-element-icon eead-icons-team';
     }
 
+    public function get_keywords() {
+        return ['team member', 'team', 'member', 'profile', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -189,7 +201,7 @@ class TeamMember extends Widget_Base {
                     ]
                 ],
                 'fields' => $repeater->get_controls(),
-                'title_field' => '{{{ social_icon_label }}}',
+                'title_field' => '{{ social_icon_label }}',
                 'condition' => [
                     'enable_social_links' => 'yes',
                 ]
@@ -348,7 +360,7 @@ class TeamMember extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'content_text_alignment', [
                 'label' => esc_html__('Text Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -373,7 +385,7 @@ class TeamMember extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'content_vertical_alignment', [
                 'label' => esc_html__('Vertical Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -516,7 +528,7 @@ class TeamMember extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'image_alignment', [
                 'label' => esc_html__('Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -943,17 +955,17 @@ class TeamMember extends Widget_Base {
     }
 
     protected function get_image() {
-        $settings = $this->get_settings();
-        $image_html = Group_Control_Image_Size::get_attachment_image_html($settings);
+        $settings = $this->get_settings_for_display();
 
         if (!empty($settings['image']['url'])) {
-            if ($settings['link_type'] == 'image' && $settings['link']['url'] != '') {
-                $image = sprintf('<a %1$s>%2$s</a>', $this->get_render_attribute_string('link'), wp_kses_post($image_html));
+            if ($settings['link_type'] == 'image' && !empty($settings['link']['url'])) {
+                ?>
+                <a <?php $this->print_render_attribute_string('link'); ?>><?php Group_Control_Image_Size::print_attachment_image_html($settings); ?></a>
+                <?php
             } else {
-                $image = wp_kses_post($image_html);
+                Group_Control_Image_Size::print_attachment_image_html($settings);
             }
         }
-        echo wp_kses_post($image);
     }
 
     protected function get_social_links() {
@@ -993,7 +1005,7 @@ class TeamMember extends Widget_Base {
             ?>
             <div <?php $this->print_render_attribute_string('description'); ?>>
                 <?php
-                echo wp_kses_post(parse_wisiwyg_content($settings['description']));
+                echo wp_kses_post(eead_parse_wysiwyg_content($settings['description']));
                 ?>
             </div>
             <?php
@@ -1007,7 +1019,7 @@ class TeamMember extends Widget_Base {
         $this->add_render_attribute('name', 'class', 'eead-team-member-name');
 
         if ($settings['name'] != '') {
-            if ($settings['link_type'] == 'title' && $settings['link']['url'] != '') {
+            if ($settings['link_type'] == 'title' && !empty($settings['link']['url'])) {
                 $member_name .= sprintf('<%1$s %2$s><a %3$s>%4$s</a></%1$s>', 'h4', $this->get_render_attribute_string('name'), $this->get_render_attribute_string('link'), esc_html($settings['name']));
             } else {
                 $member_name .= sprintf('<%1$s %2$s>%3$s</%1$s>', 'h4', $this->get_render_attribute_string('name'), esc_html($settings['name']));
@@ -1039,6 +1051,10 @@ class TeamMember extends Widget_Base {
                 'eead-content-' . esc_attr($settings['content_display']),
             ]
         ]);
+
+        if (!empty($settings['link']['url'])) {
+            $this->add_link_attributes('link', $settings['link']);
+        }
 
         if ($settings['social_icon_display'] == 'on-image-hover') {
             $this->add_render_attribute('team-wrapper', [

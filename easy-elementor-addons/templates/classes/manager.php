@@ -7,7 +7,7 @@ use EEADElements\Templates;
 if (!defined('ABSPATH'))
     exit;
 
-if (!class_exists('EEAD_Templates_Manager')) {
+if (!class_exists(__NAMESPACE__ . '\EEAD_Templates_Manager')) {
 
     /**
      * EEAD Templates Manager.
@@ -17,7 +17,6 @@ if (!class_exists('EEAD_Templates_Manager')) {
      */
     class EEAD_Templates_Manager {
 
-        private static $instance = null;
         private $sources = array();
 
         /**
@@ -31,12 +30,7 @@ if (!class_exists('EEAD_Templates_Manager')) {
             //Register AJAX hooks
             add_action('wp_ajax_eead_get_templates', array($this, 'get_templates'));
             add_action('wp_ajax_eead_inner_template', array($this, 'insert_inner_template'));
-
-            if (defined('ELEMENTOR_VERSION') && version_compare(ELEMENTOR_VERSION, '2.2.8', '>')) {
-                add_action('elementor/ajax/register_actions', array($this, 'register_ajax_actions'), 20);
-            } else {
-                add_action('wp_ajax_elementor_get_template_data', array($this, 'get_template_data'), -1);
-            }
+            add_action('elementor/ajax/register_actions', array($this, 'register_ajax_actions'), 20);
 
             $this->register_sources();
             add_filter('eead-addons-core/assets/editor/localize', array($this, 'localize_tabs'));
@@ -109,15 +103,6 @@ if (!class_exists('EEAD_Templates_Manager')) {
         }
 
         /**
-         * Returns needed source instance
-         *
-         * @return object
-         */
-        public function get_source($slug = null) {
-            return isset($this->sources[$slug]) ? $this->sources[$slug] : false;
-        }
-
-        /**
          * Get template
          *
          * Get templates grid data.
@@ -133,6 +118,11 @@ if (!class_exists('EEAD_Templates_Manager')) {
 
             $tab = eead_get_var('tab');
             $tabs = $this->get_template_tabs();
+
+            if (!$tab || !isset($tabs[$tab])) {
+                wp_send_json_error();
+            }
+
             $sources = $tabs[$tab]['sources'];
 
             $result = array(
@@ -173,7 +163,10 @@ if (!class_exists('EEAD_Templates_Manager')) {
         public function insert_inner_template() {
             check_ajax_referer('eead_editor_nonce', 'nonce');
 
-            if (!current_user_can('edit_posts')) {
+            // The dependency content arrives from the client and is published as
+            // post content or Elementor data, so only users trusted with
+            // unfiltered HTML may create it.
+            if (!current_user_can('edit_posts') || !current_user_can('unfiltered_html')) {
                 wp_send_json_error();
             }
 
@@ -220,7 +213,7 @@ if (!class_exists('EEAD_Templates_Manager')) {
                         'post_title' => $post_title,
                         'post_status' => 'publish',
                         'meta_input' => array(
-                            '_elementor_data' => $content,
+                            '_elementor_data' => wp_slash(is_array($content) ? wp_json_encode($content) : $content),
                             '_elementor_edit_mode' => 'builder',
                             '_elementor_template_type' => 'section',
                             '_elementor_version' => defined('ELEMENTOR_VERSION') ? ELEMENTOR_VERSION : '3.12',
@@ -329,11 +322,18 @@ if (!class_exists('EEAD_Templates_Manager')) {
                 return;
             }
 
-            $actions = json_decode(stripslashes(eead_get_request('actions')), true);
+            // Elementor sends `actions` as JSON keyed by request id, each entry
+            // holding `action` and `data`. Only read it raw here (unslashed) to
+            // find our request; the source is validated against our own list.
+            $actions = json_decode(eead_get_request('actions', ''), true);
+            if (!is_array($actions)) {
+                return;
+            }
+
             $data = false;
 
             foreach ($actions as $id => $action_data) {
-                if (!isset($action_data['get_template_data'])) {
+                if (isset($action_data['action']) && 'get_template_data' === $action_data['action']) {
                     $data = $action_data;
                 }
             }
@@ -352,7 +352,7 @@ if (!class_exists('EEAD_Templates_Manager')) {
 
             $source = $data['data']['source'];
 
-            if (!$source && !isset($this->sources[$source])) {
+            if (empty($source) || !is_string($source) || !isset($this->sources[$source])) {
                 return;
             }
 
@@ -393,39 +393,6 @@ if (!class_exists('EEAD_Templates_Manager')) {
 
             $template = $source->get_item($data['template_id'], $data['tab']);
             return $template;
-        }
-
-        /**
-         * EEAD get template data
-         *
-         * trigger `get_template_data_array` after template insert
-         *
-         * @access public
-         */
-        public function get_template_data() {
-            $template = $this->get_template_data_array(array(
-                'template_id' => eead_get_request('template_id'),
-                'source' => eead_get_request('source'),
-                'tab' => eead_get_request('tab'),
-            ));
-            if (!$template) {
-                wp_send_json_error();
-            }
-            wp_send_json_success($template);
-        }
-
-        /**
-         * Returns the instance.
-         *
-         * @since  3.6.0
-         * @return object
-         */
-        public static function get_instance() {
-            // If the single instance hasn't been set, set it now.
-            if (null == self::$instance) {
-                self::$instance = new self;
-            }
-            return self::$instance;
         }
 
     }

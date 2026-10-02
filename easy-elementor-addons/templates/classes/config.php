@@ -7,7 +7,7 @@ use EEADElements\Helper\EEAD_Helper;
 if (!defined('ABSPATH'))
     exit; // No access of directly access
 
-if (!class_exists('EEAD_Templates_Core_Config')) {
+if (!class_exists(__NAMESPACE__ . '\EEAD_Templates_Core_Config')) {
 
     /**
      * EEAD Templates Core config.
@@ -16,14 +16,6 @@ if (!class_exists('EEAD_Templates_Core_Config')) {
      *
      */
     class EEAD_Templates_Core_Config {
-        /*
-         * Instance of the class
-         *
-         * @access private
-         *
-         */
-
-        private static $instance = null;
 
         /*
          * Holds config data
@@ -107,7 +99,12 @@ if (!class_exists('EEAD_Templates_Core_Config')) {
          * @return string admin license page or plugin URI
          */
         public function get_license_page() {
-            return esc_url(admin_url('admin.php?page=eead-license-key'));
+            // No `eead-license-key` screen is registered by the plugin, so the old
+            // target was a dead link. An add-on that owns licensing can filter this;
+            // the dashboard is the fallback so the link always lands somewhere.
+            $url = apply_filters('eead_license_page_url', admin_url('admin.php?page=eead-settings'));
+
+            return esc_url($url);
         }
 
         /**
@@ -133,20 +130,6 @@ if (!class_exists('EEAD_Templates_Core_Config')) {
          */
         public function get($key = '') {
             return isset($this->config[$key]) ? $this->config[$key] : false;
-        }
-
-        /**
-         * Creates and returns an instance of the class
-         *
-         * @access public
-         *
-         * @return object
-         */
-        public static function get_instance() {
-            if (self::$instance == null) {
-                self::$instance = new self;
-            }
-            return self::$instance;
         }
 
     }

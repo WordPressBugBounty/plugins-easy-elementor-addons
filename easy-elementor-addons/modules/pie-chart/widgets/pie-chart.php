@@ -26,6 +26,18 @@ class PieChart extends Widget_Base {
 		return 'eead-element-icon eead-icons-pie-chart';
 	}
 
+	public function get_keywords() {
+		return ['pie chart', 'chart', 'doughnut', 'graph', 'eead'];
+	}
+
+	/**
+	 * Drop the inner .elementor-widget-container wrapper when Elementor's
+	 * Optimized Markup feature is active.
+	 */
+	public function has_widget_inner_wrapper(): bool {
+		return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+	}
+
 	public function get_categories() {
 		return ['easy-elementor-addons'];
 	}
@@ -87,7 +99,7 @@ class PieChart extends Widget_Base {
 						'color' => '#64b1d5',
 					),
 				),
-				'title_field' => '{{{ label }}}'
+				'title_field' => '{{ label }}'
 			]
 		);
 
@@ -629,7 +641,7 @@ class PieChart extends Widget_Base {
 		];
 
 		if (!empty($settings['chart_cutout_percentage']['size'])) {
-			$options['cutoutPercentage'] = $settings['chart_cutout_percentage']['size'];
+			$options['cutoutPercentage'] = $settings['chart_cutout_percentage']['size'] . '%';
 		}
 
 		$legend_style = [];
@@ -637,7 +649,6 @@ class PieChart extends Widget_Base {
 		$legend_style_dictionary = [
 			'boxWidth' => 'chart_legend_box_width',
 			'color' => 'chart_legend_font_color',
-			//'family' => 'chart_legend_font_family',
 			'size' => 'chart_legend_font_size',
 			'style' => 'chart_legend_font_style',
 			'weight' => 'chart_legend_font_weight',

@@ -22,16 +22,24 @@ class VideoPlayer extends Widget_Base {
         return 'eead-video-player';
     }
 
-    public function get_script_depends() {
-        return array();
-    }
-
     public function get_title() {
         return esc_html__('Video Player', 'easy-elementor-addons');
     }
 
     public function get_icon() {
         return 'eead-element-icon eead-icons-video-player';
+    }
+
+    public function get_keywords() {
+        return ['video player', 'video', 'youtube', 'vimeo', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
     }
 
     public function get_categories() {
@@ -396,7 +404,10 @@ class VideoPlayer extends Widget_Base {
         $settings = $this->get_settings_for_display();
 
         $this->add_render_attribute('overlay', [
-            'class' => 'eead-video-overlay'
+            'class' => 'eead-video-overlay',
+            'role' => 'button',
+            'tabindex' => '0',
+            'aria-label' => esc_html__('Play video', 'easy-elementor-addons')
         ]);
 
         $thumb_url = $this->get_thumbnail_url();
@@ -423,7 +434,7 @@ class VideoPlayer extends Widget_Base {
 
         $this->add_render_attribute('play_button', [
             'class' => 'eead-video-play-button',
-            'role' => 'button'
+            'aria-hidden' => 'true'
         ]);
         ?>
 
@@ -450,7 +461,9 @@ class VideoPlayer extends Widget_Base {
                 $this->add_render_attribute('video_player', 'class', 'eead-custom-play-button');
             }
 
-            echo wp_kses_post('<video ' . $this->get_render_attribute_string('video_player') . '></video>');
+            ?>
+            <video <?php $this->print_render_attribute_string('video_player'); ?>></video>
+            <?php
         } else {
             $embed_params = $this->get_embed_params();
             $embed_options = $this->get_embed_options();
@@ -499,7 +512,7 @@ class VideoPlayer extends Widget_Base {
 
             if ($settings['loop']) {
                 $video_properties = Embed::get_video_properties(esc_url($settings['youtube_url']));
-                $params['playlist'] = $video_properties['video_id'];
+                $params['playlist'] = $video_properties['video_id'] ?? '';
             }
 
             $params['wmode'] = 'opaque';
@@ -561,14 +574,23 @@ class VideoPlayer extends Widget_Base {
 
     public function get_iframe_thumbnail_url($url) {
         $settings = $this->get_settings_for_display();
-        $oembed = _wp_oembed_get_object();
-        $data = $oembed->get_data($url);
-        $thumb_url = $data->thumbnail_url;
+        $thumb_url = '';
 
         if ($settings['video_type'] === 'youtube') {
-            $url_fetch = explode("v=", $url);
-            $videoid = $url_fetch[1];
-            $thumb_url = 'http://img.youtube.com/vi/' . $videoid . '/maxresdefault.jpg';
+            $video_properties = Embed::get_video_properties($url);
+            if (!empty($video_properties['video_id'])) {
+                $thumb_url = 'https://img.youtube.com/vi/' . rawurlencode($video_properties['video_id']) . '/hqdefault.jpg';
+            }
+        } else {
+            $transient_key = 'eead_video_thumb_' . md5($url);
+            $thumb_url = get_transient($transient_key);
+
+            if (false === $thumb_url) {
+                $oembed = _wp_oembed_get_object();
+                $data = $oembed->get_data($url);
+                $thumb_url = ($data && !empty($data->thumbnail_url)) ? set_url_scheme($data->thumbnail_url, 'https') : '';
+                set_transient($transient_key, $thumb_url, DAY_IN_SECONDS);
+            }
         }
 
         return esc_url($thumb_url);

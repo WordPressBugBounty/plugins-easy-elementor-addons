@@ -33,6 +33,18 @@ class HorizontalTab extends Widget_Base {
         return 'eead-element-icon eead-icons-horizontal-tab';
     }
 
+    public function get_keywords() {
+        return ['tabs', 'horizontal tabs', 'tab', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -88,7 +100,7 @@ class HorizontalTab extends Widget_Base {
                 'type' => Controls_Manager::SELECT,
                 'label_block' => true,
                 'multiple' => false,
-                'options' => $this->get_pages(),
+                'options' => eead_get_pages(),
                 'condition' => ['content_type' => 'page']
             ]
         );
@@ -107,7 +119,7 @@ class HorizontalTab extends Widget_Base {
                 'label' => esc_html__('Select Template', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SELECT,
                 'default' => '0',
-                'options' => $this->get_elementor_templates(),
+                'options' => eead_get_elementor_templates(),
                 'label_block' => 'true',
                 'condition' => ['content_type' => 'elementor_template']
             ]
@@ -149,7 +161,7 @@ class HorizontalTab extends Widget_Base {
                         'wisiwyg_content' => 'Donec justo eros, luctus quis scelerisque id, ultricies sit amet odio. Vestibulum aliquam efficitur eleifend. Praesent dignissim faucibus ex vel sodales. Morbi aliquet libero at augue pharetra vehicula. Cras dapibus lorem efficitur nunc euismod convallis. Nunc molestie risus id lacinia consequat. Integer iaculis orci in ipsum vestibulum, non mattis justo ornare. Cras et lorem tempor ligula suscipit mollis. Nulla vitae augue non leo tempus finibus.'
                     ]
                 ],
-                'title_field' => '{{{title}}}'
+                'title_field' => '{{ title }}'
             ]
         );
 
@@ -435,7 +447,7 @@ class HorizontalTab extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'tab_buttons_alignment', [
                 'label' => esc_html__('Buttons Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -837,7 +849,7 @@ class HorizontalTab extends Widget_Base {
         ?>
         <div class="eead-horizontal-tab">
             <div class="eead-ht-container">
-                <div class="eead-ht-tabs">
+                <div class="eead-ht-tabs" role="tablist" aria-orientation="horizontal">
                     <?php $this->get_tabs(); ?>
                 </div>
 
@@ -858,7 +870,7 @@ class HorizontalTab extends Widget_Base {
                 if ($tab['enable'] == 'yes') {
                     $i++;
                     ?>
-                    <div class="eead-ht-tab <?php echo ($i == 1 ? 'eead-ht-active-tab' : ''); ?>" data-tabid="<?php echo esc_attr($i); ?>">
+                    <div class="eead-ht-tab <?php echo ($i == 1 ? 'eead-ht-active-tab' : ''); ?>" data-tabid="<?php echo esc_attr($i); ?>" role="tab" tabindex="0" aria-selected="<?php echo ($i == 1 ? 'true' : 'false'); ?>">
                         <?php Icons_Manager::render_icon($tab['icon'], ['aria-hidden' => 'true']); ?>
                         <span><?php echo esc_html($tab['title']); ?></span>
                     </div>
@@ -883,23 +895,23 @@ class HorizontalTab extends Widget_Base {
                             $page_id = $tab['page'];
                             $post = get_post($page_id);
 
-                            if ($post && $post->post_status === 'publish' && !post_password_required($post)) {
-                                if (\Elementor\Plugin::$instance->db->is_built_with_elementor($page_id)) {
-                                    echo \Elementor\Plugin::$instance->frontend->get_builder_content_for_display($page_id);
+                            if ($post && $post->post_status === 'publish' && !post_password_required($post) && (int) $page_id !== get_the_ID()) {
+                                if (\Elementor\Plugin::instance()->db->is_built_with_elementor($page_id)) {
+                                    echo \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($page_id); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Elementor-rendered content.
                                 } else {
                                     if ($post && !is_wp_error($post)) {
-                                        if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
-                                            echo do_shortcode($post->post_content);
+                                        if (\Elementor\Plugin::instance()->editor->is_edit_mode()) {
+                                            echo do_shortcode($post->post_content); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Published post content.
                                         } else {
-                                            echo apply_filters('the_content', $post->post_content);
+                                            echo apply_filters('the_content', $post->post_content); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core content filter output.
                                         }
                                     }
                                 }
                             }
-                        } elseif (isset($tab['content_type']) && $tab['content_type'] === 'elementor_template' && !empty($tab['elementor_template'])) {
-                            echo \Elementor\Plugin::$instance->frontend->get_builder_content_for_display($tab['elementor_template']);
+                        } elseif (isset($tab['content_type']) && $tab['content_type'] === 'elementor_template' && !empty($tab['elementor_template']) && 'publish' === get_post_status((int) $tab['elementor_template'])) {
+                            echo \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($tab['elementor_template']); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Elementor-rendered content.
                         } elseif (isset($tab['content_type']) && $tab['content_type'] === 'wisiwyg' && !empty($tab['wisiwyg_content'])) {
-                            echo wp_kses_post(parse_wisiwyg_content($tab['wisiwyg_content']));
+                            echo wp_kses_post(eead_parse_wysiwyg_content($tab['wisiwyg_content']));
                         }
                         ?>
                     </div>
@@ -907,39 +919,6 @@ class HorizontalTab extends Widget_Base {
                 }
             }
         }
-    }
-
-    protected function get_elementor_templates() {
-        $templates = $this->elementor()->templates_manager->get_source('local')->get_items();
-        $types = [];
-
-        if (empty($templates)) {
-            $template_options = ['0' => esc_html__('Template Not Found!', 'easy-elementor-addons')];
-        } else {
-            $template_options = ['0' => esc_html__('Select Template', 'easy-elementor-addons')];
-
-            foreach ($templates as $template) {
-                $template_options[$template['template_id']] = $template['title'] . ' (' . $template['type'] . ')';
-                $types[$template['template_id']] = $template['type'];
-            }
-        }
-
-        return $template_options;
-    }
-
-    protected function elementor() {
-        return Plugin::$instance;
-    }
-
-    protected function get_pages() {
-        $pages = get_pages();
-
-        $_pages = [];
-        foreach ($pages as $key => $object) {
-            $_pages[$object->ID] = ucfirst($object->post_title);
-        }
-
-        return $_pages;
     }
 
 }

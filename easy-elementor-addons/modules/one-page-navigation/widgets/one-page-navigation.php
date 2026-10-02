@@ -30,6 +30,18 @@ class OnePageNavigation extends Widget_Base {
         return 'eead-element-icon eead-icons-one-page-nav';
     }
 
+    public function get_keywords() {
+        return ['one page', 'navigation', 'dots', 'scroll', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -92,7 +104,7 @@ class OnePageNavigation extends Widget_Base {
                     ]
                 ],
                 'fields' => $repeater->get_controls(),
-                'title_field' => '{{{ section_title }}}'
+                'title_field' => '{{ section_title }}'
             ]
         );
 
@@ -721,7 +733,7 @@ class OnePageNavigation extends Widget_Base {
     }
 
     protected function render() {
-        $settings = $this->get_settings();
+        $settings = $this->get_settings_for_display();
 
         $this->add_render_attribute(
             'onepage-nav', [
@@ -744,8 +756,7 @@ class OnePageNavigation extends Widget_Base {
         <div class='eead-one-page-nav-container'>
             <ul <?php $this->print_render_attribute_string('onepage-nav'); ?>>
                 <?php
-                $count = 1;
-                foreach ($settings['nav_dots'] as $index => $dot) {
+                foreach ($settings['nav_dots'] as $dot) {
                     ?>
                     <li class="eead-one-page-nav-item">
                         <?php
@@ -757,7 +768,7 @@ class OnePageNavigation extends Widget_Base {
                             <?php
                         }
                         ?>
-                        <a href="#" data-row-id="<?php echo esc_attr($dot['section_id']); ?>">
+                        <a href="#" data-row-id="<?php echo esc_attr($dot['section_id']); ?>" aria-label="<?php echo esc_attr($dot['section_title']); ?>">
                             <span class="eead-nav-dot">
                                 <?php
                                 Icons_Manager::render_icon($dot['select_dot_icon'], ['aria-hidden' => 'true']);
@@ -766,7 +777,6 @@ class OnePageNavigation extends Widget_Base {
                         </a>
                     </li>
                     <?php
-                    $count++;
                 }
                 ?>
             </ul>

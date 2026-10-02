@@ -31,6 +31,18 @@ class Counter extends Widget_Base {
         return 'eead-element-icon eead-icons-counter';
     }
 
+    public function get_keywords() {
+        return ['counter', 'number', 'stats', 'odometer', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -266,7 +278,7 @@ class Counter extends Widget_Base {
                 'type' => Controls_Manager::COLOR,
                 'default' => '#333333',
                 'selectors' => [
-                    '{{WRAPPER}} .eead-counter-box.eadd-counter-style2 .eead-counter-icon:after' => 'background: {{VALUE}}',
+                    '{{WRAPPER}} .eead-counter-box.eead-counter-style2 .eead-counter-icon:after' => 'background: {{VALUE}}',
                 ],
                 'condition' => [
                     'counter_style' => 'style2'
@@ -443,6 +455,24 @@ class Counter extends Widget_Base {
             ]
         );
 
+        $this->add_responsive_control(
+            'counter_title_spacing', [
+                'label' => esc_html__('Spacing', 'easy-elementor-addons'),
+                'description' => esc_html__('Space between the number and the title.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 60,
+                    ]
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-counter-box .eead-counter-title' => 'margin-top: {{SIZE}}{{UNIT}};',
+                ]
+            ]
+        );
+
         $this->end_controls_section();
     }
 
@@ -465,7 +495,7 @@ class Counter extends Widget_Base {
             if ($counter_count) {
                 ?>
                 <div class="eead-counter">
-                    <?php if ($settings['icon']['value']) { ?>
+                    <?php if (!empty($settings['icon']['value'])) { ?>
                         <div class="eead-counter-icon">
                             <?php Icons_Manager::render_icon($settings['icon'], ['aria-hidden' => 'true']); ?>
                         </div>

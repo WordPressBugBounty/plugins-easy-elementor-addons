@@ -12,14 +12,13 @@ if (!function_exists('is_plugin_active')) {
 
 final class EEAD_Modules_Manager {
 
-    private function is_module_active($module_id) {
-        $options = get_option('eead_active_modules', []);
-        return true;
-    }
-
     public function __construct() {
         $this->require_files();
-        $this->register_modules();
+
+        // Deferred to `init` so widget labels contributed by add-ons are built
+        // after textdomains load. Elementor only instantiates widget types on
+        // first use, which is always later than this.
+        add_action('init', [$this, 'register_modules'], 20);
     }
 
     private function require_files() {
@@ -27,20 +26,18 @@ final class EEAD_Modules_Manager {
     }
 
     public function register_modules() {
-        $all_modules = \eead_get_all_widgets_list();
-        $default_modules = array_keys($all_modules);
-        $modules = get_option('eead_widgets') ? get_option('eead_widgets') : $default_modules;
-        
-        if ($modules) {
-            foreach ($modules as $module) {
-                if (!in_array($module, $default_modules)) {
-                    continue;
-                }
-                $class_name = str_replace('-', ' ', $module);
-                $class_name = str_replace(' ', '', ucwords($class_name));
-                $class_name = __NAMESPACE__ . '\\Modules\\' . $class_name . '\Module';
-                $class_name::instance();
+        foreach (\eead_get_enabled_widgets() as $module) {
+            $class_name = str_replace('-', ' ', $module);
+            $class_name = str_replace(' ', '', ucwords($class_name));
+            $class_name = __NAMESPACE__ . '\\Modules\\' . $class_name . '\Module';
+
+            // Add-ons contribute their own modules through `eead_all_widgets_list`,
+            // so the class may live in a plugin whose files are no longer readable.
+            if (!class_exists($class_name)) {
+                continue;
             }
+
+            $class_name::instance();
         }
     }
 

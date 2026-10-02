@@ -34,6 +34,18 @@ class Slider extends Widget_Base {
         return 'eead-element-icon eead-icons-slider';
     }
 
+    public function get_keywords() {
+        return ['slider', 'carousel', 'slideshow', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -123,7 +135,7 @@ class Slider extends Widget_Base {
                         'slider_button_link' => '#'
                     ]
                 ],
-                'title_field' => '{{{ slider_title }}}'
+                'title_field' => '{{ slider_title }}'
             ]
         );
 
@@ -1728,7 +1740,7 @@ class Slider extends Widget_Base {
                 'eead-slider-height-' . esc_attr($settings['slider_height_type']),
                 'eead-slider-show-nav-hover-' . ($settings['show_on_hover'] ? 'on' : 'off')
             ]
-        ],
+        ]
         );
         ?>
 
@@ -1766,7 +1778,7 @@ class Slider extends Widget_Base {
                     'data-title-anim' => isset($settings['title_animation']) ? esc_attr($settings['title_animation']) : 'none',
                     'data-subtitle-anim' => isset($settings['sub_title_animation']) ? esc_attr($settings['sub_title_animation']) : 'none',
                     'data-button-anim' => isset($settings['button_animation']) ? esc_attr($settings['button_animation']) : 'none'
-                ],
+                ]
             );
             ?>
 
@@ -1785,10 +1797,12 @@ class Slider extends Widget_Base {
                             if ($image) {
                                 $image_url = Group_Control_Image_Size::get_attachment_image_src($slider['slider_image']['id'], 'thumbnail', $settings);
 
+                                $image_alt = \Elementor\Control_Media::get_image_alt($slider['slider_image']);
+
                                 if ($image_url) {
-                                    echo '<img src="' . esc_url($image_url) . '">';
+                                    echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '">';
                                 } else {
-                                    echo '<img src="' . esc_url($slider['slider_image']['url']) . '">';
+                                    echo '<img src="' . esc_url($slider['slider_image']['url']) . '" alt="' . esc_attr($image_alt) . '">';
                                 }
                             }
                             ?>

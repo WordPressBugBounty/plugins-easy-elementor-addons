@@ -27,6 +27,18 @@ class StepFlow extends Widget_Base {
         return 'eead-element-icon eead-icons-step-flow';
     }
 
+    public function get_keywords() {
+        return ['step flow', 'steps', 'process', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -137,7 +149,7 @@ class StepFlow extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'content_alignment', [
                 'label' => esc_html__('Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -158,7 +170,7 @@ class StepFlow extends Widget_Base {
                 'default' => 'center',
                 'toggle' => true,
                 'selectors' => [
-                    '{{WRAPPER}} .elementor-widget-container' => 'text-align: {{VALUE}};'
+                    '{{WRAPPER}} .eead-step-flow' => 'text-align: {{VALUE}};'
                 ]
             ]
         );
@@ -168,6 +180,24 @@ class StepFlow extends Widget_Base {
                 'label' => esc_html__('Show Direction', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
                 'default' => 'yes',
+            ]
+        );
+
+        $this->add_control(
+            'direction_hide_on', [
+                'label' => esc_html__('Hide Direction On', 'easy-elementor-addons'),
+                'description' => esc_html__('Steps usually stack on smaller screens, where an arrow pointing sideways no longer leads anywhere.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'mobile',
+                'options' => [
+                    'none' => esc_html__('Never', 'easy-elementor-addons'),
+                    'tablet' => esc_html__('Tablet and Mobile', 'easy-elementor-addons'),
+                    'mobile' => esc_html__('Mobile', 'easy-elementor-addons'),
+                ],
+                'prefix_class' => 'eead-step-direction-hide-',
+                'condition' => [
+                    'show_direction' => 'yes',
+                ]
             ]
         );
 
@@ -580,7 +610,7 @@ class StepFlow extends Widget_Base {
                 'label' => esc_html__('Hover Color', 'easy-elementor-addons'),
                 'type' => Controls_Manager::COLOR,
                 'condition' => [
-                    'link[url]!' => ''
+                    'readmore_link[url]!' => ''
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .eead-steps-title a:hover' => 'color: {{VALUE}};',
@@ -836,7 +866,7 @@ class StepFlow extends Widget_Base {
             Group_Control_Typography::get_type(), [
                 'name' => 'readmore_typography',
                 'label' => esc_html__('Typography', 'easy-elementor-addons'),
-                'selector' => '{{WRAPPER}} .eead-step-flow-readmore',
+                'selector' => '{{WRAPPER}} .eead-step-readmore',
                 'separator' => 'before'
             ]
         );
@@ -847,7 +877,7 @@ class StepFlow extends Widget_Base {
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%'],
                 'selectors' => [
-                    '{{WRAPPER}} .eead-step-flow-readmore' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .eead-step-readmore' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ]
             ]
         );
@@ -858,7 +888,7 @@ class StepFlow extends Widget_Base {
                 'type' => Controls_Manager::DIMENSIONS,
                 'size_units' => ['px', '%', 'em'],
                 'selectors' => [
-                    '{{WRAPPER}} .eead-step-flow-readmore' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .eead-step-readmore' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ]
             ]
         );
@@ -878,7 +908,7 @@ class StepFlow extends Widget_Base {
                 'label' => esc_html__('Color', 'easy-elementor-addons'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .eead-step-flow-readmore' => 'color: {{VALUE}}',
+                    '{{WRAPPER}} .eead-step-readmore' => 'color: {{VALUE}}',
                 ]
             ]
         );
@@ -888,7 +918,7 @@ class StepFlow extends Widget_Base {
                 'label' => esc_html__('Background Color', 'easy-elementor-addons'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .eead-step-flow-readmore' => 'background: {{VALUE}}',
+                    '{{WRAPPER}} .eead-step-readmore' => 'background: {{VALUE}}',
                 ]
             ]
         );
@@ -898,7 +928,7 @@ class StepFlow extends Widget_Base {
                 'label' => esc_html__('Border Color', 'easy-elementor-addons'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .eead-step-flow-readmore' => 'border: 1px solid {{VALUE}}',
+                    '{{WRAPPER}} .eead-step-readmore' => 'border: 1px solid {{VALUE}}',
                 ]
             ]
         );
@@ -916,7 +946,7 @@ class StepFlow extends Widget_Base {
                 'label' => esc_html__('Color', 'easy-elementor-addons'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .eead-step-flow-readmore:hover' => 'color: {{VALUE}}',
+                    '{{WRAPPER}} .eead-step-readmore:hover' => 'color: {{VALUE}}',
                 ]
             ]
         );
@@ -926,7 +956,7 @@ class StepFlow extends Widget_Base {
                 'label' => esc_html__('Background Color', 'easy-elementor-addons'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .eead-step-flow-readmore:hover' => 'background: {{VALUE}}',
+                    '{{WRAPPER}} .eead-step-readmore:hover' => 'background: {{VALUE}}',
                 ]
             ]
         );
@@ -936,7 +966,7 @@ class StepFlow extends Widget_Base {
                 'label' => esc_html__('Border Color', 'easy-elementor-addons'),
                 'type' => Controls_Manager::COLOR,
                 'selectors' => [
-                    '{{WRAPPER}} .eead-step-flow-readmore:hover' => 'border: 1px solid {{VALUE}}',
+                    '{{WRAPPER}} .eead-step-readmore:hover' => 'border: 1px solid {{VALUE}}',
                 ]
             ]
         );
@@ -959,14 +989,17 @@ class StepFlow extends Widget_Base {
         $this->add_render_attribute('badge', 'class', 'eead-steps-label');
         $this->add_inline_editing_attributes('badge', 'none');
 
+        $this->add_inline_editing_attributes('title', 'basic');
+
         if (!empty($settings['readmore_link']['url'])) {
             $this->add_link_attributes('link', $settings['readmore_link']);
-            $this->add_inline_editing_attributes('link', 'basic', 'title');
 
             $title = sprintf('<a %s>%s</a>', $this->get_render_attribute_string('link'), esc_html($settings['title']));
+
+            $this->add_link_attributes('readmore', $settings['readmore_link']);
+            $this->add_render_attribute('readmore', 'class', 'eead-step-readmore');
         } else {
-            $this->add_inline_editing_attributes('title', 'basic');
-            $title = $settings['title'];
+            $title = esc_html($settings['title']);
         }
         ?>
         <div class="eead-step-flow">
@@ -992,7 +1025,7 @@ class StepFlow extends Widget_Base {
             </div>
 
             <<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_tag'])); ?> <?php $this->print_render_attribute_string('title'); ?>>
-                <?php echo esc_html($title); ?>
+                <?php echo wp_kses_post($title); ?>
             </<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_tag'])); ?>>
 
             <?php if ($settings['description']) { ?>
@@ -1000,7 +1033,7 @@ class StepFlow extends Widget_Base {
             <?php } ?>
 
             <?php if ($settings['show_readmore'] == 'yes' && !empty($settings['readmore_text']) && !empty($settings['readmore_link']['url'])) { ?>
-                <a href="<?php echo esc_url($settings['readmore_link']['url']); ?>" class="eead-step-readmore"><?php echo esc_html($settings['readmore_text']); ?></a>
+                <a <?php $this->print_render_attribute_string('readmore'); ?>><?php echo esc_html($settings['readmore_text']); ?></a>
             <?php } ?>
 
         </div>
@@ -1009,32 +1042,32 @@ class StepFlow extends Widget_Base {
 
     protected function render_arrow() {
         $settings = $this->get_settings_for_display();
-        $widgetID = $this->get_id();
+        $marker_id = 'eead-arrow-' . $this->get_id();
         if ($settings['show_direction'] === 'yes') {
             echo '<span class="eead-step-direction">';
             switch ($settings['arrow_style']) {
                 case 'style1':
-                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path marker-end="url(#' . esc_attr($widgetID) . ')" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="rotate(315 400 400)" d="m150 150 500 500"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($widgetID) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
+                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path marker-end="url(#' . esc_attr($marker_id) . ')" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="rotate(315 400 400)" d="m150 150 500 500"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($marker_id) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
                     break;
 
                 case 'style2':
-                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path d="M156.5 156.5q312 21 487 487" marker-end="url(#' . esc_attr($widgetID) . ')" transform="rotate(310 400 400)" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($widgetID) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
+                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path d="M156.5 156.5q312 21 487 487" marker-end="url(#' . esc_attr($marker_id) . ')" transform="rotate(310 400 400)" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($marker_id) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
                     break;
 
                 case 'style3':
-                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path d="M150 150q427 233 250 250-226 33 250 250" marker-end="url(#' . esc_attr($widgetID) . ')" transform="rotate(315 400 400)" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($widgetID) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
+                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path d="M150 150q427 233 250 250-226 33 250 250" marker-end="url(#' . esc_attr($marker_id) . ')" transform="rotate(315 400 400)" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($marker_id) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
                     break;
 
                 case 'style4':
-                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path d="M150 150q5 391 250 250 192-112 250 250" marker-end="url(#' . esc_attr($widgetID) . ')" transform="rotate(315 400 400)" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($widgetID) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
+                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path d="M150 150q5 391 250 250 192-112 250 250" marker-end="url(#' . esc_attr($marker_id) . ')" transform="rotate(315 400 400)" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($marker_id) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
                     break;
 
                 case 'style5':
-                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path d="M158.145 150q-108 408 500 500" marker-end="url(#' . esc_attr($widgetID) . ')" transform="rotate(315 400 400)" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($widgetID) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
+                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path d="M158.145 150q-108 408 500 500" marker-end="url(#' . esc_attr($marker_id) . ')" transform="rotate(315 400 400)" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($marker_id) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
                     break;
 
                 case 'style6':
-                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path d="M159.5 159.5q413 539 240.5 240.5Q85.5-126.5 640.5 640.5" marker-end="url(#' . esc_attr($widgetID) . ')" transform="rotate(315 400 400)" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($widgetID) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
+                    echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path d="M159.5 159.5q413 539 240.5 240.5Q85.5-126.5 640.5 640.5" marker-end="url(#' . esc_attr($marker_id) . ')" transform="rotate(315 400 400)" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($marker_id) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';
                     break;
             }
             echo '</span>';

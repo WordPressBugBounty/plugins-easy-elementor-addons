@@ -33,6 +33,18 @@ class AdvancedIconBox extends Widget_Base {
         return 'eead-element-icon eead-icons-icon-text';
     }
 
+    public function get_keywords() {
+        return ['icon box', 'icon', 'feature', 'box', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -189,9 +201,9 @@ class AdvancedIconBox extends Widget_Base {
                     'icon_inline' => '',
                 ],
                 'selectors_dictionary' => [
-                    'top' => '--eead-aib-display:block;--eead-aib-margin-bottom:var(--eead-aib-icon-spacing, 20px);',
-                    'left' => '--eead-aib-display:flex;--eead-aib-flex-flow:row;--eead-aib-text-align:left;--eead-aib-margin-bottom:0;',
-                    'right' => '--eead-aib-display:flex;--eead-aib-flex-flow:row-reverse;--eead-aib-text-align:right;--eead-aib-margin-bottom:0;'
+                    'top' => '--eead-aib-display:block;--eead-aib-flex-flow:column;--eead-aib-margin-bottom:var(--eead-aib-icon-spacing, 20px);',
+                    'left' => '--eead-aib-display:flex;--eead-aib-flex-flow:row;--eead-aib-text-align:left;--eead-aib-justify:flex-start;--eead-aib-margin-bottom:0;',
+                    'right' => '--eead-aib-display:flex;--eead-aib-flex-flow:row-reverse;--eead-aib-text-align:right;--eead-aib-justify:flex-end;--eead-aib-margin-bottom:0;'
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .eead-advanced-icon-box' => '{{VALUE}}',
@@ -218,8 +230,13 @@ class AdvancedIconBox extends Widget_Base {
                     ]
                 ],
                 'default' => 'center',
+                'selectors_dictionary' => [
+                    'left' => '--eead-aib-text-align:left;--eead-aib-justify:flex-start;',
+                    'center' => '--eead-aib-text-align:center;--eead-aib-justify:center;',
+                    'right' => '--eead-aib-text-align:right;--eead-aib-justify:flex-end;'
+                ],
                 'selectors' => [
-                    '{{WRAPPER}} .eead-advanced-icon-box' => '--eead-aib-text-align: {{VALUE}};',
+                    '{{WRAPPER}} .eead-advanced-icon-box' => '{{VALUE}}',
                 ],
                 'condition' => [
                     'icon_position' => 'top',
@@ -243,8 +260,8 @@ class AdvancedIconBox extends Widget_Base {
                 ],
                 'default' => 'left',
                 'selectors_dictionary' => [
-                    'left' => '--eead-aib-inline-flex-flow:row;--eead-aib-text-align:left;',
-                    'right' => '--eead-aib-inline-flex-flow:row-reverse;--eead-aib-text-align:right;'
+                    'left' => '--eead-aib-inline-flex-flow:row;--eead-aib-text-align:left;--eead-aib-justify:flex-start;',
+                    'right' => '--eead-aib-inline-flex-flow:row-reverse;--eead-aib-text-align:right;--eead-aib-justify:flex-end;'
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .eead-advanced-icon-box' => '{{VALUE}}',
@@ -1234,6 +1251,21 @@ class AdvancedIconBox extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'readmore_hover_text_decoration', [
+                'label' => esc_html__('Text Decoration', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => [
+                    '' => esc_html__('Default', 'easy-elementor-addons'),
+                    'none' => esc_html__('None', 'easy-elementor-addons'),
+                    'underline' => esc_html__('Underline', 'easy-elementor-addons'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-advanced-icon-box .eead-aib-button:hover' => 'text-decoration: {{VALUE}};',
+                ]
+            ]
+        );
+
         $this->add_group_control(
             Group_Control_Background::get_type(), [
                 'name' => 'readmore_hover_background',
@@ -1379,6 +1411,15 @@ class AdvancedIconBox extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'fill_height', [
+                'label' => esc_html__('Fill Height', 'easy-elementor-addons'),
+                'description' => esc_html__('Stretch the box to the full height of its column and keep the Read More button at the bottom, so a row of boxes lines up.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'prefix_class' => 'eead-aib-fill-height-',
+            ]
+        );
+
         $this->end_controls_section();
     }
 
@@ -1388,15 +1429,10 @@ class AdvancedIconBox extends Widget_Base {
         $has_icon = !empty($settings['selected_icon']['value']);
         $has_image = !empty($settings['image']['url']);
 
-        if ($has_icon && ('icon' == $settings['icon_type'])) {
-            $this->add_render_attribute('font-icon', [
-                'class' => $settings['selected_icon'],
-                'aria-hidden' => 'true'
-            ]);
-        } elseif ($has_image && ('image' == $settings['icon_type'])) {
+        if ($has_image && ('image' == $settings['icon_type'])) {
             $this->add_render_attribute('image-icon', [
-                'src' => esc_url($settings['image']['url']),
-                'alt' => esc_html($settings['title_text'])
+                'src' => $settings['image']['url'],
+                'alt' => wp_strip_all_tags($settings['title_text'])
             ]);
         }
 
@@ -1442,7 +1478,7 @@ class AdvancedIconBox extends Widget_Base {
             if ($settings['title_text']) {
                 ?>
                 <<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_size'])); ?> class="eead-aib-title">
-                    <span>
+                    <span <?php $this->print_render_attribute_string('title_text'); ?>>
                         <?php echo wp_kses($settings['title_text'], eead_allow_tags('title')); ?>
                     </span>
                 </<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_size'])); ?>>
@@ -1485,16 +1521,19 @@ class AdvancedIconBox extends Widget_Base {
         $settings = $this->get_settings_for_display();
 
         $align = $settings['text_align'] ? $settings['text_align'] : $settings['icon_position'];
+        $align = in_array($align, ['left', 'center', 'right'], true) ? $align : 'center';
         $title_separator_type = in_array($settings['title_separator_type'], $this->valid_svg_list()) ? $settings['title_separator_type'] : 'line';
-        $svg_image = EEAD_PATH . 'assets/img/divider/' . esc_attr($title_separator_type) . '-' . $align . '.svg';
+        $svg_image = EEAD_PATH . 'assets/img/divider/' . $title_separator_type . '-' . $align . '.svg';
 
         if (file_exists($svg_image)) {
             $file_path = $svg_image;
         } else {
-            $file_path = EEAD_PATH . 'assets/img/divider/' . esc_attr($title_separator_type) . '.svg';
+            $file_path = EEAD_PATH . 'assets/img/divider/' . $title_separator_type . '.svg';
         }
 
-        include($file_path);
+        if (file_exists($file_path)) {
+            echo file_get_contents($file_path); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Bundled static SVG file.
+        }
     }
 
     protected function render_button() {
@@ -1502,15 +1541,7 @@ class AdvancedIconBox extends Widget_Base {
         $this->add_render_attribute('readmore', 'class', ['eead-aib-button']);
 
         if (!empty($settings['readmore_link']['url'])) {
-            $this->add_render_attribute('readmore', 'href', $settings['readmore_link']['url']);
-
-            if ($settings['readmore_link']['is_external']) {
-                $this->add_render_attribute('readmore', 'target', '_blank');
-            }
-
-            if ($settings['readmore_link']['nofollow']) {
-                $this->add_render_attribute('readmore', 'rel', 'nofollow');
-            }
+            $this->add_link_attributes('readmore', $settings['readmore_link']);
         }
 
         if ($settings['readmore_hover_animation']) {
@@ -1547,7 +1578,8 @@ class AdvancedIconBox extends Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
 
-        $this->add_render_attribute('description_text', 'class', 'eead-advanced-icon-box-description');
+        $this->add_render_attribute('description_text', 'class', 'eead-aib-desc');
+        $this->add_inline_editing_attributes('description_text', 'advanced');
         $this->add_inline_editing_attributes('title_text', 'none');
         ?>
         <div class="eead-advanced-icon-box">
@@ -1580,7 +1612,7 @@ class AdvancedIconBox extends Widget_Base {
 
                 if ($settings['description_text']) {
                     ?>
-                    <div class="eead-aib-desc">
+                    <div <?php $this->print_render_attribute_string('description_text'); ?>>
                         <?php echo wp_kses_post($this->parse_text_editor($settings['description_text'])); ?>
                     </div>
                     <?php

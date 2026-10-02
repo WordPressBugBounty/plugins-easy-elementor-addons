@@ -38,6 +38,14 @@ class FlipBox extends Widget_Base {
         return ['3d', 'flip', 'box'];
     }
 
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -1193,19 +1201,15 @@ class FlipBox extends Widget_Base {
         $this->add_render_attribute('button', [
             'class' => [
                 'eead-fb-button',
-                $settings['button_hover_animation'] ? ' elementor-animation-' . esc_attr($settings['button_hover_animation']) : ''
-            ],
-            'href' => esc_url($settings['link']['url']),
-            'target' => $settings['link']['is_external'] ? '_blank' : '_self'
+                $settings['button_hover_animation'] ? ' elementor-animation-' . $settings['button_hover_animation'] : ''
+            ]
         ]);
 
+        $this->add_render_attribute('box_link', 'class', 'eead-fb-link');
 
-        $this->add_render_attribute('box_link', [
-            'class' => 'eead-fb-link',
-            'href' => esc_url($settings['link']['url'])
-        ]);
-        if ($settings['link']['is_external']) {
-            $this->add_render_attribute('box_link', 'target', '_blank');
+        if (!empty($settings['link']['url'])) {
+            $this->add_link_attributes('button', $settings['link']);
+            $this->add_link_attributes('box_link', $settings['link']);
         }
 
         if ($settings['graphic_element'] === 'icon') {
@@ -1225,7 +1229,7 @@ class FlipBox extends Widget_Base {
                     <div class="eead-fb-layer-inner">
                         <?php if ($settings['graphic_element'] === 'image' && !empty($settings['image']['url'])) { ?>
                             <div class="eead-fb-image">
-                                <?php echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'thumbnail', 'image')); ?>
+                                <?php Group_Control_Image_Size::print_attachment_image_html($settings, 'image', 'image'); ?>
                             </div>
                         <?php } elseif ($settings['graphic_element'] === 'icon' && !empty($settings['box_icon']['value'])) { ?>
                             <div <?php $this->print_render_attribute_string('icon-wrapper'); ?>>
@@ -1276,7 +1280,7 @@ class FlipBox extends Widget_Base {
                     <?php
                     if ($settings['link_click'] === 'box') {
                         ?>
-                        <a <?php $this->print_render_attribute_string('box_link'); ?>></a>;
+                        <a <?php $this->print_render_attribute_string('box_link'); ?>></a>
                         <?php
                     }
                     ?>

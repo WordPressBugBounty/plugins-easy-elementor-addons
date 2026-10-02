@@ -31,6 +31,18 @@ class PopupModal extends Widget_Base {
 		return 'eead-element-icon eead-icons-popup';
 	}
 
+	public function get_keywords() {
+		return ['popup', 'modal', 'lightbox', 'eead'];
+	}
+
+	/**
+	 * Drop the inner .elementor-widget-container wrapper when Elementor's
+	 * Optimized Markup feature is active.
+	 */
+	public function has_widget_inner_wrapper(): bool {
+		return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+	}
+
 	public function get_categories() {
 		return ['easy-elementor-addons'];
 	}
@@ -102,7 +114,7 @@ class PopupModal extends Widget_Base {
 				'label' => esc_html__('Select Template', 'easy-elementor-addons'),
 				'type' => Controls_Manager::SELECT,
 				'default' => '0',
-				'options' => get_elementor_templates(),
+				'options' => eead_get_elementor_templates(),
 				'label_block' => false,
 				'condition' => [
 					'popup_type' => 'template',
@@ -168,7 +180,7 @@ class PopupModal extends Widget_Base {
 				'label_block' => true,
 				'default' => esc_html__('Click Here', 'easy-elementor-addons'),
 				'condition' => [
-					'trigger_type' => ['button', 'text']
+					'trigger_type' => ['button']
 				]
 			]
 		);
@@ -1427,7 +1439,8 @@ class PopupModal extends Widget_Base {
 				esc_attr('eead-popup-modal-trigger-' . $settings['trigger_type']),
 				esc_attr('eead-modal-popup-btn-' . $id)
 			],
-			'data-id' => esc_attr($id)
+			'data-id' => esc_attr($id),
+			'aria-haspopup' => 'dialog'
 		]);
 
 		if ($settings['trigger_type'] == 'selector') {
@@ -1440,6 +1453,7 @@ class PopupModal extends Widget_Base {
 
 		if ($settings['trigger_type'] == 'icon') {
 			$this->add_render_attribute('popup-modal-button', 'class', 'eead-popup-modal-trigger-icon-' . esc_attr($settings['icon_style']));
+			$this->add_render_attribute('popup-modal-button', 'aria-label', esc_html__('Open popup', 'easy-elementor-addons'));
 		}
 		?>
 
@@ -1451,14 +1465,12 @@ class PopupModal extends Widget_Base {
 				}
 				echo '<span>' . esc_html($settings['trigger_text']) . '</span>';
 			} elseif ($settings['trigger_type'] == 'image') {
-				echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'trigger_image_thumbnail', 'trigger_image'));
+				Group_Control_Image_Size::print_attachment_image_html($settings, 'trigger_image_thumbnail', 'trigger_image');
 				if ($settings['enable_image_trigger_icon']) {
 					echo '<span>';
 					Icons_Manager::render_icon($settings['image_trigger_icon'], ['aria-hidden' => 'true']);
 					echo '</span>';
 				}
-			} elseif ($settings['trigger_type'] == 'text') {
-				echo '<span>' . esc_html($settings['trigger_text']) . '</span>';
 			} elseif ($settings['trigger_type'] == 'icon') {
 				Icons_Manager::render_icon($settings['trigger_icon'], ['aria-hidden' => 'true']);
 			}
@@ -1491,7 +1503,7 @@ class PopupModal extends Widget_Base {
 				<div class="modal__container animated animated-fast <?php echo esc_attr($settings['popup_animation']) ?>" role="dialog" aria-modal="true" aria-labelledby="modal-<?php echo esc_attr($id); ?>-title">
 					<?php if ($settings['close_button'] == 'yes') { ?>
 						<div class="eead-popup-modal-close">
-							<button class="modal__close" aria-label="<?php echo esc_html__('Close Modal', 'easy-elementor-addons'); ?>" data-micromodal-close>
+							<button class="modal__close" aria-label="<?php echo esc_attr__('Close Modal', 'easy-elementor-addons'); ?>" data-micromodal-close>
 								<span class="icofont-close-line" data-micromodal-close></span>
 							</button>
 						</div>
@@ -1509,7 +1521,7 @@ class PopupModal extends Widget_Base {
 						<?php
 						switch ($settings['popup_type']) {
 							case 'image':
-								echo '<img src="' . esc_url($settings['image']['url']) . '">';
+								echo '<img src="' . esc_url($settings['image']['url']) . '" alt="' . esc_attr(\Elementor\Control_Media::get_image_alt($settings['image'])) . '">';
 								break;
 
 							case 'content':
@@ -1520,7 +1532,9 @@ class PopupModal extends Widget_Base {
 
 							case 'template':
 								$template_id = $settings['templates'];
-								echo Plugin::$instance->frontend->get_builder_content_for_display($template_id);
+								if (!empty($template_id) && 'publish' === get_post_status((int) $template_id)) {
+									echo Plugin::instance()->frontend->get_builder_content_for_display($template_id); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Elementor-rendered content.
+								}
 								break;
 
 							case 'custom-html':

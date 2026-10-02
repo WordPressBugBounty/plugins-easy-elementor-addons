@@ -31,6 +31,18 @@ class SocialShare extends Widget_Base {
         return 'eead-element-icon eead-icons-social-share';
     }
 
+    public function get_keywords() {
+        return ['social share', 'share', 'social', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -65,7 +77,7 @@ class SocialShare extends Widget_Base {
 
         $this->add_control(
             'pintrest', [
-                'label' => esc_html__('Pintrest', 'easy-elementor-addons'),
+                'label' => esc_html__('Pinterest', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
                 'label_on' => esc_html__('On', 'easy-elementor-addons'),
                 'label_off' => esc_html__('Off', 'easy-elementor-addons'),
@@ -111,15 +123,6 @@ class SocialShare extends Widget_Base {
         );
 
         $this->add_control(
-            'digg', [
-                'label' => esc_html__('Digg', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SWITCHER,
-                'label_on' => esc_html__('On', 'easy-elementor-addons'),
-                'label_off' => esc_html__('Off', 'easy-elementor-addons')
-            ]
-        );
-
-        $this->add_control(
             'reddit', [
                 'label' => esc_html__('Reddit', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
@@ -129,26 +132,8 @@ class SocialShare extends Widget_Base {
         );
 
         $this->add_control(
-            'delicious', [
-                'label' => esc_html__('Delicious', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SWITCHER,
-                'label_on' => esc_html__('On', 'easy-elementor-addons'),
-                'label_off' => esc_html__('Off', 'easy-elementor-addons')
-            ]
-        );
-
-        $this->add_control(
             'wordpress', [
                 'label' => esc_html__('WordPress', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SWITCHER,
-                'label_on' => esc_html__('On', 'easy-elementor-addons'),
-                'label_off' => esc_html__('Off', 'easy-elementor-addons')
-            ]
-        );
-
-        $this->add_control(
-            'skype', [
-                'label' => esc_html__('Skype', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
                 'label_on' => esc_html__('On', 'easy-elementor-addons'),
                 'label_off' => esc_html__('Off', 'easy-elementor-addons')
@@ -496,125 +481,39 @@ class SocialShare extends Widget_Base {
     /** Render Layout */
     protected function render() {
         $settings = $this->get_settings_for_display();
-        $facebook = esc_html($settings['facebook']);
-        $twitter = esc_html($settings['twitter']);
-        $pintrest = esc_html($settings['pintrest']);
-        $linkedin = esc_html($settings['linkedin']);
-        $vkontakte = esc_html($settings['vkontakte']);
-        $tumblr = esc_html($settings['tumblr']);
-        $blogger = esc_html($settings['blogger']);
-        $digg = esc_html($settings['digg']);
-        $reddit = esc_html($settings['reddit']);
-        $delicious = esc_html($settings['delicious']);
-        $wordpress = esc_html($settings['wordpress']);
-        $skype = esc_html($settings['skype']);
-        $telegram = esc_html($settings['telegram']);
-        $whatsapp = esc_html($settings['whatsapp']);
-        $line = esc_html($settings['line']);
-        $email = esc_html($settings['email']);
         $show_text = $settings['show_text'];
         $show_icon = $settings['show_icon'];
 
-        $title = get_the_title();
-        $url = get_the_permalink();
+        $title = rawurlencode(html_entity_decode(wp_strip_all_tags(get_the_title()), ENT_QUOTES, 'UTF-8'));
+        $url = rawurlencode(get_the_permalink());
         $hover_animation = $settings['hover_animation'];
+
+        $networks = [
+            'facebook' => ['class' => 'facebook', 'icon' => 'icofont-facebook', 'label' => esc_html__('Facebook', 'easy-elementor-addons'), 'href' => 'https://www.facebook.com/sharer/sharer.php?u=' . $url . '&t=' . $title],
+            'twitter' => ['class' => 'twitter', 'icon' => 'icofont-x-twitter', 'label' => esc_html__('Twitter', 'easy-elementor-addons'), 'href' => 'https://x.com/intent/tweet?text=' . $title . '&url=' . $url],
+            'pintrest' => ['class' => 'pinterest', 'icon' => 'icofont-pinterest', 'label' => esc_html__('Pinterest', 'easy-elementor-addons'), 'href' => 'https://pinterest.com/pin/create/button/?url=' . $url],
+            'linkedin' => ['class' => 'linkedin', 'icon' => 'icofont-linkedin', 'label' => esc_html__('Linkedin', 'easy-elementor-addons'), 'href' => 'https://www.linkedin.com/shareArticle?mini=true&url=' . $url . '&title=' . $title],
+            'vkontakte' => ['class' => 'vkontakte', 'icon' => 'icofont-vk', 'label' => esc_html__('Vkontakte', 'easy-elementor-addons'), 'href' => 'https://vk.com/share.php?url=' . $url . '&title=' . $title],
+            'tumblr' => ['class' => 'tumblr', 'icon' => 'icofont-tumblr', 'label' => esc_html__('Tumblr', 'easy-elementor-addons'), 'href' => 'https://www.tumblr.com/share/link?url=' . $url . '&name=' . $title],
+            'blogger' => ['class' => 'blogger', 'icon' => 'icofont-blogger', 'label' => esc_html__('Blogger', 'easy-elementor-addons'), 'href' => 'https://www.blogger.com/blog-this.g?u=' . $url . '&n=' . $title],
+            'reddit' => ['class' => 'reddit', 'icon' => 'icofont-reddit', 'label' => esc_html__('Reddit', 'easy-elementor-addons'), 'href' => 'https://reddit.com/submit?url=' . $url . '&title=' . $title],
+            'wordpress' => ['class' => 'wordpress', 'icon' => 'icofont-brand-wordpress', 'label' => esc_html__('WordPress', 'easy-elementor-addons'), 'href' => 'https://wordpress.com/press-this.php?u=' . $url . '&t=' . $title],
+            'telegram' => ['class' => 'telegram', 'icon' => 'icofont-telegram', 'label' => esc_html__('Telegram', 'easy-elementor-addons'), 'href' => 'https://t.me/share/url?url=' . $url . '&text=' . $title],
+            'whatsapp' => ['class' => 'whatsapp', 'icon' => 'icofont-whatsapp', 'label' => esc_html__('Whatsapp', 'easy-elementor-addons'), 'href' => 'https://api.whatsapp.com/send?text=' . $title . '%20' . $url],
+            'line' => ['class' => 'line', 'icon' => 'icofont-line', 'label' => esc_html__('Line', 'easy-elementor-addons'), 'href' => 'https://lineit.line.me/share/ui?url=' . $url . '&text=' . $title],
+            'email' => ['class' => 'email', 'icon' => 'icofont-envelope', 'label' => esc_html__('Email', 'easy-elementor-addons'), 'href' => 'mailto:?subject=' . $title . '&body=' . $url]
+        ];
 
         echo '<div class="eead-social-share-container">';
 
-        if ($facebook == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-facebook elementor-animation-' . esc_attr($hover_animation) . '" href="http://www.facebook.com/sharer/sharer.php?u=' . esc_url($url) . '&amp;t=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-facebook"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Facebook', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($twitter == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-twitter elementor-animation-' . esc_attr($hover_animation) . '" href="https://twitter.com/intent/tweet?text=' . esc_html($title) . '&url=' . esc_url($url) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-x-twitter"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Twitter', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($pintrest == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-pinterest elementor-animation-' . esc_attr($hover_animation) . '" href="http://pinterest.com/pin/create/button/?url=' . esc_url($url) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-pinterest"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Pintrest', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($linkedin == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-linkedin elementor-animation-' . esc_attr($hover_animation) . '" href="http://www.linkedin.com/shareArticle?mini=true&amp;url=' . esc_url($url) . '&title=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-linkedin"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Linkedin', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($vkontakte == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-vkontakte elementor-animation-' . esc_attr($hover_animation) . '" href="http://vk.com/share.php?url=' . esc_url($url) . '&title=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-vk"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Vkontakte', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($tumblr == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-tumblr elementor-animation-' . esc_attr($hover_animation) . '" href="https://www.tumblr.com/share/link?url=' . esc_url($url) . '&name=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-tumblr"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Tumblr', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($blogger == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-blogger elementor-animation-' . esc_attr($hover_animation) . '" href="https://www.blogger.com/blog-this.g?u=' . esc_url($url) . '&n=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-blogger"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Blogger', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($digg == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-digg elementor-animation-' . esc_attr($hover_animation) . '" href="http://digg.com/submit?url=' . esc_url($url) . '&title=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-digg"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Digg', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($reddit == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-reddit elementor-animation-' . esc_attr($hover_animation) . '" href="https://reddit.com/submit?url=' . esc_url($url) . '&title=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-reddit"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Reddit', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($delicious == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-evernote elementor-animation-' . esc_attr($hover_animation) . '" href="https://www.evernote.com/clip.action?url=' . esc_url($url) . '&title=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-evernote"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Evernote', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($wordpress == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-wordpress elementor-animation-' . esc_attr($hover_animation) . '" href="https://wordpress.com/press-this.php?u=' . esc_url($url) . '&t=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-brand-wordpress"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('WordPress', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($skype == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-skype elementor-animation-' . esc_attr($hover_animation) . '" href="https://web.skype.com/share?url=' . esc_url($url) . '&text=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-skype"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Skype', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($telegram == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-telegram elementor-animation-' . esc_attr($hover_animation) . '" href="https://t.me/share/url?url=' . esc_url($url) . '&text=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-telegram"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Telegram', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($whatsapp == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-whatsapp elementor-animation-' . esc_attr($hover_animation) . '" href="https://api.whatsapp.com/send?phone=&text=' . esc_html($title) . " " . esc_url($url) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-whatsapp"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Whatsapp', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($line == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-line elementor-animation-' . esc_attr($hover_animation) . '" href="https://lineit.line.me/share/ui?url=' . esc_url($url) . '&text=' . esc_html($title) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-line"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Line', 'easy-elementor-addons') . '</span>' : '';
-            echo '</a>';
-        }
-        if ($email == 'yes') {
-            echo '<a target="_blank" class="eead-social-share-link eead-email elementor-animation-' . esc_attr($hover_animation) . '" href="mailto:?Subject=' . esc_html($title) . '&Body=' . esc_url($url) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon icofont-envelope"></i>' : '';
-            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html__('Email', 'easy-elementor-addons') . '</span>' : '';
+        foreach ($networks as $key => $network) {
+            if (!isset($settings[$key]) || $settings[$key] !== 'yes') {
+                continue;
+            }
+
+            echo '<a target="_blank" rel="noopener noreferrer" class="eead-social-share-link eead-' . esc_attr($network['class']) . ' elementor-animation-' . esc_attr($hover_animation) . '" href="' . esc_url($network['href']) . '">';
+            echo $show_icon == 'yes' ? '<i class="eead-icon ' . esc_attr($network['icon']) . '"></i>' : '';
+            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html($network['label']) . '</span>' : '';
             echo '</a>';
         }
         echo '</div>';

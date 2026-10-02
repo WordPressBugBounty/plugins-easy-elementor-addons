@@ -30,12 +30,20 @@ class ImageComparison extends Widget_Base {
         return 'eead-element-icon eead-icons-compare';
     }
 
-    public function get_categories() {
-        return ['easy-elementor-addons'];
+    public function get_keywords() {
+        return ['image comparison', 'before after', 'compare', 'eead'];
     }
 
-    public function get_style_depends() {
-        return ['image-compare'];
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
+    public function get_categories() {
+        return ['easy-elementor-addons'];
     }
 
     public function get_script_depends() {
@@ -369,10 +377,10 @@ class ImageComparison extends Widget_Base {
         $id = $this->get_id();
 
         $compare_settings = [
-            'id' => esc_attr('eead-image-compare-' . $id),
+            'id' => 'eead-image-compare-' . $id,
             'orientation' => $settings['orientation'] == 'horizontal' ? false : true,
             'smoothing' => $settings['smoothing'] == 'yes' ? true : false,
-            'smoothing_amount' => $settings['smoothing_intensity']['size'] ? $settings['smoothing_intensity']['size'] : 600,
+            'smoothing_amount' => !empty($settings['smoothing_intensity']['size']) ? $settings['smoothing_intensity']['size'] : 600,
             'before_label' => $settings['before_label'] ? esc_html($settings['before_label']) : false,
             'after_label' => $settings['after_label'] ? esc_html($settings['after_label']) : false,
             'show_before_after_label' => ($settings['show_before_after_label'] == 'yes' || $settings['show_before_after_label'] == 'hover') ? true : false,
@@ -388,7 +396,7 @@ class ImageComparison extends Widget_Base {
 
         $this->add_render_attribute([
             'image-compare' => [
-                'id' => esc_attr('eead-image-compare-' . $id),
+                'id' => 'eead-image-compare-' . $id,
                 'class' => ['eead-image-compare'],
                 'data-settings' => [
                     wp_json_encode($compare_settings),
@@ -403,8 +411,8 @@ class ImageComparison extends Widget_Base {
         <div class="eead-image-comparison">
             <div <?php $this->print_render_attribute_string('image-compare'); ?>>
                 <?php
-                echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'thumbnail_size', 'before_image'));
-                echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'thumbnail_size', 'after_image'));
+                Group_Control_Image_Size::print_attachment_image_html($settings, 'thumbnail_size', 'before_image');
+                Group_Control_Image_Size::print_attachment_image_html($settings, 'thumbnail_size', 'after_image');
                 ?>
             </div>
         </div>

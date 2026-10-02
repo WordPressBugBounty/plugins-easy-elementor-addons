@@ -11,7 +11,6 @@ use Elementor\Icons_Manager;
 use Elementor\Group_Control_Border;
 use Elementor\Group_Control_Box_Shadow;
 use Elementor\Group_Control_Background;
-use Elementor\Plugin;
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
@@ -32,6 +31,18 @@ class ImageGallery extends Widget_Base {
 
     public function get_icon() {
         return 'eead-element-icon eead-icons-gallery-grid';
+    }
+
+    public function get_keywords() {
+        return ['gallery', 'image gallery', 'filterable', 'masonry', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
     }
 
     public function get_categories() {
@@ -928,10 +939,18 @@ class ImageGallery extends Widget_Base {
                 foreach ($images as $value) {
                     $filter_label = $settings['gallery_type'] == 'filterable' ? $value['filter_label'] : '';
                     ?>
-                    <div class="eead-ig-item-box <?php echo esc_attr(strtolower(str_replace(' ', '-', $filter_label))); ?>">
+                    <div class="eead-ig-item-box <?php echo esc_attr($this->get_filter_class($filter_label)); ?>">
                         <div class="eead-ig-item">
                             <div class="eead-ig-item-thumbnail">
-                                <img src="<?php echo esc_url($value['url']); ?>">
+                                <?php
+                                if (!empty($value['id'])) {
+                                    echo wp_get_attachment_image($value['id'], 'large', false, ['loading' => 'lazy']);
+                                } else {
+                                    ?>
+                                    <img src="<?php echo esc_url($value['url']); ?>" alt="">
+                                    <?php
+                                }
+                                ?>
                             </div>
 
                             <div class="eead-ig-item-caption <?php echo esc_attr($settings['image_hover_style']); ?>">
@@ -956,15 +975,16 @@ class ImageGallery extends Widget_Base {
             </div>
         </div>
         <?php
-        if (Plugin::instance()->editor->is_edit_mode()) {
-            $this->render_editor_script();
-        }
     }
 
     protected function get_caption($image_id) {
         $settings = $this->get_settings_for_display();
         $caption_title = $caption_text = '';
         $image_obj = get_post($image_id);
+
+        if (!$image_obj) {
+            return;
+        }
 
         if ($settings['caption_type'] == 'caption') {
             $caption_text = $image_obj->post_excerpt;
@@ -986,15 +1006,19 @@ class ImageGallery extends Widget_Base {
         }
     }
 
+    protected function get_filter_class($label) {
+        return $label ? 'eead-ig-' . sanitize_html_class(sanitize_title($label)) : '';
+    }
+
     protected function get_images() {
         $settings = $this->get_settings_for_display();
         $gallery = [];
         $i = 0;
-        foreach ($settings['filterable_image_gallery'] as $item) {
-            foreach ($item['image_group'] as $key => $image) {
+        foreach ($settings['filterable_image_gallery'] as $index => $item) {
+            foreach ($item['image_group'] as $image) {
                 $gallery[$i]['id'] = $image['id'];
                 $gallery[$i]['url'] = $image['url'];
-                $gallery[$i]['filter_label'] = !empty($item['filter_label']) ? $item['filter_label'] : 'Group-' . ($key + 1);
+                $gallery[$i]['filter_label'] = !empty($item['filter_label']) ? $item['filter_label'] : esc_html__('Group ', 'easy-elementor-addons') . ($index + 1);
                 $i++;
             }
         }
@@ -1023,7 +1047,7 @@ class ImageGallery extends Widget_Base {
                         }
                         $active_class = empty($settings['filter_all_label']) && $index == 0 ? ' eead-ig-active' : '';
                         ?>
-                        <div class="eead-ig-filter<?php echo esc_attr($active_class); ?>" data-filter=".<?php echo esc_attr(strtolower(str_replace(' ', '-', $filter_label))); ?>">
+                        <div class="eead-ig-filter<?php echo esc_attr($active_class); ?>" data-filter=".<?php echo esc_attr($this->get_filter_class($filter_label)); ?>">
                             <?php echo esc_html($filter_label); ?>
                         </div>
                         <?php
@@ -1035,59 +1059,5 @@ class ImageGallery extends Widget_Base {
         }
     }
 
-    protected function render_editor_script() {
-        $id = '#eead-image-gallery-container-' . $this->get_id();
-        ?>
-        <script type="text/javascript">
-            jQuery(document).ready(function ($) {
-                setTimeout(function () {
-                    var $gallery_container = $('<?php echo esc_attr($id); ?>');
-                    var $gallery = $gallery_container.find('.eead-ig-wrap');
-                    var $settings = $gallery_container.data('settings');
-
-                    if ($settings.layout == 'masonry' || $settings.layout == 'grid') {
-                        var layout = $settings.layout == 'grid' ? 'fitRows' : 'masonry';
-                        var filterValue = $gallery_container.find('.eead-ig-filter-list .eead-ig-filter').first().data('filter');
-
-                        $gallery.imagesLoaded().done(function () {
-                            $gallery.isotope({
-                                itemSelector: '.eead-ig-item-box',
-                                layoutMode: layout,
-                                percentPosition: true,
-                                stagger: 30,
-                                transitionDuration: $settings.duration + 'ms',
-                                filter: filterValue
-                            });
-                        });
-
-                        $gallery_container.on('click', '.eead-ig-filter', function () {
-                            var $this = $(this),
-                                filterValue = $this.attr('data-filter');
-
-                            $this.siblings().removeClass('eead-ig-active');
-                            $this.addClass('eead-ig-active');
-                            $gallery.isotope({
-                                itemSelector: '.eead-ig-item-box',
-                                layoutMode: layout,
-                                percentPosition: true,
-                                stagger: 30,
-                                transitionDuration: $settings.duration + 'ms',
-                                filter: filterValue
-                            });
-                        });
-
-                        $gallery_container.addClass('eead-isotope-initialized');
-
-                        // Init Popup
-                        lightGallery(document.getElementById($gallery_container.attr('id')), {
-                            selector: '.eead-ig-lightbox',
-                            thumbnail: false,
-                        });
-                    }
-                }, 2000);
-            });
-        </script>
-        <?php
-    }
 
 }

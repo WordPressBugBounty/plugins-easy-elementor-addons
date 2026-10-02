@@ -10,7 +10,6 @@ use Elementor\Utils;
 use Elementor\Repeater;
 use Elementor\Group_Control_Background;
 use Elementor\Group_Control_Box_Shadow;
-use Elementor\Group_Control_Border;
 use Elementor\Group_Control_Typography;
 use Elementor\Group_Control_Image_Size;
 
@@ -37,6 +36,14 @@ class LogoGrid extends Widget_Base {
 
     public function get_keywords() {
         return [];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
     }
 
     public function get_categories() {
@@ -514,7 +521,7 @@ class LogoGrid extends Widget_Base {
         $settings = $this->get_settings_for_display();
 
         $this->add_render_attribute('logo-grid', 'class', 'eead-logo-grid');
-        $this->add_render_attribute('logo-grid', 'class', 'eead-logo-grid-border-' . esc_attr($settings['border_type']));
+        $this->add_render_attribute('logo-grid', 'class', 'eead-logo-grid-border-' . $settings['border_type']);
 
         if ($settings['grayscale_normal'] === 'yes') {
             $this->add_render_attribute('logo-grid', 'class', 'grayscale-normal');
@@ -529,9 +536,12 @@ class LogoGrid extends Widget_Base {
             <?php
             $count = 1;
             $logo_count = count($settings['logos']);
-            $last_row_items = $logo_count % $settings['columns'] == 0 ? $settings['columns'] : $logo_count % $settings['columns'];
-            $tablet_last_row_items = $logo_count % $settings['columns_tablet'] == 0 ? $settings['columns_tablet'] : $logo_count % $settings['columns_tablet'];
-            $mobile_last_row_items = $logo_count % $settings['columns_mobile'] == 0 ? $settings['columns_mobile'] : $logo_count % $settings['columns_mobile'];
+            $columns = max(1, (int) $settings['columns']);
+            $columns_tablet = !empty($settings['columns_tablet']) ? max(1, (int) $settings['columns_tablet']) : 2;
+            $columns_mobile = !empty($settings['columns_mobile']) ? max(1, (int) $settings['columns_mobile']) : 1;
+            $last_row_items = $logo_count % $columns == 0 ? $columns : $logo_count % $columns;
+            $tablet_last_row_items = $logo_count % $columns_tablet == 0 ? $columns_tablet : $logo_count % $columns_tablet;
+            $mobile_last_row_items = $logo_count % $columns_mobile == 0 ? $columns_mobile : $logo_count % $columns_mobile;
 
             foreach ($settings['logos'] as $item) {
                 if (!empty($item['logo_image']['url'])) {

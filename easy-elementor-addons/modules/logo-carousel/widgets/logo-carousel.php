@@ -33,6 +33,18 @@ class LogoCarousel extends Widget_Base {
         return 'eead-element-icon eead-icons-logo-carousel';
     }
 
+    public function get_keywords() {
+        return ['logo carousel', 'logo', 'carousel', 'clients', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -75,10 +87,29 @@ class LogoCarousel extends Widget_Base {
         );
 
         $repeater->add_control(
+            'logo_url', [
+                'label' => esc_html__('Link', 'easy-elementor-addons'),
+                'type' => Controls_Manager::URL,
+                'dynamic' => [
+                    'active' => true,
+                ],
+                'placeholder' => 'https://www.your-link.com',
+                'default' => [
+                    'url' => '',
+                ]
+            ]
+        );
+
+        // Legacy text link - only shown when it still holds a value.
+        $repeater->add_control(
             'logo_link', [
-                'label' => esc_html__('Logo Link', 'easy-elementor-addons'),
+                'label' => esc_html__('Link (old)', 'easy-elementor-addons'),
                 'type' => Controls_Manager::TEXT,
-                'label_block' => true
+                'label_block' => true,
+                'description' => esc_html__('This field is deprecated. Please move the URL to the Link field above and clear this field.', 'easy-elementor-addons'),
+                'condition' => [
+                    'logo_link!' => ''
+                ]
             ]
         );
 
@@ -104,7 +135,7 @@ class LogoCarousel extends Widget_Base {
                     ]
                 ],
                 'fields' => $repeater->get_controls(),
-                'title_field' => '{{{ title }}}'
+                'title_field' => '{{ title }}'
             ]
         );
 
@@ -112,7 +143,8 @@ class LogoCarousel extends Widget_Base {
             'link_new_tab', [
                 'label' => esc_html__('Open Link in New Tab', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
-                'default' => 'yes'
+                'default' => 'yes',
+                'description' => esc_html__('Applies to links in the "Link (old)" field only. Use the link options of the Link field for new links.', 'easy-elementor-addons')
             ]
         );
 
@@ -978,7 +1010,7 @@ class LogoCarousel extends Widget_Base {
             $params['next_icon'] = $settings['next_icon_arrow']['value'];
         }
 
-        $params = json_encode($params);
+        $params = wp_json_encode($params);
 
         $this->add_render_attribute('logo_container', [
             'class' => [
@@ -999,10 +1031,21 @@ class LogoCarousel extends Widget_Base {
                     }
                     $image_html = '<img src="' . esc_url($image_url) . '" alt="' . esc_attr(Control_Media::get_image_alt($item['image'])) . '" />';
 
+                    $link = isset($item['logo_url']) && is_array($item['logo_url']) ? $item['logo_url'] : [];
+                    if (empty($link['url']) && !empty($item['logo_link'])) {
+                        // Backward compatibility with the old text link field.
+                        $link = [
+                            'url' => $item['logo_link'],
+                            'is_external' => $target === '_blank' ? 'on' : ''
+                        ];
+                    }
+
                     echo '<div class="eead-logo-slide">';
-                    if (!empty($item['logo_link'])) {
+                    if (!empty($link['url'])) {
+                        $link_key = 'logo-link-' . $item['_id'];
+                        $this->add_link_attributes($link_key, $link);
                         ?>
-                        <a href="<?php echo esc_url($item['logo_link']); ?>" target="<?php echo esc_attr($target); ?>">
+                        <a <?php $this->print_render_attribute_string($link_key); ?>>
                             <?php echo wp_kses_post($image_html); ?>
                         </a>
                         <?php

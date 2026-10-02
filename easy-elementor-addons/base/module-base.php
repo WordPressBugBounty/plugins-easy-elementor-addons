@@ -8,13 +8,7 @@ if (!defined('ABSPATH'))
 abstract class Module_Base {
 
     /**
-     * @var \ReflectionClass
-     */
-    private $reflection;
-    private $components = [];
-
-    /**
-     * @var Element_Pack_Module_Base
+     * @var Module_Base[]
      */
     protected static $_instances = [];
 
@@ -40,30 +34,16 @@ abstract class Module_Base {
     }
 
     public function __construct() {
-        $this->reflection = new \ReflectionClass($this);
-
-        add_action('elementor/widgets/widgets_registered', [$this, 'init_widgets']);
+        add_action('elementor/widgets/register', [$this, 'init_widgets']);
     }
 
-    public function init_widgets() {
-        $widget_manager = \Elementor\Plugin::instance()->widgets_manager;
+    public function init_widgets($widgets_manager) {
+        $namespace = substr(static::class, 0, strrpos(static::class, '\\'));
 
         foreach ($this->get_widgets() as $widget) {
-            $class_name = $this->reflection->getNamespaceName() . '\Widgets\\' . $widget;
-            $widget_manager->register_widget_type(new $class_name());
+            $class_name = $namespace . '\Widgets\\' . $widget;
+            $widgets_manager->register(new $class_name());
         }
-    }
-
-    public function add_component($id, $instance) {
-        $this->components[$id] = $instance;
-    }
-
-    public function get_component($id) {
-        if (isset($this->components[$id])) {
-            return $this->components[$id];
-        }
-
-        return false;
     }
 
 }

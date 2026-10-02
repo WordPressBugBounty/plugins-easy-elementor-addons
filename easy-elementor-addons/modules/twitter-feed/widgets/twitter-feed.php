@@ -26,6 +26,18 @@ class TwitterFeed extends Widget_Base {
         return 'eead-element-icon eead-icons-twitter-x';
     }
 
+    public function get_keywords() {
+        return ['twitter', 'tweet', 'x', 'feed', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -119,15 +131,11 @@ class TwitterFeed extends Widget_Base {
             ]
         );
 
-        $prefill_options = [];
-        if (is_single()) {
-            $prefill_options = [
-                'post_title' => esc_html__('Post Title', 'easy-elementor-addons'),
-                'excerpt' => esc_html__('Post Excerpt', 'easy-elementor-addons')
-            ];
-        }
-
-        $prefill_options['custom'] = 'Custom';
+        $prefill_options = [
+            'post_title' => esc_html__('Post Title', 'easy-elementor-addons'),
+            'excerpt' => esc_html__('Post Excerpt', 'easy-elementor-addons'),
+            'custom' => esc_html__('Custom', 'easy-elementor-addons')
+        ];
         $this->add_control(
             'prefill_text_hashtag', [
                 'label' => esc_html__('Pre Fill Text', 'easy-elementor-addons'),
@@ -245,7 +253,7 @@ class TwitterFeed extends Widget_Base {
         ]);
 
         $this->add_render_attribute('video', [
-            'href' => $settings['url_video'],
+            'href' => esc_url($settings['url_video']),
         ]);
         ?>
         <blockquote <?php $this->print_render_attribute_string('blockquote'); ?>><a <?php $this->print_render_attribute_string('video'); ?>></a></blockquote>
@@ -260,27 +268,10 @@ class TwitterFeed extends Widget_Base {
         ]);
 
         $this->add_render_attribute('post', [
-            'href' => $settings['url_post']
+            'href' => esc_url($settings['url_post'])
         ]);
         ?>
         <blockquote <?php $this->print_render_attribute_string('blockquote'); ?>><a <?php $this->print_render_attribute_string('post'); ?>></a></blockquote>
-        <?php
-    }
-
-    public function get_list_html($settings) {
-        if ($settings['embed_type'] === 'list') {
-            $this->add_render_attribute('list', 'class', 'twitter-timeline');
-        }
-
-        $this->add_render_attribute('list', [
-            'href' => $settings['url_list'],
-            'data-height' => $settings['height_list']['size'],
-            'data-theme' => $settings['theme_list'],
-            'data-lang' => $settings['language'],
-            'data-partner' => 'twitter-deck'
-        ]);
-        ?>
-        <a <?php $this->print_render_attribute_string('list'); ?>> </a>
         <?php
     }
 
@@ -288,7 +279,7 @@ class TwitterFeed extends Widget_Base {
 
         $this->add_render_attribute('hashtag', [
             'class' => 'twitter-hashtag-button',
-            'href' => 'https://twitter.com/intent/tweet?button_hashtag=' . esc_attr($settings['hashtag']),
+            'href' => 'https://x.com/intent/tweet?button_hashtag=' . rawurlencode(ltrim($settings['hashtag'], '#')),
             'data-lang' => $settings['language']
         ]);
 
@@ -309,21 +300,19 @@ class TwitterFeed extends Widget_Base {
         }
         $this->add_render_attribute('hashtag', 'data-url', $settings['hashtag_url']);
         ?>
-        <a <?php $this->print_render_attribute_string('hashtag'); ?>>Tweet<?php echo esc_html($settings['hashtag']); ?> </a>
+        <a <?php $this->print_render_attribute_string('hashtag'); ?>><?php
+            /* translators: %s: hashtag */
+            echo esc_html(sprintf(__('Tweet %s', 'easy-elementor-addons'), $settings['hashtag']));
+            ?></a>
         <?php
     }
 
     public function current_post_title() {
-        global $post;
-        $title = $post->post_title;
-        return $title;
+        return get_the_title();
     }
 
     public function current_post_excerpt() {
-        global $post;
-        if (has_excerpt($post->ID)) {
-            return get_the_excerpt($post->ID);
-        }
+        return has_excerpt() ? get_the_excerpt() : '';
     }
 
 }

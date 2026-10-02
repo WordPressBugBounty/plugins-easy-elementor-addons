@@ -28,6 +28,18 @@ class LinkEffect extends Widget_Base {
         return 'eead-element-icon eead-icons-link';
     }
 
+    public function get_keywords() {
+        return ['link effect', 'link', 'hover effect', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -368,20 +380,27 @@ class LinkEffect extends Widget_Base {
     /** Render Layout */
     protected function render() {
         $settings = $this->get_settings_for_display();
-        $link = $settings['link']['url'] ? $settings['link']['url'] : '#';
         $link_text = !empty($settings['text']) ? $settings['text'] : '';
         $link_secondary_text = !empty($settings['secondary_text']) ? $settings['secondary_text'] : '';
 
         $effect_one = ['effect-4', 'effect-5', 'effect-19', 'effect-20'];
         $effect_two = ['effect-10', 'effect-11', 'effect-15', 'effect-16', 'effect-17', 'effect-18'];
 
+        $this->add_render_attribute('eead-link', 'class', ['eead-link', 'eead-link-' . $settings['effect']]);
+
+        if (!empty($settings['link']['url'])) {
+            $this->add_link_attributes('eead-link', $settings['link']);
+        } else {
+            $this->add_render_attribute('eead-link', 'href', '#');
+        }
+
         if (in_array($settings['effect'], $effect_one)) {
-            $this->add_render_attribute('eead-link-text', 'data-hover', esc_html($link_text));
+            $this->add_render_attribute('eead-link-text', 'data-hover', $link_text);
         } else if (in_array($settings['effect'], $effect_two)) {
-            $this->add_render_attribute('eead-link-text-2', 'data-hover', esc_html($link_text));
+            $this->add_render_attribute('eead-link', 'data-hover', $link_text);
         }
         ?>
-        <a href="<?php echo esc_url($link); ?>" class="eead-link eead-link-<?php echo esc_attr($settings['effect']); ?>" <?php $this->print_render_attribute_string('eead-link-text-2'); ?>>
+        <a <?php $this->print_render_attribute_string('eead-link'); ?>>
             <span <?php $this->print_render_attribute_string('eead-link-text'); ?>>
                 <?php echo esc_html($link_text); ?>
             </span>

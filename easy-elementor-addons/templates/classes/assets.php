@@ -7,7 +7,7 @@ use EEADElements\Templates;
 if (!defined('ABSPATH'))
     exit; // No access of directly access
 
-if (!class_exists('EEAD_Templates_Assets')) {
+if (!class_exists(__NAMESPACE__ . '\EEAD_Templates_Assets')) {
 
     /**
      * EEAD Templates Assets.
@@ -16,13 +16,6 @@ if (!class_exists('EEAD_Templates_Assets')) {
      *
      */
     class EEAD_Templates_Assets {
-        /*
-         * Instance of the class
-         *
-         * @access private
-         */
-
-        private static $instance = null;
 
         /**
          * EEAD_Templates_Assets constructor.
@@ -80,7 +73,6 @@ if (!class_exists('EEAD_Templates_Assets')) {
             );
             $button = Templates\eead_elementor_templates()->config->get('eead_elementor_templates');
             wp_localize_script('eead-addons-editor-js', 'EEADData', apply_filters('eead-addons-core/assets/editor/localize', array(
-                'eead_image_dir' => EEAD_URL . 'templates/assets/images/hash-icon.svg',
                 'nonce' => wp_create_nonce('eead_editor_nonce'),
                 'EEADEditorBtn' => $button,
                 'modalRegions' => $this->get_modal_region(),
@@ -117,37 +109,16 @@ if (!class_exists('EEAD_Templates_Assets')) {
         public function load_footer_scripts() {
             $scripts = glob(EEAD_PATH . 'templates/editor/*.php');
 
+            // Marionette reads these templates with $('script#id').html(), so the
+            // markup has to be printed as-is. Each partial is static plugin
+            // markup that escapes its own dynamic output.
             array_map(function ($file) {
                 $name = basename($file, '.php');
 
-                // Start output buffering
-                ob_start();
+                printf('<script type="text/html" id="%s">', esc_attr('views-eead-' . $name));
                 include $file;
-                $template_content = ob_get_clean();
-                $template_content_escaped = wp_json_encode($template_content);
-
-                printf(
-                    '<script type="text/html" id="%1$s">%2$s</script>',
-                    esc_attr('views-eead-' . $name),
-                    esc_attr(substr($template_content_escaped, 1, -1))
-                );
+                echo '</script>';
             }, $scripts);
-        }
-
-        /**
-         * Get Instance
-         *
-         * Creates and returns an instance of the class.
-         *
-         * @access public
-         *
-         * @return object
-         */
-        public static function get_instance() {
-            if (self::$instance == null) {
-                self::$instance = new self;
-            }
-            return self::$instance;
         }
 
     }

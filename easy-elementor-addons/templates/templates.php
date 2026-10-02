@@ -7,7 +7,7 @@ use EEADElements\Templates\Types;
 if (!defined('ABSPATH'))
     exit;
 
-if (!class_exists('EEAD_Templates')) {
+if (!class_exists(__NAMESPACE__ . '\EEAD_Templates')) {
 
     class EEAD_Templates {
 
@@ -70,7 +70,7 @@ if (!class_exists('EEAD_Templates')) {
 
 }
 
-if (!function_exists('eead_elementor_templates')) {
+if (!function_exists(__NAMESPACE__ . '\eead_elementor_templates')) {
 
     function eead_elementor_templates() {
         return EEAD_Templates::get_instance();

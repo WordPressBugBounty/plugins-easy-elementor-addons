@@ -30,6 +30,18 @@ class PopupVideo extends Widget_Base {
         return 'eead-element-icon eead-icons-video-popup';
     }
 
+    public function get_keywords() {
+        return ['popup video', 'video', 'lightbox', 'play', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -153,7 +165,7 @@ class PopupVideo extends Widget_Base {
                 'placeholder' => esc_html__('Play Video', 'easy-elementor-addons'),
                 'default' => esc_html__('Play', 'easy-elementor-addons'),
                 'condition' => [
-                    'trigger_type' => ['button', 'text']
+                    'trigger_type' => ['button']
                 ]
             ]
         );
@@ -869,14 +881,12 @@ class PopupVideo extends Widget_Base {
             }
             echo '<span>' . esc_html($settings['play_text']) . '</span>';
         } elseif ($settings['trigger_type'] == 'image') {
-            echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, 'play_image_thumbnail', 'play_image'));
+            Group_Control_Image_Size::print_attachment_image_html($settings, 'play_image_thumbnail', 'play_image');
             if ($settings['enable_image_play_icon']) {
                 echo '<span>';
                 Icons_Manager::render_icon($settings['image_play_icon'], ['aria-hidden' => 'true']);
                 echo '</span>';
             }
-        } elseif ($settings['trigger_type'] == 'text') {
-            echo '<span>' . esc_html($settings['play_text']) . '</span>';
         } elseif ($settings['trigger_type'] == 'icon') {
             Icons_Manager::render_icon($settings['play_icon'], ['aria-hidden' => 'true']);
         }
@@ -909,7 +919,7 @@ class PopupVideo extends Widget_Base {
             ];
 
             $this->add_render_attribute('popup-video', [
-                'href' => $settings['youtube_url'],
+                'href' => esc_url($settings['youtube_url']),
                 'data-settings' => wp_json_encode($video_settings)
             ]);
         } elseif ($settings['video_type'] == 'vimeo') {
@@ -923,7 +933,7 @@ class PopupVideo extends Widget_Base {
             ];
 
             $this->add_render_attribute('popup-video', [
-                'href' => $settings['vimeo_url'],
+                'href' => esc_url($settings['vimeo_url']),
                 'data-settings' => wp_json_encode($video_settings)
             ]);
         } elseif ($settings['video_type'] == 'custom') {

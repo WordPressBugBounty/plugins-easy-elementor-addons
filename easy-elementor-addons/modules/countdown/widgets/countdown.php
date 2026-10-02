@@ -31,6 +31,18 @@ class Countdown extends Widget_Base {
         return 'eead-element-icon eead-icons-count-down';
     }
 
+    public function get_keywords() {
+        return ['countdown', 'timer', 'coming soon', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -133,7 +145,7 @@ class Countdown extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'countdown_alignment', [
                 'label' => esc_html__('Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -818,7 +830,7 @@ class Countdown extends Widget_Base {
         $this->add_group_control(
             Group_Control_Typography::get_type(), [
                 'name' => 'countdown_expire_message_typography',
-                'selector' => '.eead-countdown-finish-text',
+                'selector' => '{{WRAPPER}} .eead-countdown-finish-text',
                 'condition' => [
                     'countdown_expire_type' => 'text',
                 ]
@@ -832,7 +844,7 @@ class Countdown extends Widget_Base {
                 'size_units' => ['px', '%', 'em'],
                 'separator' => 'before',
                 'selectors' => [
-                    '{{WRAPPER}} .eead-countdown-container' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    '{{WRAPPER}} .eead-countdown-finish-message' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
                 ],
                 'condition' => [
                     'countdown_expire_type' => 'text',
@@ -846,8 +858,15 @@ class Countdown extends Widget_Base {
     protected function render() {
 
         $settings = $this->get_settings_for_display();
-        $get_due_date = esc_attr($settings['countdown_due_time']);
-        $due_date = gmdate("M d Y G:i:s", strtotime($get_due_date));
+        $due_date = '';
+        if (!empty($settings['countdown_due_time'])) {
+            try {
+                $ts = (new \DateTime($settings['countdown_due_time'], wp_timezone()))->getTimestamp();
+                $due_date = gmdate('Y-m-d\TH:i:s\Z', $ts);
+            } catch (\Exception $e) {
+                $due_date = '';
+            }
+        }
         $separator = '';
 
         $this->add_render_attribute('eead-countdown', [
@@ -859,16 +878,8 @@ class Countdown extends Widget_Base {
             $separator = '<span class="eead-countdown-separator">:</span>';
         }
 
-        if ($settings['countdown_expire_type'] == 'text') {
-            if (!empty($settings['countdown_expiry_text'])) {
-                $this->add_render_attribute('eead-countdown', 'data-expiry-text', esc_html($settings['countdown_expiry_text']));
-            }
-
-            if (!empty($settings['countdown_expiry_text_title'])) {
-                $this->add_render_attribute('eead-countdown', 'data-expiry-title', esc_html($settings['countdown_expiry_text_title']));
-            }
-        } elseif ($settings['countdown_expire_type'] == 'url') {
-            $this->add_render_attribute('eead-countdown', 'data-redirect-url', esc_url($settings['countdown_expiry_redirection']));
+        if ($settings['countdown_expire_type'] == 'url') {
+            $this->add_render_attribute('eead-countdown', 'data-redirect-url', esc_url_raw($settings['countdown_expiry_redirection']));
         }
         ?>
 
@@ -940,6 +951,18 @@ class Countdown extends Widget_Base {
                 ?>
             </div>
 
+            <?php if ($settings['countdown_expire_type'] == 'text') { ?>
+                <template class="eead-countdown-expiry">
+                    <div class="eead-countdown-finish-message">
+                        <?php if (!empty($settings['countdown_expiry_text_title'])) { ?>
+                            <h4 class="expiry-title"><?php echo esc_html($settings['countdown_expiry_text_title']); ?></h4>
+                        <?php } ?>
+                        <?php if (!empty($settings['countdown_expiry_text'])) { ?>
+                            <div class="eead-countdown-finish-text"><?php echo wp_kses_post($settings['countdown_expiry_text']); ?></div>
+                        <?php } ?>
+                    </div>
+                </template>
+            <?php } ?>
         </div>
         <?php
     }

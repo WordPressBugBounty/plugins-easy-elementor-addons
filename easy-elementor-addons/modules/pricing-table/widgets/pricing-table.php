@@ -33,6 +33,18 @@ class PricingTable extends Widget_Base {
         return 'eead-element-icon eead-icons-pricing-table';
     }
 
+    public function get_keywords() {
+        return ['pricing table', 'price', 'plan', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -131,7 +143,7 @@ class PricingTable extends Widget_Base {
                         'list' => 'Enter Features List'
                     ]
                 ],
-                'title_field' => '{{{ list }}}',
+                'title_field' => '{{ list }}',
             ]
         );
 
@@ -204,6 +216,15 @@ class PricingTable extends Widget_Base {
                     'style6' => esc_html__('Style 6', 'easy-elementor-addons'),
                     'style7' => esc_html__('Style 7', 'easy-elementor-addons'),
                 ],
+            ]
+        );
+
+        $this->add_control(
+            'fill_height', [
+                'label' => esc_html__('Fill Height', 'easy-elementor-addons'),
+                'description' => esc_html__('Stretch the table to the full height of its column and keep the button at the bottom, so plans side by side line up.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'prefix_class' => 'eead-pt-fill-height-',
             ]
         );
 
@@ -589,6 +610,35 @@ class PricingTable extends Widget_Base {
             ]
         );
 
+        $this->add_responsive_control(
+            'feature_list_items_align', [
+                'label' => esc_html__('Items Alignment', 'easy-elementor-addons'),
+                'type' => Controls_Manager::CHOOSE,
+                'options' => [
+                    'left' => [
+                        'title' => esc_html__('Left', 'easy-elementor-addons'),
+                        'icon' => 'eicon-text-align-left',
+                    ],
+                    'center' => [
+                        'title' => esc_html__('Center', 'easy-elementor-addons'),
+                        'icon' => 'eicon-text-align-center',
+                    ],
+                    'right' => [
+                        'title' => esc_html__('Right', 'easy-elementor-addons'),
+                        'icon' => 'eicon-text-align-right',
+                    ],
+                ],
+                'selectors_dictionary' => [
+                    'left' => 'flex-start',
+                    'center' => 'center',
+                    'right' => 'flex-end',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-pricing-table ul.eead-pricing-listing li' => 'justify-content: {{VALUE}};',
+                ],
+            ]
+        );
+
         $this->add_control(
             'feature_list_color', [
                 'label' => esc_html__('Color', 'easy-elementor-addons'),
@@ -748,7 +798,7 @@ class PricingTable extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'button_align', [
                 'label' => esc_html__('Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -973,9 +1023,12 @@ class PricingTable extends Widget_Base {
             <div class="eead-pricing-body">
                 <?php $this->get_pricing_list(); ?>
 
-                <?php if (!empty($settings['link']['url'])) { ?>
+                <?php
+                if (!empty($settings['link']['url'])) {
+                    $this->add_link_attributes('button', $settings['link']);
+                    ?>
                     <div class="eead-pricing-button">
-                        <a href="<?php echo esc_url($settings['link']['url']); ?>" <?php echo ($settings['link']['is_external'] ? ' target="_blank"' : '') . ($settings['link']['nofollow'] ? ' rel="nofollow"' : ''); ?>>
+                        <a <?php $this->print_render_attribute_string('button'); ?>>
                             <?php echo wp_kses_post($settings['link_text']); ?>
                             <?php Icons_Manager::render_icon($settings['link_icon'], ['aria-hidden' => 'true']); ?>
                         </a>

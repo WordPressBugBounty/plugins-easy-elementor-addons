@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Tiled Posts Widget
+ * Lottie Widget
  */
 class Lottie extends Widget_Base {
 
@@ -30,6 +30,18 @@ class Lottie extends Widget_Base {
 
     public function get_icon() {
         return 'eead-element-icon eead-icons-lottie';
+    }
+
+    public function get_keywords() {
+        return ['lottie', 'animation', 'json', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
     }
 
     public function get_categories() {
@@ -324,13 +336,13 @@ class Lottie extends Widget_Base {
             if (!empty($settings['lottie_json']['url'])) {
                 $lottie_settings['path'] = $settings['lottie_json']['url'];
             } else {
-                $lottie_settings['path'] = $settings['lottie_url'];
+                $lottie_settings['path'] = esc_url_raw($settings['lottie_url']);
             }
 
             $this->add_render_attribute('wrapper', [
                 'id' => esc_attr('eead-lottie-' . $this->get_id()),
                 'class' => 'eead-lottie',
-                'data-settings' => json_encode($lottie_settings)
+                'data-settings' => wp_json_encode($lottie_settings)
             ]);
 
             if ($settings['lottie_link_check']) {
@@ -341,8 +353,8 @@ class Lottie extends Widget_Base {
                 }
             }
             ?>
-            <<?php echo esc_attr($tag); ?> <?php $this->print_render_attribute_string('wrapper'); ?> <?php $this->print_render_attribute_string('link'); ?>>
-                &nbsp
+            <<?php echo esc_attr($tag); ?> <?php $this->print_render_attribute_string('wrapper'); ?>>
+                &nbsp;
             </<?php echo esc_attr($tag); ?>>
         </div>
         <?php

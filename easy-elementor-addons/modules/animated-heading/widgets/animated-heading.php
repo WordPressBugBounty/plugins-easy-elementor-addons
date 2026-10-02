@@ -28,6 +28,18 @@ class AnimatedHeading extends Widget_Base {
         return 'eead-element-icon eead-icons-animated-heading';
     }
 
+    public function get_keywords() {
+        return ['animated heading', 'heading', 'animation', 'typing', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -101,7 +113,7 @@ class AnimatedHeading extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'alignment', [
                 'label' => esc_html__('Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -365,14 +377,7 @@ class AnimatedHeading extends Widget_Base {
 
             <?php
             if (!empty($settings['heading_link']['url'])) {
-                $this->add_render_attribute('url', 'href', esc_url($settings['heading_link']['url']));
-                if ($settings['heading_link']['is_external']) {
-                    $this->add_render_attribute('url', 'target', '_blank');
-                }
-
-                if (!empty($settings['heading_link']['nofollow'])) {
-                    $this->add_render_attribute('url', 'rel', 'nofollow');
-                }
+                $this->add_link_attributes('url', $settings['heading_link']);
                 ?>
                 <a <?php $this->print_render_attribute_string('url'); ?>>
                     <?php
@@ -391,7 +396,7 @@ class AnimatedHeading extends Widget_Base {
                     <span <?php $this->print_render_attribute_string('animated-heading'); ?>>
                         <?php
                         if ($settings['layout'] != 'typed') {
-                            echo esc_attr(rtrim($settings['animated_heading'], ','));
+                            echo esc_html(rtrim($settings['animated_heading'], ','));
                         }
                         ?>
                     </span>

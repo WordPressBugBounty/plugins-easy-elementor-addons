@@ -7,8 +7,6 @@ use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
 use Elementor\Group_Control_Typography;
 use Elementor\Group_Control_Background;
-use DateTime;
-use Elementor\Group_Control_Box_Shadow;
 use Elementor\Group_Control_Border;
 
 if (!defined('ABSPATH')) {
@@ -40,6 +38,18 @@ class Weather extends Widget_Base {
     }
 
     /* Category */
+
+    public function get_keywords() {
+        return ['weather', 'forecast', 'temperature', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
 
     public function get_categories() {
         return ['easy-elementor-addons'];
@@ -710,7 +720,9 @@ class Weather extends Widget_Base {
         $weatherstackApiKey = isset($eead_general_settings['weather_api_key']) ? $eead_general_settings['weather_api_key'] : NULL;
 
         if (empty($weatherstackApiKey)) {
-            echo esc_html__('Please enter the API Key first!', 'easy-elementor-addons');
+            if (current_user_can('edit_posts')) {
+                echo esc_html__('Please enter the API Key first!', 'easy-elementor-addons');
+            }
             return;
         }
 
@@ -722,7 +734,6 @@ class Weather extends Widget_Base {
         $layout = esc_attr($settings['layout']);
         $temp = $data['current']['temperature'];
 
-        $weather_icon = $data['current']['weather_icons'][0];
         $weather_description = $data['current']['weather_descriptions'][0];
         $localtime = $data['location']['localtime'];
         $observation_time = $data['current']['observation_time'];
@@ -771,12 +782,11 @@ class Weather extends Widget_Base {
         <div class="eead-weather-container eead-<?php echo esc_attr($layout); ?>">
             <div class="eead-weather">
                 <div class="eead-weather-header">
-                    <!--<img src="<?php echo esc_url($weather_icon) ?>" alt="<?php echo esc_attr($weather_description); ?>">-->
                     <div class="eead-weather-info">
                         <div class="eead-weather-location">
                             <i class="icofont-location-pin"></i>
                             <span class="eead-weather-city"><?php echo esc_html($data['location']['name']); ?>,</span>
-                            <span class="eead-weather-country"><?php echo esc_html($data['location']['country']); ?></s>
+                            <span class="eead-weather-country"><?php echo esc_html($data['location']['country']); ?></span>
                         </div>
 
                         <?php
@@ -903,14 +913,13 @@ class Weather extends Widget_Base {
             113 => 'wi-day-sunny'
         );
         echo '<div class="eead-weather-icon">';
-        echo '<i class="wi ' . esc_attr($icon_mapping[$weather_code]) . '"></i>';
+        echo '<i class="wi ' . esc_attr($icon_mapping[$weather_code] ?? 'wi-na') . '"></i>';
         echo '</div>';
     }
 
     protected function get_time($datetime, $format) {
-        $date = date_create_from_format('Y-m-d', $datetime);
-        $date = new DateTime($date);
-        return date_i18n($format, date_timestamp_get($date));
+        $ts = strtotime($datetime);
+        return $ts ? date_i18n($format, $ts) : '';
     }
 
     protected function get_temp($temp) {
@@ -921,7 +930,7 @@ class Weather extends Widget_Base {
             $temp_unit = '&#176;C';
         } else if ($unit == 's') {
             $temp = ($temp + 273.15);
-            $temp_unit = '&#176;K';
+            $temp_unit = 'K';
         } else if ($unit == 'f') {
             $temp = ($temp * 1.8) + 32;
             $temp_unit = '&#176;F';
@@ -939,18 +948,14 @@ class Weather extends Widget_Base {
         $city = $settings['city_location'];
         $country = $settings['country_location'];
         if (empty($city) or empty($country)) {
-            echo esc_html__('Oops! It seems that you have left either the city or the country field empty', 'easy-elementor-addons');
+            if (current_user_can('edit_posts')) {
+                echo esc_html__('Oops! It seems that you have left either the city or the country field empty', 'easy-elementor-addons');
+            }
             return;
         }
 
-
-        if (!empty($city)) {
-            $location = $city;
-            if (!empty($country)) {
-                $location .= ',' . $country;
-            }
-        }
-        $transientKey = sprintf('eead-weather-%s-%s', $city, md5($widgetID));
+        $location = $city . ',' . $country;
+        $transientKey = 'eead_weather_' . md5($location . $widgetID);
         $weatherTransientData = get_transient($transientKey);
 
         if (!isset($weatherTransientData) || empty($weatherTransientData)) {
@@ -968,24 +973,36 @@ class Weather extends Widget_Base {
             );
 
             $response = wp_remote_get($request_url, array('timeout' => 30));
-            $remote_data = wp_remote_retrieve_body($response);
-            $remote_data = json_decode($remote_data, true);
+            $can_see_errors = current_user_can('edit_posts');
 
             /* Check if something went wrong while fetching from api */
-            if (!$remote_data || is_wp_error($remote_data)) {
-                echo esc_html__('Oops! Something went wrong while fetching the data', 'easy-elementor-addons');
+            if (is_wp_error($response) || 200 !== (int) wp_remote_retrieve_response_code($response)) {
+                if ($can_see_errors) {
+                    echo esc_html__('Oops! Something went wrong while fetching the data', 'easy-elementor-addons');
+                }
+                return;
+            }
+
+            $remote_data = json_decode(wp_remote_retrieve_body($response), true);
+
+            if (!$remote_data || !is_array($remote_data)) {
+                if ($can_see_errors) {
+                    echo esc_html__('Oops! Something went wrong while fetching the data', 'easy-elementor-addons');
+                }
                 return;
             }
 
             if (isset($remote_data['error'])) {
-                if (isset($remote_data['error']['info'])) {
-                    echo esc_html($remote_data['error']['info']);
-                } else {
-                    echo esc_html__('Weather data of this location not found.', 'easy-elementor-addons');
+                if ($can_see_errors) {
+                    if (isset($remote_data['error']['info'])) {
+                        echo esc_html($remote_data['error']['info']);
+                    } else {
+                        echo esc_html__('Weather data of this location not found.', 'easy-elementor-addons');
+                    }
                 }
                 return;
             }
-            set_transient($transientKey, $remote_data, $settings['cache_expiration']);
+            set_transient($transientKey, $remote_data, max(60, absint($settings['cache_expiration'])));
 
             return $remote_data;
         } else {
@@ -1245,197 +1262,6 @@ class Weather extends Widget_Base {
             'HM' => esc_html__('Heard Island and McDonald Islands', 'easy-elementor-addons'),
             'TK' => esc_html__('Tokelau', 'easy-elementor-addons'),
             'UM' => esc_html__('United States Minor Outlying Islands', 'easy-elementor-addons'),
-        ];
-    }
-
-    protected function get_language_options() {
-
-        return [
-            'ab' => esc_html__('Abkhaz', 'easy-elementor-addons'),
-            'aa' => esc_html__('Afar', 'easy-elementor-addons'),
-            'af' => esc_html__('Afrikaans', 'easy-elementor-addons'),
-            'ak' => esc_html__('Akan', 'easy-elementor-addons'),
-            'sq' => esc_html__('Albanian', 'easy-elementor-addons'),
-            'am' => esc_html__('Amharic', 'easy-elementor-addons'),
-            'ar' => esc_html__('Arabic', 'easy-elementor-addons'),
-            'an' => esc_html__('Aragonese', 'easy-elementor-addons'),
-            'hy' => esc_html__('Armenian', 'easy-elementor-addons'),
-            'as' => esc_html__('Assamese', 'easy-elementor-addons'),
-            'av' => esc_html__('Avaric', 'easy-elementor-addons'),
-            'ae' => esc_html__('Avestan', 'easy-elementor-addons'),
-            'ay' => esc_html__('Aymara', 'easy-elementor-addons'),
-            'az' => esc_html__('Azerbaijani', 'easy-elementor-addons'),
-            'bm' => esc_html__('Bambara', 'easy-elementor-addons'),
-            'ba' => esc_html__('Bashkir', 'easy-elementor-addons'),
-            'eu' => esc_html__('Basque', 'easy-elementor-addons'),
-            'be' => esc_html__('Belarusian', 'easy-elementor-addons'),
-            'bn' => esc_html__('Bengali; Bangla', 'easy-elementor-addons'),
-            'bh' => esc_html__('Bihari', 'easy-elementor-addons'),
-            'bi' => esc_html__('Bislama', 'easy-elementor-addons'),
-            'bs' => esc_html__('Bosnian', 'easy-elementor-addons'),
-            'br' => esc_html__('Breton', 'easy-elementor-addons'),
-            'bg' => esc_html__('Bulgarian', 'easy-elementor-addons'),
-            'my' => esc_html__('Burmese', 'easy-elementor-addons'),
-            'ca' => esc_html__('Catalan; Valencian', 'easy-elementor-addons'),
-            'ch' => esc_html__('Chamorro', 'easy-elementor-addons'),
-            'ce' => esc_html__('Chechen', 'easy-elementor-addons'),
-            'ny' => esc_html__('Chichewa; Chewa; Nyanja', 'easy-elementor-addons'),
-            'zh' => esc_html__('Chinese', 'easy-elementor-addons'),
-            'cv' => esc_html__('Chuvash', 'easy-elementor-addons'),
-            'kw' => esc_html__('Cornish', 'easy-elementor-addons'),
-            'co' => esc_html__('Corsican', 'easy-elementor-addons'),
-            'cr' => esc_html__('Cree', 'easy-elementor-addons'),
-            'hr' => esc_html__('Croatian', 'easy-elementor-addons'),
-            'cs' => esc_html__('Czech', 'easy-elementor-addons'),
-            'da' => esc_html__('Danish', 'easy-elementor-addons'),
-            'dv' => esc_html__('Divehi; Dhivehi; Maldivian;', 'easy-elementor-addons'),
-            'nl' => esc_html__('Dutch', 'easy-elementor-addons'),
-            'dz' => esc_html__('Dzongkha', 'easy-elementor-addons'),
-            'en' => esc_html__('English', 'easy-elementor-addons'),
-            'eo' => esc_html__('Esperanto', 'easy-elementor-addons'),
-            'et' => esc_html__('Estonian', 'easy-elementor-addons'),
-            'ee' => esc_html__('Ewe', 'easy-elementor-addons'),
-            'fo' => esc_html__('Faroese', 'easy-elementor-addons'),
-            'fj' => esc_html__('Fijian', 'easy-elementor-addons'),
-            'fi' => esc_html__('Finnish', 'easy-elementor-addons'),
-            'fr' => esc_html__('French', 'easy-elementor-addons'),
-            'ff' => esc_html__('Fula; Fulah; Pulaar; Pular', 'easy-elementor-addons'),
-            'gl' => esc_html__('Galician', 'easy-elementor-addons'),
-            'ka' => esc_html__('Georgian', 'easy-elementor-addons'),
-            'de' => esc_html__('German', 'easy-elementor-addons'),
-            'el' => esc_html__('Greek, Modern', 'easy-elementor-addons'),
-            'gn' => esc_html__('GuaranÃ­', 'easy-elementor-addons'),
-            'gu' => esc_html__('Gujarati', 'easy-elementor-addons'),
-            'ht' => esc_html__('Haitian; Haitian Creole', 'easy-elementor-addons'),
-            'ha' => esc_html__('Hausa', 'easy-elementor-addons'),
-            'he' => esc_html__('Hebrew (modern)', 'easy-elementor-addons'),
-            'hz' => esc_html__('Herero', 'easy-elementor-addons'),
-            'hi' => esc_html__('Hindi', 'easy-elementor-addons'),
-            'ho' => esc_html__('Hiri Motu', 'easy-elementor-addons'),
-            'hu' => esc_html__('Hungarian', 'easy-elementor-addons'),
-            'ia' => esc_html__('Interlingua', 'easy-elementor-addons'),
-            'id' => esc_html__('Indonesian', 'easy-elementor-addons'),
-            'ie' => esc_html__('Interlingue', 'easy-elementor-addons'),
-            'ga' => esc_html__('Irish', 'easy-elementor-addons'),
-            'ig' => esc_html__('Igbo', 'easy-elementor-addons'),
-            'ik' => esc_html__('Inupiaq', 'easy-elementor-addons'),
-            'io' => esc_html__('Ido', 'easy-elementor-addons'),
-            'is' => esc_html__('Icelandic', 'easy-elementor-addons'),
-            'it' => esc_html__('Italian', 'easy-elementor-addons'),
-            'iu' => esc_html__('Inuktitut', 'easy-elementor-addons'),
-            'ja' => esc_html__('Japanese', 'easy-elementor-addons'),
-            'jv' => esc_html__('Javanese', 'easy-elementor-addons'),
-            'kl' => esc_html__('Kalaallisut, Greenlandic', 'easy-elementor-addons'),
-            'kn' => esc_html__('Kannada', 'easy-elementor-addons'),
-            'kr' => esc_html__('Kanuri', 'easy-elementor-addons'),
-            'ks' => esc_html__('Kashmiri', 'easy-elementor-addons'),
-            'kk' => esc_html__('Kazakh', 'easy-elementor-addons'),
-            'km' => esc_html__('Khmer', 'easy-elementor-addons'),
-            'ki' => esc_html__('Kikuyu, Gikuyu', 'easy-elementor-addons'),
-            'rw' => esc_html__('Kinyarwanda', 'easy-elementor-addons'),
-            'ky' => esc_html__('Kyrgyz', 'easy-elementor-addons'),
-            'kv' => esc_html__('Komi', 'easy-elementor-addons'),
-            'kg' => esc_html__('Kongo', 'easy-elementor-addons'),
-            'ko' => esc_html__('Korean', 'easy-elementor-addons'),
-            'ku' => esc_html__('Kurdish', 'easy-elementor-addons'),
-            'kj' => esc_html__('Kwanyama, Kuanyama', 'easy-elementor-addons'),
-            'la' => esc_html__('Latin', 'easy-elementor-addons'),
-            'lb' => esc_html__('Luxembourgish, Letzeburgesch', 'easy-elementor-addons'),
-            'lg' => esc_html__('Ganda', 'easy-elementor-addons'),
-            'li' => esc_html__('Limburgish, Limburgan, Limburger', 'easy-elementor-addons'),
-            'ln' => esc_html__('Lingala', 'easy-elementor-addons'),
-            'lo' => esc_html__('Lao', 'easy-elementor-addons'),
-            'lt' => esc_html__('Lithuanian', 'easy-elementor-addons'),
-            'lu' => esc_html__('Luba-Katanga', 'easy-elementor-addons'),
-            'lv' => esc_html__('Latvian', 'easy-elementor-addons'),
-            'gv' => esc_html__('Manx', 'easy-elementor-addons'),
-            'mk' => esc_html__('Macedonian', 'easy-elementor-addons'),
-            'mg' => esc_html__('Malagasy', 'easy-elementor-addons'),
-            'ms' => esc_html__('Malay', 'easy-elementor-addons'),
-            'ml' => esc_html__('Malayalam', 'easy-elementor-addons'),
-            'mt' => esc_html__('Maltese', 'easy-elementor-addons'),
-            'mi' => esc_html__('MÄori', 'easy-elementor-addons'),
-            'mr' => esc_html__('Marathi (MarÄá¹­hÄ«)', 'easy-elementor-addons'),
-            'mh' => esc_html__('Marshallese', 'easy-elementor-addons'),
-            'mn' => esc_html__('Mongolian', 'easy-elementor-addons'),
-            'na' => esc_html__('Nauru', 'easy-elementor-addons'),
-            'nv' => esc_html__('Navajo, Navaho', 'easy-elementor-addons'),
-            'nb' => esc_html__('Norwegian BokmÃ¥l', 'easy-elementor-addons'),
-            'nd' => esc_html__('North Ndebele', 'easy-elementor-addons'),
-            'ne' => esc_html__('Nepali', 'easy-elementor-addons'),
-            'ng' => esc_html__('Ndonga', 'easy-elementor-addons'),
-            'nn' => esc_html__('Norwegian Nynorsk', 'easy-elementor-addons'),
-            'no' => esc_html__('Norwegian', 'easy-elementor-addons'),
-            'ii' => esc_html__('Nuosu', 'easy-elementor-addons'),
-            'nr' => esc_html__('South Ndebele', 'easy-elementor-addons'),
-            'oc' => esc_html__('Occitan', 'easy-elementor-addons'),
-            'oj' => esc_html__('Ojibwe, Ojibwa', 'easy-elementor-addons'),
-            'cu' => esc_html__('Old Church Slavonic, Church Slavic, Church Slavonic, Old Bulgarian, Old Slavonic', 'easy-elementor-addons'),
-            'om' => esc_html__('Oromo', 'easy-elementor-addons'),
-            'or' => esc_html__('Oriya', 'easy-elementor-addons'),
-            'os' => esc_html__('Ossetian, Ossetic', 'easy-elementor-addons'),
-            'pa' => esc_html__('Panjabi, Punjabi', 'easy-elementor-addons'),
-            'pi' => esc_html__('PÄli', 'easy-elementor-addons'),
-            'fa' => esc_html__('Persian (Farsi)', 'easy-elementor-addons'),
-            'pl' => esc_html__('Polish', 'easy-elementor-addons'),
-            'ps' => esc_html__('Pashto, Pushto', 'easy-elementor-addons'),
-            'pt' => esc_html__('Portuguese', 'easy-elementor-addons'),
-            'qu' => esc_html__('Quechua', 'easy-elementor-addons'),
-            'rm' => esc_html__('Romansh', 'easy-elementor-addons'),
-            'rn' => esc_html__('Kirundi', 'easy-elementor-addons'),
-            'ro' => esc_html__('Romanian, [])', 'easy-elementor-addons'),
-            'ru' => esc_html__('Russian', 'easy-elementor-addons'),
-            'sa' => esc_html__('Sanskrit (Saá¹ská¹›ta)', 'easy-elementor-addons'),
-            'sc' => esc_html__('Sardinian', 'easy-elementor-addons'),
-            'sd' => esc_html__('Sindhi', 'easy-elementor-addons'),
-            'se' => esc_html__('Northern Sami', 'easy-elementor-addons'),
-            'sm' => esc_html__('Samoan', 'easy-elementor-addons'),
-            'sg' => esc_html__('Sango', 'easy-elementor-addons'),
-            'sr' => esc_html__('Serbian', 'easy-elementor-addons'),
-            'gd' => esc_html__('Scottish Gaelic; Gaelic', 'easy-elementor-addons'),
-            'sn' => esc_html__('Shona', 'easy-elementor-addons'),
-            'si' => esc_html__('Sinhala, Sinhalese', 'easy-elementor-addons'),
-            'sk' => esc_html__('Slovak', 'easy-elementor-addons'),
-            'sl' => esc_html__('Slovene', 'easy-elementor-addons'),
-            'so' => esc_html__('Somali', 'easy-elementor-addons'),
-            'st' => esc_html__('Southern Sotho', 'easy-elementor-addons'),
-            'az' => esc_html__('South Azerbaijani', 'easy-elementor-addons'),
-            'es' => esc_html__('Spanish; Castilian', 'easy-elementor-addons'),
-            'su' => esc_html__('Sundanese', 'easy-elementor-addons'),
-            'sw' => esc_html__('Swahili', 'easy-elementor-addons'),
-            'ss' => esc_html__('Swati', 'easy-elementor-addons'),
-            'sv' => esc_html__('Swedish', 'easy-elementor-addons'),
-            'ta' => esc_html__('Tamil', 'easy-elementor-addons'),
-            'te' => esc_html__('Telugu', 'easy-elementor-addons'),
-            'tg' => esc_html__('Tajik', 'easy-elementor-addons'),
-            'th' => esc_html__('Thai', 'easy-elementor-addons'),
-            'ti' => esc_html__('Tigrinya', 'easy-elementor-addons'),
-            'bo' => esc_html__('Tibetan Standard, Tibetan, Central', 'easy-elementor-addons'),
-            'tk' => esc_html__('Turkmen', 'easy-elementor-addons'),
-            'tl' => esc_html__('Tagalog', 'easy-elementor-addons'),
-            'tn' => esc_html__('Tswana', 'easy-elementor-addons'),
-            'to' => esc_html__('Tonga (Tonga Islands)', 'easy-elementor-addons'),
-            'tr' => esc_html__('Turkish', 'easy-elementor-addons'),
-            'ts' => esc_html__('Tsonga', 'easy-elementor-addons'),
-            'tt' => esc_html__('Tatar', 'easy-elementor-addons'),
-            'tw' => esc_html__('Twi', 'easy-elementor-addons'),
-            'ty' => esc_html__('Tahitian', 'easy-elementor-addons'),
-            'ug' => esc_html__('Uyghur, Uighur', 'easy-elementor-addons'),
-            'uk' => esc_html__('Ukrainian', 'easy-elementor-addons'),
-            'ur' => esc_html__('Urdu', 'easy-elementor-addons'),
-            'uz' => esc_html__('Uzbek', 'easy-elementor-addons'),
-            've' => esc_html__('Venda', 'easy-elementor-addons'),
-            'vi' => esc_html__('Vietnamese', 'easy-elementor-addons'),
-            'vo' => esc_html__('VolapÃ¼k', 'easy-elementor-addons'),
-            'wa' => esc_html__('Walloon', 'easy-elementor-addons'),
-            'cy' => esc_html__('Welsh', 'easy-elementor-addons'),
-            'wo' => esc_html__('Wolof', 'easy-elementor-addons'),
-            'fy' => esc_html__('Western Frisian', 'easy-elementor-addons'),
-            'xh' => esc_html__('Xhosa', 'easy-elementor-addons'),
-            'yi' => esc_html__('Yiddish', 'easy-elementor-addons'),
-            'yo' => esc_html__('Yoruba', 'easy-elementor-addons'),
-            'za' => esc_html__('Zhuang, Chuang', 'easy-elementor-addons'),
-            'zu' => esc_html__('Zulu', 'easy-elementor-addons'),
         ];
     }
 

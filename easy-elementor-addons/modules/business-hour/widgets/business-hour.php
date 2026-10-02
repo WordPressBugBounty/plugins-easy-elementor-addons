@@ -30,6 +30,18 @@ class BusinessHour extends Widget_Base {
         return 'eead-element-icon eead-icons-business-hours';
     }
 
+    public function get_keywords() {
+        return ['business hours', 'opening hours', 'schedule', 'time', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -251,7 +263,7 @@ class BusinessHour extends Widget_Base {
                             'end_time' => $this->format_time('20:00'), //'H:i'
                         ]
                     ],
-                    'title_field' => '{{{start_time}}} - {{{end_time}}}',
+                    'title_field' => '{{ start_time }} - {{ end_time }}',
                     'condition' => [
                         "{$key}_closed" => '',
                     ],
@@ -845,7 +857,7 @@ class BusinessHour extends Widget_Base {
 
     public function set_gmt_zone($receive) {
         // Convert hours to seconds
-        $offset_seconds = $receive * 3600;
+        $offset_seconds = (float) $receive * 3600;
 
         // Get GMT time adjusted by offset
         $time = gmdate("g:i:s A", time() + $offset_seconds);
@@ -853,12 +865,32 @@ class BusinessHour extends Widget_Base {
         return $time;
     }
 
+    public function get_display_timezone() {
+        $settingsTimeZone = $this->get_settings_for_display();
+
+        if ($settingsTimeZone['dynamic_timezone'] != 'default') {
+            if ($settingsTimeZone['dynamic_timezone'] == 'custom') {
+                $offset = $settingsTimeZone['custom_timezone_input'] ? $settingsTimeZone['custom_timezone_input'] : '+6';
+            } else {
+                $offset = $settingsTimeZone['dynamic_timezone'];
+            }
+        } else {
+            // Site timezone - same as current_time().
+            return wp_timezone();
+        }
+
+        $offset = (float) $offset;
+        $hours = (int) floor(abs($offset));
+        $minutes = (int) round((abs($offset) - $hours) * 60);
+
+        return new \DateTimeZone(sprintf('%s%02d:%02d', $offset < 0 ? '-' : '+', $hours, $minutes));
+    }
+
     /** Render Layout */
     protected function render() {
         $settings = $this->get_settings_for_display();
 
         $timeNotation = (get_option('time_format') == 'H:i') ? '24h' : '12h';
-        $ct_input = get_option('gmt_offset');
 
         if ($settings['dynamic_timezone'] == 'custom') {
             $ct_input = (isset($settings['custom_timezone_input']) && !empty($settings['custom_timezone_input'])) ? $settings['custom_timezone_input'] : '+6';
@@ -876,7 +908,10 @@ class BusinessHour extends Widget_Base {
                             "dynamic_timezone_default" => get_option('gmt_offset'),
                             "dynamic_timezone" => $settings['dynamic_timezone'] == 'default' ? get_option('gmt_offset') : $ct_input,
                             "timeNotation" => $timeNotation,
-                        ])
+                        ], function ($value) {
+                            // Keep a 0 (UTC) offset; only drop empty values.
+                            return $value !== null && $value !== '';
+                        })
                     ),
                 ]
             ],
@@ -891,17 +926,17 @@ class BusinessHour extends Widget_Base {
                 <div class="eead-bh-header">
                     <?php
                     if ($settings['header_content_type'] == 'date') {
-                        $cur_time = strtotime($this->set_time_zone());
+                        $display_tz = $this->get_display_timezone();
                         ?>
                         <div class="eead-bh-current-time">
                             <?php
-                            echo esc_html(date('g:i a', $cur_time));
+                            echo esc_html(wp_date('g:i a', time(), $display_tz));
                             ?>
                         </div>
 
                         <div class="eead-bh-current-date">
                             <?php
-                            echo esc_html(date(get_option('date_format'), $cur_time));
+                            echo esc_html(wp_date(get_option('date_format'), time(), $display_tz));
                             ?>
                         </div>
                         <?php
@@ -920,7 +955,7 @@ class BusinessHour extends Widget_Base {
                     } elseif ($settings['header_content_type'] == 'text') {
                         ?>
                         <div class="eead-bh-custom-text">
-                            <?php echo do_shortcode($settings['header_text']); ?>
+                            <?php echo do_shortcode(wp_kses_post($settings['header_text'])); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Sanitized before shortcode processing. ?>
                         </div>
                         <?php
                     }
@@ -932,7 +967,7 @@ class BusinessHour extends Widget_Base {
                 <?php
                 $week = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
                 $week = $this->set_start_of_week($week);
-                $active_day = strtolower(current_time('D')); // sun
+                $active_day = strtolower((new \DateTime('now', $this->get_display_timezone()))->format('D')); // sun (not localized)
                 foreach ($week as $day) {
                     ?>
                     <div class="eead-business-hour-row<?php echo ($day == $active_day) ? ' active-day' : ''; ?>">
@@ -966,17 +1001,17 @@ class BusinessHour extends Widget_Base {
                 <div class="eead-bh-footer">
                     <?php
                     if ($settings['footer_content_type'] == 'date') {
-                        $cur_time = strtotime($this->set_time_zone());
+                        $display_tz = $this->get_display_timezone();
                         ?>
                         <div class="eead-bh-current-time">
                             <?php
-                            echo esc_html(date('g:i a', $cur_time));
+                            echo esc_html(wp_date('g:i a', time(), $display_tz));
                             ?>
                         </div>
 
                         <div class="eead-bh-current-date">
                             <?php
-                            echo esc_html(date(get_option('date_format'), $cur_time));
+                            echo esc_html(wp_date(get_option('date_format'), time(), $display_tz));
                             ?>
                         </div>
                         <?php
@@ -995,7 +1030,7 @@ class BusinessHour extends Widget_Base {
                     } elseif ($settings['footer_content_type'] == 'text') {
                         ?>
                         <div class="eead-bh-custom-text">
-                            <?php echo do_shortcode($settings['footer_text']); ?>
+                            <?php echo do_shortcode(wp_kses_post($settings['footer_text'])); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Sanitized before shortcode processing. ?>
                         </div>
                         <?php
                     }
@@ -1009,35 +1044,60 @@ class BusinessHour extends Widget_Base {
 
     private function is_open($settings) {
 
+        /** Current time in the timezone the widget displays (minute precision). */
+        $now = new \DateTime('now', $this->get_display_timezone());
+        $now->setTime((int) $now->format('H'), (int) $now->format('i'), 0);
+
         /** Get current day prefix. */
-        $day = strtolower(current_time('D')); // mon
+        $day = strtolower($now->format('D')); // mon
 
         /** Check closing day */
         if ($settings["{$day}_closed"] === 'yes') {
             return false;
         }
 
+        if (empty($settings["{$day}_business_hours"]) || !is_array($settings["{$day}_business_hours"])) {
+            return false;
+        }
+
         /** Check, opened or not? */
         foreach ($settings["{$day}_business_hours"] as $hours) {
+            $start = $this->get_slot_time($now, isset($hours['start_time']) ? $hours['start_time'] : '');
+            $end = $this->get_slot_time($now, isset($hours['end_time']) ? $hours['end_time'] : '');
 
-            $wp_time_format = get_option('time_format');
-            $current_time = current_time($wp_time_format);
-
-            $start_time = $hours['start_time'];
-            $end_time = $hours['end_time'];
-
-            /** Convert to same format. */
-            $date1 = DateTime::createFromFormat($wp_time_format, $current_time);
-            $date2 = DateTime::createFromFormat($wp_time_format, $start_time);
-            $date3 = DateTime::createFromFormat($wp_time_format, $end_time);
+            if (!$start || !$end) {
+                continue;
+            }
 
             /** If the current time between start_time and end_time - we are opened now. */
-            if ($date1 > $date2 && $date1 < $date3) {
+            if ($now > $start && $now < $end) {
                 return true;
             }
         }
 
         /** Closed by default. */
+        return false;
+    }
+
+    /**
+     * Convert a slot time string to a DateTime on the same day/timezone as $now.
+     */
+    private function get_slot_time($now, $time) {
+        if (!is_string($time) || $time === '') {
+            return false;
+        }
+
+        $formats = array_unique([get_option('time_format'), 'H:i', 'g:i a', 'g:i A']);
+
+        foreach ($formats as $format) {
+            $parsed = \DateTime::createFromFormat($format, trim($time), $now->getTimezone());
+            if ($parsed) {
+                $slot = clone $now;
+                $slot->setTime((int) $parsed->format('H'), (int) $parsed->format('i'), 0);
+                return $slot;
+            }
+        }
+
         return false;
     }
 

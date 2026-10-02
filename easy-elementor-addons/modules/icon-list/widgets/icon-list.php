@@ -35,6 +35,18 @@ class IconList extends Widget_Base {
         return 'eead-element-icon eead-icons-icon-list';
     }
 
+    public function get_keywords() {
+        return ['icon list', 'list', 'icon', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -152,7 +164,7 @@ class IconList extends Widget_Base {
                     ),
                 ),
                 'fields' => $repeater->get_controls(),
-                'title_field' => '<i class="{{icon}}" aria-hidden="true"></i> {{{text}}}',
+                'title_field' => '{{{ elementor.helpers.renderIcon( this, icon, {}, "i", "panel" ) || "" }}} {{ text }}',
             ]
         );
 
@@ -196,7 +208,7 @@ class IconList extends Widget_Base {
                     '8' => esc_html__('8', 'easy-elementor-addons')
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .eead-icon-list-items' => 'grid-template-columns: repeat({{SIZE}}, 1fr);'
+                    '{{WRAPPER}} .eead-icon-list-items' => 'grid-template-columns: repeat({{VALUE}}, 1fr);'
                 ],
                 'prefix_class' => 'eead-lc%s-col-',
                 'render_type' => 'template',
@@ -344,6 +356,44 @@ class IconList extends Widget_Base {
             Group_Control_Box_Shadow::get_type(), [
                 'name' => 'item_boxshadow',
                 'selector' => '{{WRAPPER}} .eead-icon-list-items li .eead-il-block',
+            ]
+        );
+
+        $this->add_control(
+            'item_hover_heading', [
+                'label' => esc_html__('Hover', 'easy-elementor-addons'),
+                'type' => Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+
+        $this->add_control(
+            'item_bg_hover_color', [
+                'label' => esc_html__('Background Color', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-icon-list-items li .eead-il-block:hover' => 'background-color: {{VALUE}};'
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'item_border_hover_color', [
+                'label' => esc_html__('Border Color', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'condition' => [
+                    'item_border_border!' => ['', 'none'],
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-icon-list-items li .eead-il-block:hover' => 'border-color: {{VALUE}};'
+                ],
+            ]
+        );
+
+        $this->add_group_control(
+            Group_Control_Box_Shadow::get_type(), [
+                'name' => 'item_boxshadow_hover',
+                'selector' => '{{WRAPPER}} .eead-icon-list-items li .eead-il-block:hover',
             ]
         );
 
@@ -562,6 +612,17 @@ class IconList extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'text_color', [
+                'label' => esc_html__('Text Color', 'easy-elementor-addons'),
+                'description' => esc_html__('Leave empty to use the color above for the text too.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-icon-list-items .eead-il-block .eead-il-text' => 'color: {{VALUE}};'
+                ],
+            ]
+        );
+
         $this->end_controls_tab();
 
         $this->start_controls_tab(
@@ -577,6 +638,16 @@ class IconList extends Widget_Base {
                 'selectors' => [
                     '{{WRAPPER}} .eead-icon-list-item .eead-il-block:hover' => 'color: {{VALUE}};',
                     '{{WRAPPER}} .eead-icon-list-item .eead-il-block:hover .eead-il-icon svg' => 'fill: {{VALUE}};'
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'text_color_hover', [
+                'label' => esc_html__('Text Color', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-icon-list-item .eead-il-block:hover .eead-il-text' => 'color: {{VALUE}};'
                 ],
             ]
         );
@@ -598,9 +669,9 @@ class IconList extends Widget_Base {
     /** Render Layout */
     protected function render() {
         $settings = $this->get_settings_for_display();
-        $list_column = isset($settings['list_column']) ? (int) $settings['list_column'] : 3;
-        $list_column_tablet = isset($settings['list_column_tablet']) ? (int) $settings['list_column_tablet'] : 2;
-        $list_column_mobile = isset($settings['list_column_mobile']) ? (int) $settings['list_column_mobile'] : 1;
+        $list_column = !empty($settings['list_column']) ? max(1, (int) $settings['list_column']) : 3;
+        $list_column_tablet = !empty($settings['list_column_tablet']) ? max(1, (int) $settings['list_column_tablet']) : 2;
+        $list_column_mobile = !empty($settings['list_column_mobile']) ? max(1, (int) $settings['list_column_mobile']) : 1;
         ?>
         <div class="eead-icon-list-container">
             <ul class="eead-icon-list-items">
@@ -621,19 +692,13 @@ class IconList extends Widget_Base {
                             'items-' . $count => [
                                 'class' => [
                                     'eead-il-block',
-                                    $settings['icon_hover_animation'] ? 'elementor-animation-' . esc_attr($settings['icon_hover_animation']) : '',
+                                    $settings['icon_hover_animation'] ? 'elementor-animation-' . $settings['icon_hover_animation'] : '',
                                 ]
                             ]
                         ]);
 
                         if (isset($list['link']) && !empty($list['link']['url'])) {
-                            $this->add_render_attribute([
-                                'items-' . $count => [
-                                    'href' => esc_url($list['link']['url']),
-                                    'target' => $list['link']['is_external'] ? '_blank' : '',
-                                    'rel' => $list['link']['nofollow'] ? 'nofollow' : ''
-                                ]
-                            ]);
+                            $this->add_link_attributes('items-' . $count, $list['link']);
                             $tag = 'a';
                         }
 
@@ -676,7 +741,7 @@ class IconList extends Widget_Base {
                 break;
 
             case 'image':
-                echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($list, 'full', 'image'));
+                Group_Control_Image_Size::print_attachment_image_html($list, 'full', 'image');
                 break;
 
             case 'number':

@@ -34,6 +34,18 @@ class PricingList extends Widget_Base {
         return 'eead-element-icon eead-icons-pricing-list';
     }
 
+    public function get_keywords() {
+        return ['pricing list', 'price', 'menu', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -130,7 +142,7 @@ class PricingList extends Widget_Base {
                         'description' => 'Cu utamur torquatos his. Qui dicta propriae signiferumque ex, esse eligendi adipisci te mel. At ius dolores offendit, vis case zril causae an. Vel integre euripidis expetendis eu. Omnis eleifend intellegebat vel cu, pri dicant admodum at.'
                     ]
                 ],
-                'title_field' => '{{{ title }}}'
+                'title_field' => '{{ title }}'
             ]
         );
 
@@ -162,7 +174,7 @@ class PricingList extends Widget_Base {
                     '3' => esc_html__('3', 'easy-elementor-addons'),
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .eead-pricing-list' => 'grid-template-columns: repeat({{SIZE}}, 1fr);'
+                    '{{WRAPPER}} .eead-pricing-list' => 'grid-template-columns: repeat({{VALUE}}, 1fr);'
                 ],
             ]
         );
@@ -173,16 +185,22 @@ class PricingList extends Widget_Base {
                 'type' => Controls_Manager::CHOOSE,
                 'toggle' => false,
                 'default' => 'row',
+                'mobile_default' => 'column',
                 'options' => [
                     'row' => [
                         'title' => esc_html__('Left', 'easy-elementor-addons'),
                         'icon' => 'eicon-h-align-left',
+                    ],
+                    'column' => [
+                        'title' => esc_html__('Top', 'easy-elementor-addons'),
+                        'icon' => 'eicon-v-align-top',
                     ],
                     'row-reverse' => [
                         'title' => esc_html__('Right', 'easy-elementor-addons'),
                         'icon' => 'eicon-h-align-right',
                     ]
                 ],
+                'prefix_class' => 'eead-pl-align%s-',
                 'selectors' => [
                     '{{WRAPPER}} .eead-pricing-list .eead-pl-item' => 'flex-direction: {{VALUE}};',
                 ]
@@ -794,23 +812,25 @@ class PricingList extends Widget_Base {
             <div class="eead-pricing-list">
                 <?php
                 if ($settings['pricing_lists']) {
-                    foreach ($settings['pricing_lists'] as $lists) { ?>
+                    foreach ($settings['pricing_lists'] as $index => $lists) { ?>
                         <div class="eead-pl-item">
                             <?php
                             $has_link = false;
+                            $link_key = 'link-' . $index;
                             if (isset($lists['link']['url']) && !empty($lists['link']['url'])) {
                                 $has_link = true;
-                                $link = $lists['link']['url'];
+                                $this->add_link_attributes($link_key, $lists['link']);
                             }
                             ?>
                             <?php if ($lists['image']['url']) { ?>
                                 <div class="eead-pl-item-image">
                                     <?php
                                     if ($has_link) {
-                                        $image = Group_Control_Image_Size::get_attachment_image_html($lists, 'thumb', 'image');
-                                        printf('<a href=%1$s>%2$s</a>', esc_url($link), wp_kses_post($image));
+                                        ?>
+                                        <a <?php $this->print_render_attribute_string($link_key); ?>><?php Group_Control_Image_Size::print_attachment_image_html($lists, 'thumb', 'image'); ?></a>
+                                        <?php
                                     } else {
-                                        echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($lists, 'thumb', 'image'));
+                                        Group_Control_Image_Size::print_attachment_image_html($lists, 'thumb', 'image');
                                     }
 
                                     if ($settings['price_position'] == 'style2' && $lists['price']) {
@@ -831,7 +851,9 @@ class PricingList extends Widget_Base {
                                         <<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_tag'])); ?> class="eead-pl-item-title">
                                             <?php
                                             if ($has_link) {
-                                                printf('<a href=%1$s>%2$s</a>', esc_url($link), esc_html($lists['title']));
+                                                ?>
+                                                <a <?php $this->print_render_attribute_string($link_key); ?>><?php echo esc_html($lists['title']); ?></a>
+                                                <?php
                                             } else {
                                                 echo esc_html($lists['title']);
                                             }

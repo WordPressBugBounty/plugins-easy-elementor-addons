@@ -30,6 +30,18 @@ class TestimonialCarousel extends Widget_Base {
         return 'eead-element-icon eead-icons-testimonial-carousel';
     }
 
+    public function get_keywords() {
+        return ['testimonial carousel', 'testimonial', 'review', 'carousel', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -118,7 +130,7 @@ class TestimonialCarousel extends Widget_Base {
                         ]
                     ]
                 ],
-                'title_field' => '{{{ name }}}',
+                'title_field' => '{{ name }}',
             ]
         );
 
@@ -657,7 +669,7 @@ class TestimonialCarousel extends Widget_Base {
 
         $this->end_controls_tabs();
 
-        $this->add_control(
+        $this->add_responsive_control(
             'text_alignment', [
                 'label' => esc_html__('Text Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -1759,10 +1771,11 @@ class TestimonialCarousel extends Widget_Base {
         <div class="eead-testimonial-image">
             <?php
             $image_url = Group_Control_Image_Size::get_attachment_image_src($item['image']['id'], 'thumbnail', $settings);
+            $image_alt = \Elementor\Control_Media::get_image_alt($item['image']);
             if ($image_url) {
-                echo '<img src="' . esc_url($image_url) . '">';
+                echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '">';
             } else {
-                echo '<img src="' . esc_url($item['image']['url']) . '">';
+                echo '<img src="' . esc_url($item['image']['url']) . '" alt="' . esc_attr($image_alt) . '">';
             }
             ?>
         </div>
@@ -1773,7 +1786,7 @@ class TestimonialCarousel extends Widget_Base {
         ?>
         <div class="eead-testimonial-content">
             <?php
-            if (!empty($settings['testimonial_title'])) {
+            if (!empty($item['testimonial_title'])) {
                 printf('<h4 class="eead-testimonial-title">%1$s</h4>', esc_html($item['testimonial_title']));
             }
 

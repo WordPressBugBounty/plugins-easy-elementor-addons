@@ -33,6 +33,18 @@ class VerticalTimeline extends Widget_Base {
         return 'eead-element-icon eead-icons-vertical-timeline';
     }
 
+    public function get_keywords() {
+        return ['timeline', 'vertical timeline', 'history', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -166,7 +178,7 @@ class VerticalTimeline extends Widget_Base {
                         'meta' => 'Thursday, August 27, 2025',
                     ]
                 ],
-                'title_field' => '{{{ title }}}'
+                'title_field' => '{{ title }}'
             ]
         );
 
@@ -210,7 +222,7 @@ class VerticalTimeline extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'text_alignment_left', [
                 'label' => esc_html__('Left Blocks Text Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -239,7 +251,7 @@ class VerticalTimeline extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'text_alignment_right', [
                 'label' => esc_html__('Right Blocks Text Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -311,6 +323,88 @@ class VerticalTimeline extends Widget_Base {
                     '{{WRAPPER}} .eead-vertical-timeline .eead-card-right .eead-vt-each-wrap, {{WRAPPER}} .eead-vertical-timeline .eead-card-left .eead-vt-each-wrap' => 'width: {{SIZE}}%;',
                     '{{WRAPPER}} .eead-vertical-timeline .eead-card-right .eead-vt-inner:before' => 'left: calc(100% - {{SIZE}}%);',
                     '{{WRAPPER}} .eead-vertical-timeline .eead-card-left .eead-vt-inner:before' => 'left: {{SIZE}}%;'
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'stack_on', [
+                'label' => esc_html__('Stack On', 'easy-elementor-addons'),
+                'description' => esc_html__('Below this screen size the items stack in a single column, with the line on the left.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'mobile',
+                'separator' => 'before',
+                'options' => [
+                    'none' => esc_html__('Never', 'easy-elementor-addons'),
+                    'tablet' => esc_html__('Tablet & Mobile', 'easy-elementor-addons'),
+                    'mobile' => esc_html__('Mobile Only', 'easy-elementor-addons'),
+                ],
+                'prefix_class' => 'eead-vt-stack-',
+            ]
+        );
+
+        $this->add_responsive_control(
+            'stack_text_alignment', [
+                'label' => esc_html__('Stacked Text Alignment', 'easy-elementor-addons'),
+                'type' => Controls_Manager::CHOOSE,
+                'default' => 'left',
+                'toggle' => false,
+                'options' => [
+                    'left' => [
+                        'title' => esc_html__('Left', 'easy-elementor-addons'),
+                        'icon' => 'eicon-text-align-left',
+                    ],
+                    'center' => [
+                        'title' => esc_html__('Center', 'easy-elementor-addons'),
+                        'icon' => 'eicon-text-align-center',
+                    ],
+                    'right' => [
+                        'title' => esc_html__('Right', 'easy-elementor-addons'),
+                        'icon' => 'eicon-text-align-right',
+                    ]
+                ],
+                'selectors' => [
+                    '{{WRAPPER}}' => '--eead-vt-stack-align: {{VALUE}};',
+                ],
+                'condition' => [
+                    'stack_on!' => 'none',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'stack_gap', [
+                'label' => esc_html__('Stacked Gap From Line', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => [
+                    'px' => [
+                        'min' => 0,
+                        'max' => 60,
+                        'step' => 1
+                    ]
+                ],
+                'default' => [
+                    'unit' => 'px',
+                    'size' => 15,
+                ],
+                'selectors' => [
+                    '{{WRAPPER}}' => '--eead-vt-stack-gap: {{SIZE}}{{UNIT}};',
+                ],
+                'condition' => [
+                    'stack_on!' => 'none',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'stack_hide_meta', [
+                'label' => esc_html__('Hide Meta When Stacked', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'return_value' => 'yes',
+                'prefix_class' => 'eead-vt-stack-hide-meta-',
+                'condition' => [
+                    'stack_on!' => 'none',
                 ]
             ]
         );
@@ -975,7 +1069,7 @@ class VerticalTimeline extends Widget_Base {
                                     <?php if (!empty($item['image']['url'])) { ?>
                                         <div class="eead-vt-image">
                                             <?php
-                                            echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($item, 'item_image', 'image'));
+                                            Group_Control_Image_Size::print_attachment_image_html($item, 'item_image', 'image');
                                             ?>
                                         </div>
                                     <?php } ?>

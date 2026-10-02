@@ -97,13 +97,6 @@ abstract class EEAD_Templates_Source_Base {
     }
 
     /**
-     * Delete templates cache
-     */
-    public function delete_templates_cache() {
-        delete_transient($this->templates_key());
-    }
-
-    /**
      * Set categories cache.
      */
     public function set_categories_cache($value) {
@@ -120,15 +113,6 @@ abstract class EEAD_Templates_Source_Base {
             return false;
         }
         return get_transient($this->categories_key());
-    }
-
-    /**
-     * Delete categories cache
-     *
-     * @return [type] [description]
-     */
-    public function delete_categories_cache() {
-        delete_transient($this->categories_key());
     }
 
     /**
@@ -150,15 +134,6 @@ abstract class EEAD_Templates_Source_Base {
             return false;
         }
         return get_transient($this->widgets_key());
-    }
-
-    /**
-     * Delete categories cache
-     *
-     * @return [type] [description]
-     */
-    public function delete_widgets_cache() {
-        delete_transient($this->widgets_key());
     }
 
     /**
@@ -187,7 +162,7 @@ abstract class EEAD_Templates_Source_Base {
      * @access protected
      */
     protected function replace_elements_ids($content) {
-        return \Elementor\Plugin::$instance->db->iterate_data($content, function ($element) {
+        return \Elementor\Plugin::instance()->db->iterate_data($content, function ($element) {
             $element['id'] = \Elementor\Utils::generate_random_string();
             return $element;
         });
@@ -208,9 +183,9 @@ abstract class EEAD_Templates_Source_Base {
      * @return mixed Processed content data.
      */
     protected function process_export_import_content($content, $method) {
-        return \Elementor\Plugin::$instance->db->iterate_data(
+        return \Elementor\Plugin::instance()->db->iterate_data(
             $content, function ($element_data) use ($method) {
-                $element = \Elementor\Plugin::$instance->elements_manager->create_element_instance($element_data);
+                $element = \Elementor\Plugin::instance()->elements_manager->create_element_instance($element_data);
                 // If the widget/element isn't exist, like a plugin that creates a widget but deactivated
                 if (!$element) {
                     return null;
@@ -240,7 +215,7 @@ abstract class EEAD_Templates_Source_Base {
         }
 
         foreach ($element->get_controls() as $control) {
-            $control_class = \Elementor\Plugin::$instance->controls_manager->get_control($control['type']);
+            $control_class = \Elementor\Plugin::instance()->controls_manager->get_control($control['type']);
             // If the control isn't exist, like a plugin that creates the control but deactivated.
             if (!$control_class) {
                 return $element_data;

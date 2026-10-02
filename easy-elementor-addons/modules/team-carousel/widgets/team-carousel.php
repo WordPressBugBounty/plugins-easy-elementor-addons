@@ -34,6 +34,18 @@ class TeamCarousel extends Widget_Base {
         return 'eead-element-icon eead-icons-team-carousel';
     }
 
+    public function get_keywords() {
+        return ['team carousel', 'team', 'carousel', 'member', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -172,7 +184,7 @@ class TeamCarousel extends Widget_Base {
                         'type' => Controls_Manager::URL,
                     ],
                 ],
-                'title_field' => '{{{ name }}}',
+                'title_field' => '{{ name }}',
             ]
         );
 
@@ -517,7 +529,7 @@ class TeamCarousel extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'content_text_alignment', [
                 'label' => esc_html__('Text Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -542,7 +554,7 @@ class TeamCarousel extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'content_vertical_alignment', [
                 'label' => esc_html__('Vertical Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -685,7 +697,7 @@ class TeamCarousel extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'image_alignment', [
                 'label' => esc_html__('Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -1590,17 +1602,18 @@ class TeamCarousel extends Widget_Base {
         $this->end_controls_section();
     }
 
-    protected function get_image($item) {
-        $settings = $this->get_settings();
+    protected function get_image($item, $index) {
+        $settings = $this->get_settings_for_display();
         $image_url = Group_Control_Image_Size::get_attachment_image_src($item['image']['id'], 'thumbnail', $settings);
+        $image_alt = \Elementor\Control_Media::get_image_alt($item['image']);
         if ($image_url) {
-            $image_html = '<img src="' . esc_url($image_url) . '">';
+            $image_html = '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '">';
         } else {
-            $image_html = '<img src="' . esc_url($item['image']['url']) . '">';
+            $image_html = '<img src="' . esc_url($item['image']['url']) . '" alt="' . esc_attr($image_alt) . '">';
         }
 
-        if ($item['link']['url'] != '') {
-            $image_html = sprintf('<a %1$s>%2$s</a>', $this->get_render_attribute_string('link'), $image_html);
+        if (!empty($item['link']['url'])) {
+            $image_html = sprintf('<a %1$s>%2$s</a>', $this->get_render_attribute_string('link-' . $index), $image_html);
         }
 
         echo wp_kses_post($image_html);
@@ -1609,16 +1622,16 @@ class TeamCarousel extends Widget_Base {
     protected function get_description($item) {
         if (!empty($item['description'])) {
             echo '<div class="eead-team-member-description">';
-            echo wp_kses_post(parse_wisiwyg_content($item['description']));
+            echo wp_kses_post(eead_parse_wysiwyg_content($item['description']));
             echo '</div>';
         }
     }
 
-    protected function get_member_name($item) {
+    protected function get_member_name($item, $index) {
         $member_name = '';
         if ($item['name'] != '') {
-            if ($item['link']['url'] != '') {
-                $member_name .= sprintf('<%1$s %2$s><a %3$s>%4$s</a></%1$s>', 'h4', 'class="eead-team-member-name"', $this->get_render_attribute_string('link'), esc_html($item['name']));
+            if (!empty($item['link']['url'])) {
+                $member_name .= sprintf('<%1$s %2$s><a %3$s>%4$s</a></%1$s>', 'h4', 'class="eead-team-member-name"', $this->get_render_attribute_string('link-' . $index), esc_html($item['name']));
             } else {
                 $member_name .= sprintf('<%1$s %2$s>%3$s</%1$s>', 'h4', 'class="eead-team-member-name"', esc_html($item['name']));
             }
@@ -1636,11 +1649,20 @@ class TeamCarousel extends Widget_Base {
     }
 
     protected function get_social_links($item, $index) {
-        $social_html = '';
-        ob_start();
+        $has_social = false;
         for ($i = 1; $i <= 4; $i++) {
-            ?>
-            <?php
+            if (!empty($item['social_link_' . $i]['url']) && !empty($item['social_icon_' . $i])) {
+                $has_social = true;
+                break;
+            }
+        }
+
+        if (!$has_social) {
+            return;
+        }
+
+        echo '<div class="eead-team-member-social-links">';
+        for ($i = 1; $i <= 4; $i++) {
             if (!empty($item['social_link_' . $i]['url']) && !empty($item['social_icon_' . $i])) {
                 $this->add_link_attributes('social-link-' . $i . $index, $item['social_link_' . $i]);
                 ?>
@@ -1650,13 +1672,7 @@ class TeamCarousel extends Widget_Base {
                 <?php
             }
         }
-        $social_html = ob_get_clean();
-
-        if ($social_html != '') {
-            echo '<div class="eead-team-member-social-links">';
-            echo wp_kses_post($social_html);
-            echo '</div>';
-        }
+        echo '</div>';
     }
 
     /** Render Layout */
@@ -1726,6 +1742,9 @@ class TeamCarousel extends Widget_Base {
             <?php
             if (!empty($team_members)) {
                 foreach ($team_members as $index => $team_member) {
+                    if (!empty($team_member['link']['url'])) {
+                        $this->add_link_attributes('link-' . $index, $team_member['link']);
+                    }
                     ?>
                     <div <?php $this->print_render_attribute_string('team'); ?>>
                         <?php
@@ -1733,7 +1752,7 @@ class TeamCarousel extends Widget_Base {
                             ?>
                             <div class="eead-team-member-image">
                                 <?php
-                                $this->get_image($team_member);
+                                $this->get_image($team_member, $index);
 
                                 if ($settings['social_icon_display'] == 'on-image-hover') {
                                     $this->get_social_links($team_member, $index);
@@ -1747,7 +1766,7 @@ class TeamCarousel extends Widget_Base {
                         <div class="eead-team-member-content-wrapper">
                             <div class="eead-team-member-content">
                                 <?php
-                                $this->get_member_name($team_member);
+                                $this->get_member_name($team_member, $index);
                                 $this->get_member_position($team_member);
                                 $this->get_description($team_member);
                                 if ($settings['social_icon_display'] !== 'on-image-hover') {

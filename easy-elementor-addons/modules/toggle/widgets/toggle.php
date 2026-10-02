@@ -34,6 +34,18 @@ class Toggle extends Widget_Base {
         return 'eead-element-icon eead-icons-toggle';
     }
 
+    public function get_keywords() {
+        return ['toggle', 'content toggle', 'switch', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -72,7 +84,7 @@ class Toggle extends Widget_Base {
                 'label' => esc_html__('Select Template', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SELECT,
                 'default' => '0',
-                'options' => get_elementor_templates(),
+                'options' => eead_get_elementor_templates(),
                 'condition' => [
                     'primary_content_type' => 'template',
                 ]
@@ -148,7 +160,7 @@ class Toggle extends Widget_Base {
                 'label' => esc_html__('Select Template', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SELECT,
                 'default' => '0',
-                'options' => get_elementor_templates(),
+                'options' => eead_get_elementor_templates(),
                 'condition' => [
                     'secondary_content_type' => 'template',
                 ]
@@ -248,7 +260,7 @@ class Toggle extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+        $this->add_responsive_control(
             'toggle_switch_alignment', [
                 'label' => esc_html__('Alignment', 'easy-elementor-addons'),
                 'type' => Controls_Manager::CHOOSE,
@@ -757,11 +769,11 @@ class Toggle extends Widget_Base {
         if ($settings[$content . '_content_type'] === 'content') {
             echo wp_kses_post($this->parse_text_editor($settings[$content . '_content']));
         } else if ($settings[$content . '_content_type'] === 'image') {
-            echo wp_kses_post(Group_Control_Image_Size::get_attachment_image_html($settings, $content . '_image', $content . '_image'));
+            Group_Control_Image_Size::print_attachment_image_html($settings, $content . '_image', $content . '_image');
         } else if ($settings[$content . '_content_type'] === 'template') {
-            if (!empty($settings[$content . '_templates'])) {
+            if (!empty($settings[$content . '_templates']) && 'publish' === get_post_status((int) $settings[$content . '_templates'])) {
                 $template_id = $settings[$content . '_templates'];
-                echo Plugin::$instance->frontend->get_builder_content_for_display($template_id);
+                echo Plugin::instance()->frontend->get_builder_content_for_display($template_id); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Elementor-rendered content.
             }
         }
     }
@@ -802,7 +814,8 @@ class Toggle extends Widget_Base {
     }
 
     protected function before_after_toggle($toggle_position = 'before') {
-        $settings = $this->get_settings();
+        $settings = $this->get_settings_for_display();
+        $filter_id = 'eead-goo-' . $this->get_id() . '-' . $toggle_position;
 
         $this->add_render_attribute('toggle-switch-' . $toggle_position, [
             'class' => ['eead-toggle-switch-container',
@@ -842,12 +855,12 @@ class Toggle extends Widget_Base {
                                 <path class="eead-svg-toggle-background" d="M71 142C31.7878 142 0 110.212 0 71C0 31.7878 31.7878 0 71 0C110.212 0 119 30 146 30C173 30 182 0 221 0C260 0 292 31.7878 292 71C292 110.212 260.212 142 221 142C181.788 142 173 112 146 112C119 112 110.212 142 71 142Z" />
                                 <rect class="eead-svg-toggle-icon on" x="64" y="39" width="12" height="64" rx="6" />
                                 <path class="eead-svg-toggle-icon off" fill-rule="evenodd" d="M221 91C232.046 91 241 82.0457 241 71C241 59.9543 232.046 51 221 51C209.954 51 201 59.9543 201 71C201 82.0457 209.954 91 221 91ZM221 103C238.673 103 253 88.6731 253 71C253 53.3269 238.673 39 221 39C203.327 39 189 53.3269 189 71C189 88.6731 203.327 103 221 103Z" />
-                                <g filter="url('#goo')">
+                                <g filter="url('#<?php echo esc_attr($filter_id); ?>')">
                                     <rect class="eead-svg-toggle-circle-center" x="13" y="42" width="116" height="58" rx="29" fill="#fff" />
                                     <rect class="eead-svg-toggle-circle left" x="14" y="14" width="114" height="114" rx="58" fill="#fff" />
                                     <rect class="eead-svg-toggle-circle right" x="164" y="14" width="114" height="114" rx="58" fill="#fff" />
                                 </g>
-                                <filter id="goo">
+                                <filter id="<?php echo esc_attr($filter_id); ?>">
                                     <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="10" />
                                     <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
                                 </filter>

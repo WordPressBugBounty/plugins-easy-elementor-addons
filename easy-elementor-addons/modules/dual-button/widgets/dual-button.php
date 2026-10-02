@@ -31,6 +31,18 @@ class DualButton extends Widget_Base {
         return 'eead-element-icon eead-icons-dual-buttons';
     }
 
+    public function get_keywords() {
+        return ['dual button', 'button', 'double button', 'cta', 'eead'];
+    }
+
+    /**
+     * Drop the inner .elementor-widget-container wrapper when Elementor's
+     * Optimized Markup feature is active.
+     */
+    public function has_widget_inner_wrapper(): bool {
+        return !\Elementor\Plugin::$instance->experiments->is_feature_active('e_optimized_markup');
+    }
+
     public function get_categories() {
         return ['easy-elementor-addons'];
     }
@@ -52,13 +64,14 @@ class DualButton extends Widget_Base {
                     'vertical' => esc_html__('Vertical', 'easy-elementor-addons')
                 ],
                 'selectors_dictionary' => [
-                    'horizontal' => '--eead-dual-button-direction:row;--eead-dual-button-align-items:center;--eead-dual-button-left-offset:100%;--eead-dual-button-top-offset:50%;--eead-dual-button-sep-margin-left:calc(var(--eead-dual-button-gap, 0)/2);--eead-dual-button-sep-margin-top:0;',
-                    'vertical' => '--eead-dual-button-direction:column;--eead-dual-button-align-items:stretch;--eead-dual-button-left-offset:50%;--eead-dual-button-top-offset:100%;--eead-dual-button-justify-content:center;--eead-dual-button-sep-margin-left:0;--eead-dual-button-sep-margin-top:calc(var(--eead-dual-button-gap, 0)/2);',
+                    'horizontal' => '--eead-dual-button-direction:row;--eead-dual-button-align-items:center;--eead-dual-button-left-offset:100%;--eead-dual-button-top-offset:50%;--eead-dual-button-sep-margin-left:calc(var(--eead-dual-button-gap, 0px)/2);--eead-dual-button-sep-margin-top:0;',
+                    'vertical' => '--eead-dual-button-direction:column;--eead-dual-button-align-items:stretch;--eead-dual-button-left-offset:50%;--eead-dual-button-top-offset:100%;--eead-dual-button-justify-content:center;--eead-dual-button-sep-margin-left:0;--eead-dual-button-sep-margin-top:calc(var(--eead-dual-button-gap, 0px)/2);',
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .eead-dual-buttons' => '{{VALUE}}'
                 ],
                 'default' => 'horizontal',
+                'mobile_default' => 'vertical',
             ]
         );
 
@@ -795,7 +808,7 @@ class DualButton extends Widget_Base {
                             ?>
                         </span>
                         <?php
-                        if ($settings['pri_button_icon']['value'] !== '') {
+                        if (!empty($settings['pri_button_icon']['value'])) {
                             ?>
                             <?php
                             Icons_Manager::render_icon($settings['pri_button_icon'], ['aria-hidden' => 'true']);
@@ -841,7 +854,7 @@ class DualButton extends Widget_Base {
                             ?>
                         </span>
                         <?php
-                        if ($settings['sec_button_icon']['value'] !== '') {
+                        if (!empty($settings['sec_button_icon']['value'])) {
                             ?>
                             <?php
                             Icons_Manager::render_icon($settings['sec_button_icon'], ['aria-hidden' => 'true']);

@@ -5,7 +5,7 @@ namespace EEADElements\Templates\Types;
 if (!defined('ABSPATH'))
     exit; // Exit if accessed directly
 
-if (!class_exists('EEAD_Structure_Section')) {
+if (!class_exists(__NAMESPACE__ . '\EEAD_Structure_Section')) {
 
     /**
      * Define EEAD_Structure_Section class
@@ -26,13 +26,6 @@ if (!class_exists('EEAD_Structure_Section')) {
 
         public function get_sources() {
             return array('eead');
-        }
-
-        public function get_document_type() {
-            return array(
-                'class' => 'EEAD_Section_Document',
-                'file' => EEAD_PATH . 'templates/documents/section.php',
-            );
         }
 
         /**

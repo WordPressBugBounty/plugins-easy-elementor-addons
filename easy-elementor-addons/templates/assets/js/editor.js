@@ -1,6 +1,6 @@
 !function (e) {
     "use strict";
-    var t, a, o, n, i = window.EEADData || {};
+    var t, a, i = window.EEADData || {};
     a = {
         ModalLayoutView: null,
         ModalHeaderView: null,
@@ -24,7 +24,6 @@
         ModalPreviewView: null,
         ModalHeaderBack: null,
         ModalHeaderLogo: null,
-        EEADProButton: null,
         KeywordsView: null,
         TabModel: null,
         CategoryModel: null,
@@ -187,10 +186,10 @@
                             page_settings: !1
                         },
                         success: function (e) {
-                            e.license ? (console.log("%c Template Inserted Successfully!!", "color: #7a7a7a; background-color: #eee;"), t.closeModal(), elementor.channels.data.trigger("$e.run( 'document/import' )", a), null !== t.atIndex && (r.at = t.atIndex), elementor.config.version < "3.0.0" ? elementor.sections.currentView.addChildModel(e.content, r) : elementor.previewView.addChildModel(e.content, r), elementor.channels.data.trigger("template:after:insert", a), t.atIndex = null) : t.layout.showLicenseError()
+                            e.license ? (t.closeModal(), null !== t.atIndex && (r.at = t.atIndex), elementor.previewView.addChildModel(e.content, r), elementor.channels.data.trigger("template:after:insert", a), t.atIndex = null) : t.layout.showLicenseError()
                         },
                         error: function (e) {
-                            console.log(e)
+                            t.layout.showConnectionError()
                         }
                     })
                 }
@@ -202,9 +201,6 @@
                         behaviorClass: a.ModalInsertTemplateBehavior
                     }
                 }
-            }), a.EEADProButton = Marionette.ItemView.extend({
-                template: "#views-eead-template-pro-button",
-                id: "eead-modal-template-pro-button"
             }), a.ModalTemplateItemView = Marionette.ItemView.extend({
                 template: "#views-eead-template-modal-item",
                 className: function () {
@@ -282,9 +278,6 @@
             }), a.ModalTabsCollectionView = Marionette.CompositeView.extend({
                 template: "#views-eead-template-modal-tabs",
                 childViewContainer: "#views-eead-template-modal-tabs-items",
-                initialize: function () {
-                    this.listenTo(t.channels.layout, "tamplate:cloned", this._renderChildren)
-                },
                 getChildView: function (e) {
                     return a.ModalTabsItemView
                 }
@@ -307,7 +300,7 @@
                     var e = this.$childViewContainer,
                         o = this.$childViewContainer.children(),
                         n = t.getTab();
-                    "eead_page" !== n && "local" !== n && e.imagesLoaded(function () { }).done(function () {
+                    "eead_pages" !== n && "local" !== n && e.imagesLoaded(function () { }).done(function () {
                         setTimeout(function () {
                             a.masonry.init({
                                 container: e,
@@ -429,70 +422,21 @@
             }
         }
     }, t = {
-        modal: !(n = {
-            getDataToSave: function (e) {
-                return e.id = window.elementor.config.post_id, e
-            },
-            init: function () {
-                window.elementor.settings.eead_template && (window.elementor.settings.eead_template.getDataToSave = this.getDataToSave), window.elementor.settings.eead_page && (window.elementor.settings.eead_page.getDataToSave = this.getDataToSave, window.elementor.settings.eead_page.changeCallbacks = {
-                    custom_header: function () {
-                        this.save(function () {
-                            elementor.reloadPreview(), elementor.once("preview:loaded", function () {
-                                elementor.getPanelView().setPage("eead_page_settings")
-                            })
-                        })
-                    },
-                    custom_footer: function () {
-                        this.save(function () {
-                            elementor.reloadPreview(), elementor.once("preview:loaded", function () {
-                                elementor.getPanelView().setPage("eead_page_settings")
-                            })
-                        })
-                    }
-                })
-            }
-        }),
-        layout: !(o = {
-            EEADSearchView: null,
-            init: function () {
-                this.EEADSearchView = window.elementor.modules.controls.BaseData.extend({
-                    onReady: function () {
-                        var t = this.model.attributes.action,
-                            a = this.model.attributes.query_params;
-                        this.ui.select.find("option").each(function (t, a) {
-                            e(this).attr("selected", !0)
-                        }), this.ui.select.select2({
-                            ajax: {
-                                url: function () {
-                                    var o = "";
-                                    return 0 < a.length && e.each(a, function (e, t) {
-                                        window.elementor.settings.page.model.attributes[t] && (o += "&" + t + "=" + window.elementor.settings.page.model.attributes[t])
-                                    }), ajaxurl + "?action=" + t + o
-                                },
-                                dataType: "json"
-                            },
-                            placeholder: "Please enter 3 or more characters",
-                            minimumInputLength: 3
-                        })
-                    },
-                    onBeforeDestroy: function () {
-                        this.ui.select.data("select2") && this.ui.select.select2("destroy"), this.$el.remove()
-                    }
-                }), window.elementor.addControlView("eead_search", this.EEADSearchView)
-            }
-        }),
+        modal: !1,
+        layout: !1,
         collections: {},
         tabs: {},
         defaultTab: "",
         channels: {},
         atIndex: null,
         init: function () {
-            window.elementor.on("preview:loaded", window._.bind(t.onPreviewLoaded, t)), a.init(), o.init(), n.init()
+            window.elementor.on("preview:loaded", window._.bind(t.onPreviewLoaded, t)), a.init()
         },
         onPreviewLoaded: function () {
-            let e = setInterval(() => {
-                window.elementor.$previewContents.find(".elementor-add-new-section").length && (this.initEEADTempsButton(), clearInterval(e))
-            }, 100);
+            let c = 0,
+                e = setInterval(() => {
+                    window.elementor.$previewContents.find(".elementor-add-new-section").length ? (this.initEEADTempsButton(), clearInterval(e)) : ++c >= 100 && clearInterval(e)
+                }, 100);
             window.elementor.$previewContents.on("click.addEEADTemplate", ".eead-add-section-btn", _.bind(this.showTemplatesModal, this)), this.channels = {
                 templates: Backbone.Radio.channel("EEAD_EDITOR:templates"),
                 tabs: Backbone.Radio.channel("EEAD_EDITOR:tabs"),
@@ -502,12 +446,10 @@
         initEEADTempsButton: function () {
             var a = window.elementor.$previewContents.find(".elementor-add-new-section"),
                 o = '<div class="elementor-add-section-area-button eead-add-section-btn" title="Add Easy Elementor Addons Template"><div class="eead-editor-icon"></div></div>';
-            a.length && i.EEADEditorBtn && e(o).prependTo(a), window.elementor.$previewContents.on("click.addEEADTemplate", ".elementor-editor-section-settings .elementor-editor-element-add", function () {
-                var a = e(this).closest(".elementor-top-section"),
+            a.length && i.EEADEditorBtn && e(o).prependTo(a), window.elementor.$previewContents.on("click.addEEADTemplate", ".elementor-editor-section-settings .elementor-editor-element-add, .elementor-editor-container-settings .elementor-editor-element-add", function () {
+                var a = e(this).closest(".elementor-top-section, .e-con"),
                     n = a.data("model-cid");
-                elementor.config.version < "3.0.0" ? window.elementor.sections.currentView.collection.length && e.each(window.elementor.sections.currentView.collection.models, function (e, a) {
-                    n === a.cid && (t.atIndex = e)
-                }) : elementor.previewView.collection.length && e.each(elementor.previewView.collection.models, function (e, a) {
+                t.atIndex = null, elementor.previewView.collection.length && e.each(elementor.previewView.collection.models, function (e, a) {
                     n === a.cid && (t.atIndex = e)
                 }), i.EEADEditorBtn && a.prev(".elementor-add-section").find(".elementor-add-new-section").prepend(o)
             })
@@ -539,14 +481,6 @@
         setPreview: function (e, t) {
             this.channels.layout.reply("preview", e), t || this.channels.layout.trigger("preview:change")
         },
-        getKeywords: function () {
-            return _.each(this.widgets, function (e, t) {
-                tabs.push({
-                    slug: t,
-                    title: e
-                })
-            }), []
-        },
         showTemplatesModal: function () {
             this.getModal().show(), this.layout || (this.layout = new a.ModalLayoutView, this.layout.showLoadingView()), this.setTab(this.defaultTab, !0), this.requestTemplates(this.defaultTab), this.setPreview("initial")
         },
@@ -563,6 +497,9 @@
                     tab: t
                 },
                 success: function (e) {
+                    if (!e || !e.success || !e.data) {
+                        return o.layout.showConnectionError()
+                    }
                     var n = new a.LibraryCollection(e.data.templates),
                         i = new a.CategoriesCollection(e.data.categories);
                     o.tabs[t].data = {

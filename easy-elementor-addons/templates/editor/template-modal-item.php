@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
 /**
  * Template Item
  */
@@ -10,7 +13,7 @@
             <i class="eicon-search-bold"></i>
         </div>
         <img src="{{ thumbnail }}" alt="{{ title }}">
-        <div class="elementor-template-library-template-name">{{{ title }}}</div>
+        <div class="elementor-template-library-template-name">{{ title }}</div>
     </div>
 </div>
 <div class="elementor-template-library-template-controls">
