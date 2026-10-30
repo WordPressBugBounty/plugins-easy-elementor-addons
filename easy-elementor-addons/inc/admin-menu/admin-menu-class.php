@@ -79,6 +79,7 @@ class AdminClass {
 
             update_option('eead_widgets', array());
             $update_widgets = update_option('eead_widgets', $data_ar);
+            update_option('eead_widgets_seen', \eead_widgets_latest_since());
             echo ($update_widgets || empty($data_ar)) ? 'yes' : 'no';
         }
         die();

@@ -553,6 +553,13 @@ function eead_get_all_widgets_list() {
             'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/animated-heading/',
             'category' => 'creative'
         ),
+        'appearing-image' => array(
+            'name' => 'Appearing Image',
+            'icon' => 'eead-icons-appearing-image',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/appearing-image/',
+            'category' => 'creative',
+            'since' => '2.5.0'
+        ),
         'business-hour' => array(
             'name' => 'Business Hour',
             'icon' => 'eead-icons-business-hours',
@@ -565,6 +572,13 @@ function eead_get_all_widgets_list() {
             'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/circular-progress-bar/',
             'category' => 'essential'
         ),
+        'comparison-table' => array(
+            'name' => 'Comparison Table',
+            'icon' => 'eead-icons-comparison-table',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/comparison-table/',
+            'category' => 'listing',
+            'since' => '2.5.0'
+        ),
         'countdown' => array(
             'name' => 'Countdown',
             'icon' => 'eead-icons-count-down',
@@ -576,6 +590,13 @@ function eead_get_all_widgets_list() {
             'icon' => 'eead-icons-counter',
             'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/counter/',
             'category' => 'essential'
+        ),
+        'data-table' => array(
+            'name' => 'Data Table',
+            'icon' => 'eead-icons-data-table',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/data-table/',
+            'category' => 'listing',
+            'since' => '2.5.0'
         ),
         'drop-bar' => array(
             'name' => 'Drop Bar',
@@ -649,6 +670,27 @@ function eead_get_all_widgets_list() {
             'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/image-gallery/',
             'category' => 'advanced'
         ),
+        'image-hover-effect' => array(
+            'name' => 'Image Hover Effects',
+            'icon' => 'eead-icons-image-hover-effect',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/image-hover-effects/',
+            'category' => 'creative',
+            'since' => '2.5.0'
+        ),
+        'image-stack' => array(
+            'name' => 'Image Stack',
+            'icon' => 'eead-icons-image-stack',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/image-stack/',
+            'category' => 'essential',
+            'since' => '2.5.0'
+        ),
+        'justified-grid' => array(
+            'name' => 'Justified Grid',
+            'icon' => 'eead-icons-justified-grid',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/justified-grid/',
+            'category' => 'listing',
+            'since' => '2.5.0'
+        ),
         'link-effect' => array(
             'name' => 'Link Effect',
             'icon' => 'eead-icons-link',
@@ -678,6 +720,13 @@ function eead_get_all_widgets_list() {
             'icon' => 'eead-icons-one-page-nav',
             'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/one-page-navigation/',
             'category' => 'essential'
+        ),
+        'pdf-viewer' => array(
+            'name' => 'PDF Viewer',
+            'icon' => 'eead-icons-pdf-viewer',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/pdf-viewer/',
+            'category' => 'essential',
+            'since' => '2.5.0'
         ),
         'pie-chart' => array(
             'name' => 'Pie Chart',
@@ -721,17 +770,45 @@ function eead_get_all_widgets_list() {
             'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/scroll-image/',
             'category' => 'essential'
         ),
+        'scroll-text-reveal' => array(
+            'name' => 'Text Scroll Reveal',
+            'icon' => 'eead-icons-scroll-text-reveal',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/text-scroll-reveal/',
+            'category' => 'creative',
+            'since' => '2.5.0'
+        ),
         'slider' => array(
             'name' => 'Slider',
             'icon' => 'eead-icons-slider',
             'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/slider/',
             'category' => 'essential'
         ),
+        'social-icons' => array(
+            'name' => 'Social Icons',
+            'icon' => 'eead-icons-social-icons',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/social-icons/',
+            'category' => 'essential',
+            'since' => '2.5.0'
+        ),
         'social-share' => array(
             'name' => 'Social Share',
             'icon' => 'eead-icons-social-share',
             'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/social-share/',
             'category' => 'social'
+        ),
+        'star-rating' => array(
+            'name' => 'Star Rating',
+            'icon' => 'eead-icons-star-rating',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/star-rating/',
+            'category' => 'essential',
+            'since' => '2.5.0'
+        ),
+        'promo-box' => array(
+            'name' => 'Promo Box',
+            'icon' => 'eead-icons-promo-box',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/promo-box/',
+            'category' => 'creative',
+            'since' => '2.5.0'
         ),
         'step-flow' => array(
             'name' => 'Step Flow',
@@ -750,6 +827,13 @@ function eead_get_all_widgets_list() {
             'icon' => 'eead-icons-switcher',
             'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/switcher/',
             'category' => 'essential'
+        ),
+        'table-of-contents' => array(
+            'name' => 'Table of Contents',
+            'icon' => 'eead-icons-table-of-contents',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/table-of-contents/',
+            'category' => 'essential',
+            'since' => '2.5.0'
         ),
         'team-member' => array(
             'name' => 'Team',
@@ -774,6 +858,13 @@ function eead_get_all_widgets_list() {
             'icon' => 'eead-icons-testimonial-carousel',
             'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/testimonial-carousel/',
             'category' => 'essential'
+        ),
+        'marquee' => array(
+            'name' => 'Marquee',
+            'icon' => 'eead-icons-marquee',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/marquee/',
+            'category' => 'creative',
+            'since' => '2.5.0'
         ),
         'toggle' => array(
             'name' => 'Toggle',
@@ -805,6 +896,13 @@ function eead_get_all_widgets_list() {
             'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/video-player/',
             'category' => 'essential'
         ),
+        'whatsapp-chat' => array(
+            'name' => 'WhatsApp Chat',
+            'icon' => 'eead-icons-whatsapp-chat',
+            'demo_url' => 'https://demo.hashthemes.com/easy-elementor-addons/whatsapp-chat/',
+            'category' => 'essential',
+            'since' => '2.5.0'
+        ),
         'weather' => array(
             'name' => 'Weather Block',
             'icon' => 'eead-icons-weather',
@@ -812,7 +910,10 @@ function eead_get_all_widgets_list() {
             'category' => 'essential'
         ),
     ));
-    ksort($all_wid);
+    // Sort by the displayed name, not the key, so renamed widgets land where users look for them.
+    uasort($all_wid, function ($a, $b) {
+        return strnatcasecmp($a['name'], $b['name']);
+    });
     return $all_wid;
 }
 
@@ -826,14 +927,36 @@ function eead_get_all_widgets_list() {
  * @return array
  */
 function eead_get_enabled_widgets() {
-    $all_widgets = array_keys(eead_get_all_widgets_list());
+    $widgets = eead_get_all_widgets_list();
+    $all_widgets = array_keys($widgets);
     $saved = get_option('eead_widgets');
 
     if (!is_array($saved)) {
         return $all_widgets;
     }
 
+    // Widgets added after the settings were last saved were never offered to
+    // the user, so they start enabled instead of silently missing. Settings
+    // saved before this was tracked date from 2.4.0.
+    $seen = get_option('eead_widgets_seen', '2.4.0');
+    foreach ($widgets as $key => $widget) {
+        if (!empty($widget['since']) && version_compare($widget['since'], $seen, '>')) {
+            $saved[] = $key;
+        }
+    }
+
     return array_values(array_intersect($all_widgets, $saved));
+}
+
+/** The newest `since` version in the widget list, stored when the widget settings are saved. */
+function eead_widgets_latest_since() {
+    $latest = EEAD_VERSION;
+    foreach (eead_get_all_widgets_list() as $widget) {
+        if (!empty($widget['since']) && version_compare($widget['since'], $latest, '>')) {
+            $latest = $widget['since'];
+        }
+    }
+    return $latest;
 }
 
 function eead_get_all_widgets_desc() {
@@ -844,10 +967,13 @@ function eead_get_all_widgets_desc() {
         'advanced-icon-box' => esc_html__('Lets you create an icon box where you can place an icon with the title, and description.', 'easy-elementor-addons'),
         'advanced-map' => esc_html__('Add fully customizable maps with advanced styling and multiple location markers.', 'easy-elementor-addons'),
         'animated-heading' => esc_html__('Place the animated heading to display your deals, offers, discounts or features of your services in an eye catchy way.', 'easy-elementor-addons'),
+        'appearing-image' => esc_html__('Reveal an image with a wipe, curtain, circle or zoom, once in view or as visitors scroll.', 'easy-elementor-addons'),
         'business-hour' => esc_html__('Displays the timetable of the business hour of your company.', 'easy-elementor-addons'),
         'circular-progressbar' => esc_html__('Displays the work progress of your company in a circular layout.', 'easy-elementor-addons'),
+        'comparison-table' => esc_html__('Compare plans or products side by side, with ticks and crosses, group headings, a highlighted column and buttons.', 'easy-elementor-addons'),
         'countdown' => esc_html__('Create engaging countdown timers to highlight offers, events, or launches.', 'easy-elementor-addons'),
         'counter' => esc_html__('Let you place a beautiful stats counter of your business by highlighting the achievements.', 'easy-elementor-addons'),
+        'data-table' => esc_html__('Build sortable, searchable tables in the editor or from pasted CSV, with pagination and stacked cards on mobile.', 'easy-elementor-addons'),
         'drop-bar' => esc_html__('Display a short information on the drop bar and display it in different positions, animation effects.', 'easy-elementor-addons'),
         'dual-button' => esc_html__('Design stylish dual-action buttons with unique layouts and effects.', 'easy-elementor-addons'),
         'dual-heading' => esc_html__('Allows you to display the heading in dual effects.', 'easy-elementor-addons'),
@@ -860,11 +986,15 @@ function eead_get_all_widgets_desc() {
         'image-accordion' => esc_html__('Images are displayed in a stacked layout that expands or collapses when clicked, showing or hiding additional images or content', 'easy-elementor-addons'),
         'image-comparison' => esc_html__('To showcase the images before and after editing the images.', 'easy-elementor-addons'),
         'image-gallery' => esc_html__('Build dynamic, filterable image or video galleries with ease.', 'easy-elementor-addons'),
+        'image-hover-effect' => esc_html__('Reveal a title, text and button over an image with 16 hover effects.', 'easy-elementor-addons'),
+        'image-stack' => esc_html__('Show overlapping profile photos with a count bubble and a line of text, like \"Trusted by 2,000+ teams\".', 'easy-elementor-addons'),
+        'justified-grid' => esc_html__('Show photos in neat rows that keep their shape, with captions and a lightbox.', 'easy-elementor-addons'),
         'link-effect' => esc_html__('Customize your hyperlink by adding different animation effects.', 'easy-elementor-addons'),
         'logo-carousel' => esc_html__('Highlight the logo of your clients, partners, or sponsor in a beautiful carousel.', 'easy-elementor-addons'),
         'logo-grid' => esc_html__('Highlight the logo of your clients, partners, or sponsor in a beautiful logo grid.', 'easy-elementor-addons'),
         'lottie' => esc_html__('Embed lightweight, animated Lottie files to enhance interactivity.', 'easy-elementor-addons'),
         'one-page-navigation' => esc_html__('Place an extra navigator to navigate different contents present in a single page.', 'easy-elementor-addons'),
+        'pdf-viewer' => esc_html__('Embed a PDF with a title bar and download button, with a simple button on phones.', 'easy-elementor-addons'),
         'pie-chart' => esc_html__('Display your company progress in a beautiful pie chart.', 'easy-elementor-addons'),
         'popup-modal' => esc_html__('Place an animated popup with different animations.', 'easy-elementor-addons'),
         'popup-video' => esc_html__('Add eye-catching video popups to boost user engagement.', 'easy-elementor-addons'),
@@ -872,20 +1002,27 @@ function eead_get_all_widgets_desc() {
         'pricing-table' => esc_html__('Display the pricing plan of your services in a beautifully designed pricing table.', 'easy-elementor-addons'),
         'progressbar' => esc_html__('Allows you to showcase your work progress in an attractive progress bar.', 'easy-elementor-addons'),
         'scroll-image' => esc_html__('Let’s you showcase a long and full width image in a short space. Automatically scroll the images when hovered over.', 'easy-elementor-addons'),
+        'scroll-text-reveal' => esc_html__('Fill a heading word by word or letter by letter as visitors scroll.', 'easy-elementor-addons'),
         'slider' => esc_html__('Highlight your announcements, deals or even products in a responsive slider.', 'easy-elementor-addons'),
+        'social-icons' => esc_html__('Link to your social profiles with brand colors, shapes, labels, tooltips and hover effects.', 'easy-elementor-addons'),
         'social-share' => esc_html__('Add social share buttons to share your pages or posts to different social media networks in a single click.', 'easy-elementor-addons'),
+        'star-rating' => esc_html__('Show a star rating with a score and caption, or a full review card with photo and source.', 'easy-elementor-addons'),
+        'promo-box' => esc_html__('Promote a product or offer with an image, badge, corner ribbon, price and button.', 'easy-elementor-addons'),
         'step-flow' => esc_html__('Present step-by-step processes with a clean and professional layout.', 'easy-elementor-addons'),
         'sticky-video' => esc_html__('Keep videos visible while users scroll through the page.', 'easy-elementor-addons'),
         'switcher' => esc_html__('To display multiple web contents in a switcher for comparison.', 'easy-elementor-addons'),
+        'table-of-contents' => esc_html__('Build a table of contents from the page headings, with smooth scrolling and the current section highlighted.', 'easy-elementor-addons'),
         'team-member' => esc_html__('Display your team members of your company/organization.', 'easy-elementor-addons'),
         'team-carousel' => esc_html__('Display your team members of your company/organization in an attractive carousel.', 'easy-elementor-addons'),
         'testimonial' => esc_html__('Showcase the positive words given by your clients in a stunning way.', 'easy-elementor-addons'),
         'testimonial-carousel' => esc_html__('Showcase the positive words given by your client in a beautiful slider.', 'easy-elementor-addons'),
+        'marquee' => esc_html__('Scroll text, icons and images in an endless marquee, with separators, outline text, hover and scroll effects.', 'easy-elementor-addons'),
         'toggle' => esc_html__('Display multiple contents and toggle them for comparison.', 'easy-elementor-addons'),
         'twitter-feed' => esc_html__('Display real-time Twitter feeds directly on your website.', 'easy-elementor-addons'),
         'vertical-tab' => esc_html__('Allows you to showcase different information in a responsive vertical tab.', 'easy-elementor-addons'),
         'vertical-timeline' => esc_html__('Adds a vertical timeline to represent the evolution, history and success story of your company in a responsive timeline.', 'easy-elementor-addons'),
         'video-player' => esc_html__('Allow you to embed the videos from Youtube, Vimeo or from your local computer.', 'easy-elementor-addons'),
+        'whatsapp-chat' => esc_html__('Add a floating or inline WhatsApp button with a chat box, greeting and one or more agents.', 'easy-elementor-addons'),
         'weather' => esc_html__('Adds a weather report of a city with humidity, Pressure and Wind Speed.', 'easy-elementor-addons'),
     );
 }

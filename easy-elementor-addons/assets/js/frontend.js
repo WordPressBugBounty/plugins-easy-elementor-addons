@@ -36,6 +36,12 @@
                 'eead-team-carousel.default': EEA.teamCarousel,
                 'eead-testimonial-carousel.default': EEA.testimonialCarousel,
                 'eead-twitter-feed.default': EEA.twitterFeed,
+                'eead-marquee.default': EEA.textMarquee,
+                'eead-data-table.default': EEA.dataTable,
+                'eead-table-of-contents.default': EEA.tableOfContents,
+                'eead-scroll-text-reveal.default': EEA.scrollTextReveal,
+                'eead-whatsapp-chat.default': EEA.whatsappChat,
+                'eead-appearing-image.default': EEA.appearingImage,
             };
 
             $.each(widgets, function (widget, callback) {
@@ -1318,6 +1324,922 @@
                     $frameContainer.height(frameHeight);
                 }
             }
+        },
+
+        textMarquee: function ($scope) {
+            EEA.release($scope, 'textMarquee');
+
+            // One instance per row: a widget can render a second, crossing row.
+            EEA.own($scope, '.eead-marquee').each(function () {
+                EEA.textMarqueeRow($scope, this);
+            });
+        },
+
+        textMarqueeRow: function ($scope, el) {
+            var track = el.querySelector('.eead-tm-track'),
+                group = track.querySelector('.eead-tm-group'),
+                settings = JSON.parse(el.getAttribute('data-settings') || '{}'),
+                vertical = settings.direction === 'up' || settings.direction === 'down',
+                // pos grows while the content moves left / up
+                sign = settings.direction === 'right' || settings.direction === 'down' ? -1 : 1,
+                hoverFactor = settings.hover === 'pause' ? 0 : (settings.hover === 'slow' ? 0.3 : 1),
+                dist = 0, pos = 0, factor = 1, boost = 0, scrollDir = 1,
+                last = null, raf = 0, running = false,
+                hovering = false, dragging = false, dragMoved = false, dragStart = 0, dragPos = 0,
+                lastScroll = window.pageYOffset, resizeObserver = null, viewObserver = null;
+
+            $(track).children('.eead-tm-clone').remove();
+            el.classList.remove('eead-tm-static', 'eead-tm-dragging');
+            track.style.transform = '';
+
+            if (settings.reducedMotion && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                el.classList.add('eead-tm-static');
+                return;
+            }
+
+            function speed() {
+                var map = settings.speed || {},
+                    mode = elementorFrontend.getCurrentDeviceMode ? elementorFrontend.getCurrentDeviceMode() : 'desktop';
+                if (map[mode] !== undefined) {
+                    return map[mode];
+                }
+                if (mode === 'mobile' && map.tablet !== undefined) {
+                    return map.tablet;
+                }
+                return map.desktop !== undefined ? map.desktop : 60;
+            }
+
+            function wrap() {
+                if (dist > 0) {
+                    pos = ((pos % dist) + dist) % dist;
+                }
+            }
+
+            function paint() {
+                track.style.transform = vertical ? 'translate3d(0,' + (-pos) + 'px,0)' : 'translate3d(' + (-pos) + 'px,0,0)';
+            }
+
+            // Enough copies of the group to cover the box while one group scrolls out.
+            function layout() {
+                var size = vertical ? group.offsetHeight : group.offsetWidth,
+                    style = window.getComputedStyle(track),
+                    gap = parseFloat(vertical ? style.rowGap : style.columnGap) || 0,
+                    box = vertical ? el.clientHeight : el.clientWidth,
+                    clones = track.querySelectorAll('.eead-tm-clone'),
+                    need, i, clone;
+
+                if (size <= 0) {
+                    return;
+                }
+
+                dist = size + gap;
+                need = Math.ceil(box / dist) + 1;
+
+                for (i = clones.length; i < need; i++) {
+                    clone = group.cloneNode(true);
+                    clone.classList.add('eead-tm-clone');
+                    clone.setAttribute('aria-hidden', 'true');
+                    $(clone).find('a, button, [tabindex]').attr('tabindex', '-1');
+                    track.appendChild(clone);
+                }
+                for (i = clones.length - 1; i >= need; i--) {
+                    track.removeChild(clones[i]);
+                }
+
+                wrap();
+                paint();
+            }
+
+            function tick(now) {
+                var dt = last === null ? 0 : Math.min((now - last) / 1000, 0.1),
+                    target = hovering ? hoverFactor : 1;
+                last = now;
+
+                factor += (target - factor) * Math.min(1, dt * 5);
+                if (Math.abs(target - factor) < 0.01) {
+                    factor = target;
+                }
+                boost *= Math.pow(0.04, dt);
+
+                if (!dragging) {
+                    pos += speed() * sign * scrollDir * factor * (1 + boost) * dt;
+                    wrap();
+                    paint();
+                }
+
+                raf = window.requestAnimationFrame(tick);
+            }
+
+            function start() {
+                if (!running) {
+                    running = true;
+                    last = null;
+                    raf = window.requestAnimationFrame(tick);
+                }
+            }
+
+            function stop() {
+                running = false;
+                window.cancelAnimationFrame(raf);
+            }
+
+            function onScroll() {
+                var y = window.pageYOffset,
+                    delta = y - lastScroll;
+                lastScroll = y;
+                if (!delta) {
+                    return;
+                }
+                boost = Math.max(boost, Math.min(Math.abs(delta) / 10, 6));
+                if (settings.scroll === 'direction') {
+                    scrollDir = delta < 0 ? -1 : 1;
+                }
+            }
+
+            function onEnter() {
+                hovering = true;
+            }
+
+            function onLeave() {
+                hovering = false;
+            }
+
+            function point(e) {
+                return vertical ? e.clientY : e.clientX;
+            }
+
+            function onDown(e) {
+                if (e.button !== undefined && e.button !== 0) {
+                    return;
+                }
+                dragging = true;
+                dragMoved = false;
+                dragStart = point(e);
+                dragPos = pos;
+                el.classList.add('eead-tm-dragging');
+                if (el.setPointerCapture) {
+                    el.setPointerCapture(e.pointerId);
+                }
+            }
+
+            function onMove(e) {
+                if (!dragging) {
+                    return;
+                }
+                var moved = point(e) - dragStart;
+                if (Math.abs(moved) > 4) {
+                    dragMoved = true;
+                }
+                pos = dragPos - moved;
+                wrap();
+                paint();
+            }
+
+            function onUp() {
+                dragging = false;
+                el.classList.remove('eead-tm-dragging');
+            }
+
+            // A drag ends with a click on whatever is under the pointer; don't follow that link.
+            function onClick(e) {
+                if (dragMoved) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dragMoved = false;
+                }
+            }
+
+            layout();
+
+            if (window.ResizeObserver) {
+                resizeObserver = new ResizeObserver(layout);
+                resizeObserver.observe(el);
+                resizeObserver.observe(group);
+            } else {
+                $(window).on('resize' + EEA.ns($scope, 'Marquee'), layout);
+            }
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(layout);
+            }
+
+            // Only animate while the marquee is on screen.
+            if (window.IntersectionObserver) {
+                viewObserver = new IntersectionObserver(function (entries) {
+                    if (entries[entries.length - 1].isIntersecting) {
+                        start();
+                    } else {
+                        stop();
+                    }
+                });
+                viewObserver.observe(el);
+            } else {
+                start();
+            }
+
+            // Touch screens fire mouseenter on tap but never mouseleave.
+            if (!window.matchMedia || window.matchMedia('(hover: hover)').matches) {
+                el.addEventListener('mouseenter', onEnter);
+                el.addEventListener('mouseleave', onLeave);
+            }
+            el.addEventListener('focusin', onEnter);
+            el.addEventListener('focusout', onLeave);
+
+            if (settings.scroll && settings.scroll !== 'none') {
+                window.addEventListener('scroll', onScroll, {passive: true});
+            }
+
+            if (settings.drag) {
+                el.addEventListener('pointerdown', onDown);
+                el.addEventListener('pointermove', onMove);
+                el.addEventListener('pointerup', onUp);
+                el.addEventListener('pointercancel', onUp);
+                el.addEventListener('click', onClick, true);
+            }
+
+            EEA.keep($scope, 'textMarquee', function () {
+                stop();
+                if (resizeObserver) {
+                    resizeObserver.disconnect();
+                }
+                if (viewObserver) {
+                    viewObserver.disconnect();
+                }
+                $(window).off(EEA.ns($scope, 'Marquee'));
+                window.removeEventListener('scroll', onScroll);
+                el.removeEventListener('mouseenter', onEnter);
+                el.removeEventListener('mouseleave', onLeave);
+                el.removeEventListener('focusin', onEnter);
+                el.removeEventListener('focusout', onLeave);
+                el.removeEventListener('pointerdown', onDown);
+                el.removeEventListener('pointermove', onMove);
+                el.removeEventListener('pointerup', onUp);
+                el.removeEventListener('pointercancel', onUp);
+                el.removeEventListener('click', onClick, true);
+            });
+        },
+
+        /** Pick a per-device value ({desktop, tablet, mobile}) for the current Elementor device. */
+        deviceValue: function (map, fallback) {
+            var mode = window.elementorFrontend && elementorFrontend.getCurrentDeviceMode ? elementorFrontend.getCurrentDeviceMode() : 'desktop';
+            map = map || {};
+            if (map[mode] !== undefined) {
+                return map[mode];
+            }
+            if (mode === 'mobile' && map.tablet !== undefined) {
+                return map.tablet;
+            }
+            return map.desktop !== undefined ? map.desktop : fallback;
+        },
+
+        reducedMotion: function () {
+            return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        },
+
+        dataTable: function ($scope) {
+            var wrap = EEA.own($scope, '.eead-data-table-wrap')[0];
+            if (!wrap) {
+                return;
+            }
+
+            var settings = JSON.parse(wrap.getAttribute('data-settings') || '{}'),
+                table = wrap.querySelector('.eead-data-table'),
+                tbody = table.tBodies[0],
+                search = wrap.querySelector('.eead-dt-search'),
+                info = wrap.querySelector('.eead-dt-info'),
+                pager = wrap.querySelector('.eead-dt-pagination'),
+                rows = Array.prototype.slice.call(tbody.rows),
+                columns = 0,
+                state = {col: -1, dir: 0, query: '', page: 1},
+                timer = 0;
+
+            if (table.tHead && table.tHead.rows[0]) {
+                Array.prototype.forEach.call(table.tHead.rows[0].cells, function (cell) {
+                    columns += cell.colSpan || 1;
+                });
+            }
+
+            rows.forEach(function (row) {
+                row.eeadText = row.textContent.toLowerCase();
+            });
+
+            // The cell under a column, counting earlier cells' column spans.
+            function cellAt(row, col) {
+                var at = 0, i;
+                for (i = 0; i < row.cells.length; i++) {
+                    if (col < at + (row.cells[i].colSpan || 1)) {
+                        return row.cells[i];
+                    }
+                    at += row.cells[i].colSpan || 1;
+                }
+                return null;
+            }
+
+            function sortValue(row, col) {
+                var cell = cellAt(row, col),
+                    text = cell ? cell.textContent.trim() : '',
+                    numeric = text.replace(/[\s,%]/g, '').replace(/^[^\d.\-]+|[^\d.]+$/g, '');
+                if (numeric !== '' && !isNaN(numeric) && /\d/.test(numeric)) {
+                    return {num: parseFloat(numeric), text: text};
+                }
+                return {num: null, text: text.toLowerCase()};
+            }
+
+            function render() {
+                var list = rows.filter(function (row) {
+                        return !state.query || row.eeadText.indexOf(state.query) !== -1;
+                    }),
+                    total, per, pages, from, to, empty;
+
+                if (state.col !== -1 && state.dir) {
+                    list = list.map(function (row, i) {
+                        return {row: row, i: i, v: sortValue(row, state.col)};
+                    }).sort(function (a, b) {
+                        var r;
+                        if (a.v.num !== null && b.v.num !== null) {
+                            r = a.v.num - b.v.num;
+                        } else {
+                            r = a.v.text.localeCompare(b.v.text, undefined, {numeric: true, sensitivity: 'base'});
+                        }
+                        return (r * state.dir) || (a.i - b.i);
+                    }).map(function (x) {
+                        return x.row;
+                    });
+                }
+
+                total = list.length;
+                per = settings.perPage || total || 1;
+                pages = Math.max(1, Math.ceil(total / per));
+                state.page = Math.min(Math.max(1, state.page), pages);
+                from = (state.page - 1) * per;
+                to = Math.min(from + per, total);
+
+                rows.forEach(function (row) {
+                    row.hidden = true;
+                });
+                list.forEach(function (row, i) {
+                    tbody.appendChild(row);
+                    row.hidden = i < from || i >= to;
+                });
+
+                empty = tbody.querySelector('.eead-dt-empty');
+                if (!total && settings.empty) {
+                    if (!empty) {
+                        empty = document.createElement('tr');
+                        empty.className = 'eead-dt-empty';
+                        empty.innerHTML = '<td></td>';
+                        empty.firstChild.colSpan = Math.max(1, columns);
+                        empty.firstChild.textContent = settings.empty;
+                    }
+                    tbody.appendChild(empty);
+                } else if (empty) {
+                    empty.parentNode.removeChild(empty);
+                }
+
+                if (info) {
+                    info.textContent = total && (settings.perPage || state.query) ? settings.info.replace('%1$s', from + 1).replace('%2$s', to).replace('%3$s', total) : '';
+                }
+                if (pager) {
+                    renderPager(pages);
+                }
+            }
+
+            function pageButton(label, page, current, disabled, aria) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'eead-dt-page';
+                b.textContent = label;
+                b.disabled = !!disabled;
+                if (aria) {
+                    b.setAttribute('aria-label', aria);
+                }
+                if (current) {
+                    b.setAttribute('aria-current', 'page');
+                }
+                b.addEventListener('click', function () {
+                    state.page = page;
+                    render();
+                    wrap.scrollIntoView({block: 'nearest'});
+                });
+                return b;
+            }
+
+            function renderPager(pages) {
+                var p, show = [];
+                pager.innerHTML = '';
+                pager.hidden = pages < 2;
+                if (pages < 2) {
+                    return;
+                }
+                for (p = 1; p <= pages; p++) {
+                    if (p === 1 || p === pages || Math.abs(p - state.page) <= 1) {
+                        show.push(p);
+                    } else if (show[show.length - 1] !== '…') {
+                        show.push('…');
+                    }
+                }
+                pager.appendChild(pageButton('‹', state.page - 1, false, state.page === 1, settings.prev));
+                show.forEach(function (p) {
+                    if (p === '…') {
+                        var gap = document.createElement('span');
+                        gap.className = 'eead-dt-gap';
+                        gap.textContent = '…';
+                        pager.appendChild(gap);
+                    } else {
+                        pager.appendChild(pageButton(String(p), p, p === state.page, false, settings.page.replace('%s', p)));
+                    }
+                });
+                pager.appendChild(pageButton('›', state.page + 1, false, state.page === pages, settings.next));
+            }
+
+            if (settings.sortable) {
+                Array.prototype.forEach.call(table.querySelectorAll('thead th[data-col]'), function (th) {
+                    var button = th.querySelector('.eead-dt-sort');
+                    button.addEventListener('click', function () {
+                        var col = parseInt(th.getAttribute('data-col'), 10);
+                        // Ascending, descending, then back to the original order.
+                        state.dir = state.col !== col ? 1 : (state.dir === 1 ? -1 : (state.dir === -1 ? 0 : 1));
+                        state.col = state.dir ? col : -1;
+                        Array.prototype.forEach.call(table.querySelectorAll('thead th[data-col]'), function (other) {
+                            other.setAttribute('aria-sort', other === th && state.dir ? (state.dir === 1 ? 'ascending' : 'descending') : 'none');
+                        });
+                        render();
+                    });
+                });
+            }
+
+            if (search) {
+                search.addEventListener('input', function () {
+                    clearTimeout(timer);
+                    timer = setTimeout(function () {
+                        state.query = search.value.trim().toLowerCase();
+                        state.page = 1;
+                        render();
+                    }, 150);
+                });
+            }
+
+            render();
+        },
+
+        tableOfContents: function ($scope) {
+            EEA.release($scope, 'toc');
+
+            var toc = EEA.own($scope, '.eead-toc')[0];
+            if (!toc) {
+                return;
+            }
+
+            var settings = JSON.parse(toc.getAttribute('data-settings') || '{}'),
+                list = toc.querySelector('.eead-toc-list'),
+                body = toc.querySelector('.eead-toc-body'),
+                toggle = toc.querySelector('.eead-toc-toggle'),
+                markerTpl = toc.querySelector('.eead-toc-marker-tpl'),
+                editMode = !!(window.elementorFrontend && elementorFrontend.isEditMode && elementorFrontend.isEditMode()),
+                root = null, headings, links = [], ticking = false, ns = EEA.ns($scope, 'Toc');
+
+            function offset() {
+                return parseInt(EEA.deviceValue(settings.offset, 24), 10) || 0;
+            }
+
+            // Collapse: start state per device, then a plain toggle.
+            function setCollapsed(collapsed) {
+                toc.classList.toggle('eead-toc-collapsed', collapsed);
+                if (toggle) {
+                    toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                }
+            }
+
+            if (settings.collapsed && settings.collapsed !== 'none') {
+                var query = {mobile: '(max-width: 767px)', tablet: '(max-width: 1024px)', all: 'all'}[settings.collapsed];
+                setCollapsed(!editMode && !!query && window.matchMedia(query).matches);
+            }
+            toc.classList.remove('eead-toc-start-collapsed');
+            if (toggle) {
+                toggle.addEventListener('click', function () {
+                    setCollapsed(!toc.classList.contains('eead-toc-collapsed'));
+                });
+            }
+
+            if (settings.container) {
+                try {
+                    root = document.querySelector(settings.container);
+                } catch (err) {
+                    root = null;
+                }
+            }
+            if (!root) {
+                root = $scope[0].closest('[data-elementor-type="wp-page"], [data-elementor-type="wp-post"], [data-elementor-type="single-post"], [data-elementor-type="single-page"]') || document.querySelector('main') || document.body;
+            }
+
+            headings = Array.prototype.filter.call(root.querySelectorAll((settings.headings || ['h2', 'h3']).join(',')), function (h) {
+                // Card titles (image hover boxes) and hidden copies (marquee clones) are not page sections.
+                if (toc.contains(h) || h.closest('.eead-toc-skip, .eead-ihe, [aria-hidden="true"]') || !h.textContent.trim() || !h.getClientRects().length) {
+                    return false;
+                }
+                if (settings.exclude) {
+                    try {
+                        if (h.closest(settings.exclude)) {
+                            return false;
+                        }
+                    } catch (err) {
+                    }
+                }
+                return true;
+            });
+
+            list.innerHTML = '';
+            if (headings.length < (settings.min || 1)) {
+                if (editMode) {
+                    var message = document.createElement('p');
+                    message.className = 'eead-toc-message';
+                    message.textContent = settings.empty;
+                    list.appendChild(message);
+                    toc.classList.remove('eead-toc-hidden');
+                } else {
+                    toc.classList.add('eead-toc-hidden');
+                }
+                return;
+            }
+            toc.classList.remove('eead-toc-hidden');
+
+            function slug(text) {
+                var base = text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'section',
+                    id = base, n = 2;
+                while (document.getElementById(id)) {
+                    id = base + '-' + n++;
+                }
+                return id;
+            }
+
+            var lists = [document.createElement('ul')], stack = [], counters = [];
+            list.appendChild(lists[0]);
+
+            headings.forEach(function (h) {
+                var level = parseInt(h.tagName.charAt(1), 10), depth = 0, li, a, text, marker;
+                if (!h.id) {
+                    h.id = slug(h.textContent.trim());
+                }
+
+                if (settings.nested) {
+                    while (stack.length && level <= stack[stack.length - 1]) {
+                        stack.pop();
+                    }
+                    depth = stack.length;
+                    stack.push(level);
+                }
+
+                while (lists.length - 1 < depth) {
+                    var parentLi = lists[lists.length - 1].lastElementChild, sub = document.createElement('ul');
+                    (parentLi || lists[lists.length - 1]).appendChild(sub);
+                    lists.push(sub);
+                }
+                lists.length = depth + 1;
+
+                counters.length = depth + 1;
+                counters[depth] = (counters[depth] || 0) + 1;
+                for (var i = 0; i < depth; i++) {
+                    counters[i] = counters[i] || 1;
+                }
+
+                li = document.createElement('li');
+                a = document.createElement('a');
+                a.href = '#' + h.id;
+                if (toc.closest('.eead-toc-marker-numbers')) {
+                    marker = document.createElement('span');
+                    marker.className = 'eead-toc-num';
+                    marker.textContent = counters.slice(0, depth + 1).join('.') + (depth ? '' : '.');
+                    a.appendChild(marker);
+                } else if (toc.closest('.eead-toc-marker-bullets')) {
+                    marker = document.createElement('span');
+                    marker.className = 'eead-toc-bullet';
+                    marker.setAttribute('aria-hidden', 'true');
+                    a.appendChild(marker);
+                } else if (markerTpl) {
+                    a.appendChild(markerTpl.content.cloneNode(true));
+                }
+                text = document.createElement('span');
+                text.className = 'eead-toc-text';
+                text.textContent = h.textContent.trim();
+                a.appendChild(text);
+                a.eeadTarget = h;
+                a.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var top = h.getBoundingClientRect().top + window.pageYOffset - offset();
+                    window.scrollTo({top: top, behavior: settings.smooth && !EEA.reducedMotion() ? 'smooth' : 'auto'});
+                    if (window.history && history.replaceState) {
+                        history.replaceState(null, '', '#' + h.id);
+                    }
+                    if (!h.hasAttribute('tabindex')) {
+                        h.setAttribute('tabindex', '-1');
+                    }
+                    h.focus({preventScroll: true});
+                });
+                li.appendChild(a);
+                lists[depth].appendChild(li);
+                links.push(a);
+            });
+
+            if (!settings.highlight && !settings.progress) {
+                return;
+            }
+
+            // The current section is the last heading that has passed the offset line.
+            function highlight() {
+                ticking = false;
+                var line = offset() + 8, current = null;
+                if (settings.progress) {
+                    // How far the reader is through the content, 0 to 1.
+                    var box = root.getBoundingClientRect(),
+                        span = Math.max(1, box.height - (window.innerHeight - line));
+                    toc.style.setProperty('--eead-toc-read', Math.min(1, Math.max(0, (line - box.top) / span)).toFixed(3));
+                }
+                if (!settings.highlight) {
+                    return;
+                }
+                links.forEach(function (a) {
+                    if (a.eeadTarget.getBoundingClientRect().top <= line) {
+                        current = a;
+                    }
+                });
+                links.forEach(function (a) {
+                    var on = a === current;
+                    a.classList.toggle('eead-toc-active', on);
+                    if (on) {
+                        a.setAttribute('aria-current', 'true');
+                    } else {
+                        a.removeAttribute('aria-current');
+                    }
+                });
+            }
+
+            function onScroll() {
+                if (!ticking) {
+                    ticking = true;
+                    window.requestAnimationFrame(highlight);
+                }
+            }
+
+            $(window).on('scroll' + ns + ' resize' + ns, EEA.guard($scope, ns, onScroll));
+            highlight();
+            EEA.keep($scope, 'toc', function () {
+                $(window).off(ns);
+            });
+        },
+
+        scrollTextReveal: function ($scope) {
+            EEA.release($scope, 'str');
+
+            var el = EEA.own($scope, '.eead-str')[0];
+            if (!el) {
+                return;
+            }
+
+            var settings = JSON.parse(el.getAttribute('data-settings') || '{}'),
+                units = Array.prototype.slice.call(el.querySelectorAll('.eead-str-unit')),
+                count = units.length,
+                done = [], ticking = false, observer = null, ns = EEA.ns($scope, 'Str');
+
+            el.classList.remove('eead-str-static', 'eead-str-once');
+            units.forEach(function (u) {
+                u.style.removeProperty('--eead-str-p');
+                u.style.transitionDelay = '';
+            });
+
+            if (!count || EEA.reducedMotion()) {
+                el.classList.add('eead-str-static');
+                return;
+            }
+
+            if (settings.trigger === 'view') {
+                // Keep the whole sequence under about four seconds, however long the text.
+                var step = Math.min(settings.stagger || 0, 4000 / count);
+                el.classList.add('eead-str-once');
+                units.forEach(function (u, i) {
+                    u.style.transitionDelay = Math.round(i * step) + 'ms';
+                });
+                if (!window.IntersectionObserver) {
+                    el.classList.add('eead-str-static');
+                    return;
+                }
+                observer = new IntersectionObserver(function (entries) {
+                    if (entries[0].isIntersecting) {
+                        units.forEach(function (u) {
+                            u.style.setProperty('--eead-str-p', '1');
+                        });
+                        observer.disconnect();
+                    }
+                }, {threshold: 0.25});
+                observer.observe(el);
+                EEA.keep($scope, 'str', function () {
+                    observer.disconnect();
+                });
+                return;
+            }
+
+            // Text already on screen when the page loads fills in as a short intro, then follows the scroll.
+            var intro = 1, introStart = null;
+
+            // Scroll-linked: filling starts when the top of the text reaches the start line and ends when its bottom reaches the end line.
+            function update() {
+                ticking = false;
+                var vh = window.innerHeight,
+                    startY = vh * (settings.start === undefined ? 85 : settings.start) / 100,
+                    endY = vh * (settings.end === undefined ? 35 : settings.end) / 100,
+                    rect = el.getBoundingClientRect(),
+                    p = Math.min(1, Math.max(0, (startY - rect.top) / Math.max(1, startY - endY + rect.height))) * intro;
+                units.forEach(function (u, i) {
+                    var v = Math.min(1, Math.max(0, p * count - i));
+                    v = Math.round(v * 100) / 100;
+                    if (done[i] !== v) {
+                        done[i] = v;
+                        u.style.setProperty('--eead-str-p', v);
+                    }
+                });
+            }
+
+            function onScroll() {
+                if (!ticking) {
+                    ticking = true;
+                    window.requestAnimationFrame(update);
+                }
+            }
+
+            function introStep(now) {
+                if (introStart === null) {
+                    introStart = now;
+                }
+                var t = Math.min(1, (now - introStart) / 1400);
+                intro = 1 - Math.pow(1 - t, 3);
+                update();
+                if (t < 1 && document.documentElement.contains(el)) {
+                    window.requestAnimationFrame(introStep);
+                }
+            }
+
+            $(window).on('scroll' + ns + ' resize' + ns, EEA.guard($scope, ns, onScroll));
+            if (el.getBoundingClientRect().top < window.innerHeight * (settings.start === undefined ? 85 : settings.start) / 100) {
+                intro = 0;
+                window.requestAnimationFrame(introStep);
+            } else {
+                update();
+            }
+            EEA.keep($scope, 'str', function () {
+                intro = 1;
+                $(window).off(ns);
+            });
+        },
+
+        whatsappChat: function ($scope) {
+            EEA.release($scope, 'wa');
+
+            var wrap = EEA.own($scope, '.eead-wa')[0],
+                panel = wrap && wrap.querySelector('.eead-wa-panel'),
+                button = wrap && wrap.querySelector('button.eead-wa-button');
+            if (!panel || !button) {
+                return;
+            }
+
+            var settings = JSON.parse(wrap.getAttribute('data-settings') || '{}'),
+                closeBtn = panel.querySelector('.eead-wa-close'),
+                key = 'eead-wa-closed-' + (settings.id || ''),
+                editMode = !!(window.elementorFrontend && elementorFrontend.isEditMode && elementorFrontend.isEditMode()),
+                timer = 0;
+
+            function isOpen() {
+                return !panel.hidden;
+            }
+
+            function open() {
+                panel.hidden = false;
+                wrap.classList.add('eead-wa-open');
+                button.setAttribute('aria-expanded', 'true');
+            }
+
+            function close(returnFocus) {
+                if (!isOpen()) {
+                    return;
+                }
+                panel.hidden = true;
+                wrap.classList.remove('eead-wa-open');
+                button.setAttribute('aria-expanded', 'false');
+                // Once closed by the visitor, it stays closed for the rest of the visit.
+                try {
+                    window.sessionStorage.setItem(key, '1');
+                } catch (err) {
+                }
+                if (returnFocus) {
+                    button.focus();
+                }
+            }
+
+            function onButton() {
+                if (isOpen()) {
+                    close(false);
+                } else {
+                    clearTimeout(timer);
+                    open();
+                    var first = panel.querySelector('.eead-wa-start, .eead-wa-agent');
+                    if (first) {
+                        first.focus();
+                    }
+                }
+            }
+
+            function onClose() {
+                close(true);
+            }
+
+            function onKey(e) {
+                if (e.key === 'Escape' && isOpen()) {
+                    close(true);
+                }
+            }
+
+            function onOutside(e) {
+                if (isOpen() && !wrap.contains(e.target) && wrap.classList.contains('eead-wa-floating')) {
+                    close(false);
+                }
+            }
+
+            button.addEventListener('click', onButton);
+            closeBtn.addEventListener('click', onClose);
+            document.addEventListener('keydown', onKey);
+            document.addEventListener('click', onOutside);
+
+            var closedBefore = false;
+            try {
+                closedBefore = window.sessionStorage.getItem(key) === '1';
+            } catch (err) {
+            }
+            if (settings.autoOpen > 0 && !closedBefore && !editMode) {
+                timer = setTimeout(open, settings.autoOpen * 1000);
+            }
+
+            EEA.keep($scope, 'wa', function () {
+                clearTimeout(timer);
+                button.removeEventListener('click', onButton);
+                closeBtn.removeEventListener('click', onClose);
+                document.removeEventListener('keydown', onKey);
+                document.removeEventListener('click', onOutside);
+            });
+        },
+
+        appearingImage: function ($scope) {
+            EEA.release($scope, 'apim');
+
+            var el = EEA.own($scope, '.eead-apim')[0],
+                frame = el && el.querySelector('.eead-apim-frame');
+            if (!frame) {
+                return;
+            }
+
+            var settings = JSON.parse(el.getAttribute('data-settings') || '{}'),
+                ns = EEA.ns($scope, 'Apim'),
+                ticking = false, observer = null;
+
+            el.classList.remove('eead-apim-once', 'eead-apim-shown', 'eead-apim-static');
+            frame.style.removeProperty('--eead-apim-p');
+
+            if (EEA.reducedMotion() || !window.IntersectionObserver) {
+                el.classList.add('eead-apim-static');
+                return;
+            }
+
+            if (settings.trigger === 'scroll') {
+                // Revealed as the image's top travels from the start line to the end line.
+                var update = function () {
+                    ticking = false;
+                    var vh = window.innerHeight,
+                        startY = vh * (settings.start === undefined ? 95 : settings.start) / 100,
+                        endY = vh * (settings.end === undefined ? 45 : settings.end) / 100,
+                        top = frame.getBoundingClientRect().top,
+                        p = Math.min(1, Math.max(0, (startY - top) / Math.max(1, startY - endY)));
+                    frame.style.setProperty('--eead-apim-p', p.toFixed(3));
+                };
+                $(window).on('scroll' + ns + ' resize' + ns, EEA.guard($scope, ns, function () {
+                    if (!ticking) {
+                        ticking = true;
+                        window.requestAnimationFrame(update);
+                    }
+                }));
+                update();
+                EEA.keep($scope, 'apim', function () {
+                    $(window).off(ns);
+                });
+                return;
+            }
+
+            el.classList.add('eead-apim-once');
+            observer = new IntersectionObserver(function (entries) {
+                if (entries[entries.length - 1].isIntersecting) {
+                    el.classList.add('eead-apim-shown');
+                    observer.disconnect();
+                }
+            }, {threshold: 0.25});
+            observer.observe(frame);
+            EEA.keep($scope, 'apim', function () {
+                observer.disconnect();
+            });
         },
 
         logoCarousel: function ($scope) {
