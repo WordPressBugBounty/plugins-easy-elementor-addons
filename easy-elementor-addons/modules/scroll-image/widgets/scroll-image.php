@@ -135,6 +135,19 @@ class ScrollImage extends Widget_Base {
 		);
 
 		$this->add_control(
+			'scroll_duration', [
+				'label' => esc_html__('Scroll Duration (seconds)', 'easy-elementor-addons'),
+				'description' => esc_html__('How long one pass over the image takes; give long screenshots more time.', 'easy-elementor-addons'),
+				'type' => Controls_Manager::SLIDER,
+				'range' => ['px' => ['min' => 0.5, 'max' => 30, 'step' => 0.5]],
+				'default' => ['size' => 2],
+				'selectors' => [
+					'{{WRAPPER}} .eead-scroll-image-container .eead-scroll-image' => 'transition-duration: {{SIZE}}s;',
+				],
+			]
+		);
+
+		$this->add_control(
 			'caption', [
 				'label' => esc_html__('Caption', 'easy-elementor-addons'),
 				'type' => Controls_Manager::TEXT,
@@ -1118,6 +1131,21 @@ class ScrollImage extends Widget_Base {
 
 		$this->add_render_attribute('image', 'style', 'background-image: url(' . esc_url($image_url) . ');');
 
+		// A background image is invisible to screen readers: describe it.
+		$alt = !empty($settings['image']['id']) ? trim((string) get_post_meta($settings['image']['id'], '_wp_attachment_image_alt', true)) : '';
+		if ('' === $alt) {
+			$alt = trim((string) $settings['caption']);
+		}
+		if ('' !== $alt) {
+			$this->add_render_attribute('image', ['role' => 'img', 'aria-label' => $alt]);
+		}
+
+		// Without a link to focus, the box itself takes focus, so keyboard and
+		// touch users can run the scroll too (CSS scrolls on :focus-within).
+		if (!$this->has_link($settings)) {
+			$this->add_render_attribute('image-box', 'tabindex', '0');
+		}
+
 		$this->add_render_attribute('image-box', [
 			'class' => [
 				'eead-scroll-image-box',
@@ -1165,8 +1193,32 @@ class ScrollImage extends Widget_Base {
 		}
 	}
 
+	/** Whether a link icon will be printed (a link type, an icon, and a target). */
+	protected function has_link($settings) {
+		if ('' === $settings['link_to'] || '' === $settings['link_icon']) {
+			return false;
+		}
+		if ('external' === $settings['link_to'] || 'modal' === $settings['link_to']) {
+			return !empty($settings['external_link']['url']);
+		}
+		if ('video' === $settings['link_to']) {
+			return !empty($settings['video_link']['url']);
+		}
+		return true;
+	}
+
 	protected function render_link() {
 		$settings = $this->get_settings_for_display();
+		if (!$this->has_link($settings)) {
+			return;
+		}
+		$labels = [
+			'lightbox' => __('View full image', 'easy-elementor-addons'),
+			'modal' => __('Open preview', 'easy-elementor-addons'),
+			'video' => __('Play video', 'easy-elementor-addons'),
+			'external' => __('Visit link', 'easy-elementor-addons'),
+		];
+		$this->add_render_attribute('link', 'aria-label', isset($labels[$settings['link_to']]) ? $labels[$settings['link_to']] : __('Open', 'easy-elementor-addons'));
 
 		$this->add_render_attribute('link', [
 			'class' => [

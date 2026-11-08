@@ -83,7 +83,7 @@ class PdfViewer extends Widget_Base {
                 'type' => Controls_Manager::URL,
                 'dynamic' => ['active' => true],
                 'placeholder' => 'https://example.com/menu.pdf',
-                'description' => esc_html__('The file must allow being shown on other sites. Files on your own site always work.', 'easy-elementor-addons'),
+                'description' => esc_html__('The file must allow being shown on other sites. Files on your own site always work. Google Drive and Dropbox share links are supported too.', 'easy-elementor-addons'),
                 'condition' => [
                     'source' => 'url'
                 ]
@@ -296,6 +296,49 @@ class PdfViewer extends Widget_Base {
         $this->end_controls_section();
     }
 
+    /**
+     * Share links from Google Drive and Dropbox point at an HTML page, not the
+     * file, and Drive refuses to be framed: turn them into their embeddable,
+     * viewable and downloadable forms. Other URLs pass through unchanged.
+     */
+    private function share_links($url) {
+        $links = ['service' => '', 'embed' => $url, 'open' => $url, 'download' => $url];
+        $host = strtolower((string) wp_parse_url($url, PHP_URL_HOST));
+
+        if ('drive.google.com' === $host || 'docs.google.com' === $host) {
+            $id = '';
+            if (preg_match('#/(?:file/)?d/([A-Za-z0-9_-]{10,})#', $url, $m)) {
+                $id = $m[1];
+            } else {
+                parse_str((string) wp_parse_url($url, PHP_URL_QUERY), $query);
+                if (!empty($query['id']) && preg_match('/^[A-Za-z0-9_-]{10,}$/', $query['id'])) {
+                    $id = $query['id'];
+                }
+            }
+            if ($id) {
+                return [
+                    'service' => 'drive',
+                    'embed' => 'https://drive.google.com/file/d/' . $id . '/preview',
+                    'open' => 'https://drive.google.com/file/d/' . $id . '/view',
+                    'download' => 'https://drive.google.com/uc?export=download&id=' . $id,
+                ];
+            }
+        }
+
+        if (preg_match('/(^|\.)dropbox\.com$/', $host)) {
+            $plain = remove_query_arg(['dl', 'raw'], $url);
+            return [
+                'service' => 'dropbox',
+                // raw=1 serves the file itself, which the browser's PDF viewer shows.
+                'embed' => add_query_arg('raw', '1', $plain),
+                'open' => $url,
+                'download' => add_query_arg('dl', '1', $plain),
+            ];
+        }
+
+        return $links;
+    }
+
     private function pdf_url($settings) {
         if ('url' === $settings['source']) {
             return !empty($settings['url']['url']) ? $settings['url']['url'] : '';
@@ -322,17 +365,27 @@ class PdfViewer extends Widget_Base {
             return;
         }
 
+        $links = $this->share_links($url);
+
         $title = trim((string) $settings['title']);
         if ('' === $title) {
-            $title = wp_basename(wp_parse_url($url, PHP_URL_PATH));
+            // A Drive link has no file name in it ("…/view"); others end in one.
+            $title = 'drive' === $links['service'] ? __('PDF document', 'easy-elementor-addons') : wp_basename(wp_parse_url($url, PHP_URL_PATH));
         }
 
-        // Open parameters understood by the browsers' own PDF viewers.
-        $params = ['page=' . max(1, (int) $settings['start_page'])];
-        if ('yes' !== $settings['browser_toolbar']) {
-            $params[] = 'toolbar=0';
+        if ('drive' === $links['service']) {
+            // Drive's own viewer; it ignores the #page / #toolbar parameters.
+            $embed = $links['embed'];
+        } else {
+            // Open parameters understood by the browsers' own PDF viewers.
+            $params = ['page=' . max(1, (int) $settings['start_page'])];
+            if ('yes' !== $settings['browser_toolbar']) {
+                $params[] = 'toolbar=0';
+            }
+            $embed = $links['embed'] . '#' . implode('&', $params);
         }
-        $embed = $url . '#' . implode('&', $params);
+        $open_url = $links['open'];
+        $download_url = $links['download'];
         $download_icon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         $open_icon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6m0-6L10 14M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         ?>
@@ -343,10 +396,10 @@ class PdfViewer extends Widget_Base {
                     <span class="eead-pdfv-title"><?php echo esc_html($title); ?></span>
                     <span class="eead-pdfv-actions">
                         <?php if ('yes' === $settings['show_open']) { ?>
-                            <a class="eead-pdfv-btn eead-pdfv-btn-ghost" href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener"><?php echo $open_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e('Open', 'easy-elementor-addons'); ?></span></a>
+                            <a class="eead-pdfv-btn eead-pdfv-btn-ghost" href="<?php echo esc_url($open_url); ?>" target="_blank" rel="noopener"><?php echo $open_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e('Open', 'easy-elementor-addons'); ?></span></a>
                         <?php } ?>
                         <?php if ('yes' === $settings['show_download']) { ?>
-                            <a class="eead-pdfv-btn" href="<?php echo esc_url($url); ?>" download><?php echo $download_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e('Download', 'easy-elementor-addons'); ?></span></a>
+                            <a class="eead-pdfv-btn" href="<?php echo esc_url($download_url); ?>" download><?php echo $download_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e('Download', 'easy-elementor-addons'); ?></span></a>
                         <?php } ?>
                     </span>
                 </div>
@@ -355,7 +408,7 @@ class PdfViewer extends Widget_Base {
             <div class="eead-pdfv-card">
                 <span class="eead-pdfv-card-icon" aria-hidden="true">PDF</span>
                 <span class="eead-pdfv-card-title"><?php echo esc_html($title); ?></span>
-                <a class="eead-pdfv-btn" href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener"><?php echo $open_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php echo esc_html($settings['card_text'] ?: __('Open the PDF', 'easy-elementor-addons')); ?></span></a>
+                <a class="eead-pdfv-btn" href="<?php echo esc_url($open_url); ?>" target="_blank" rel="noopener"><?php echo $open_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php echo esc_html($settings['card_text'] ?: __('Open the PDF', 'easy-elementor-addons')); ?></span></a>
             </div>
         </div>
         <?php

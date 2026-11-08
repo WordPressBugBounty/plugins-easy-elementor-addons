@@ -184,6 +184,20 @@ class TeamCarousel extends Widget_Base {
                         'type' => Controls_Manager::URL,
                     ],
                 ],
+                'default' => [
+                    [
+                        'name' => esc_html__('John Doe', 'easy-elementor-addons'),
+                        'designation' => esc_html__('WordPress Developer', 'easy-elementor-addons'),
+                    ],
+                    [
+                        'name' => esc_html__('Jane Smith', 'easy-elementor-addons'),
+                        'designation' => esc_html__('UI/UX Designer', 'easy-elementor-addons'),
+                    ],
+                    [
+                        'name' => esc_html__('Alex Brown', 'easy-elementor-addons'),
+                        'designation' => esc_html__('Project Manager', 'easy-elementor-addons'),
+                    ],
+                ],
                 'title_field' => '{{ name }}',
             ]
         );
@@ -213,6 +227,15 @@ class TeamCarousel extends Widget_Base {
                     'below-image' => esc_html__('Below Image', 'easy-elementor-addons'),
                     'on-image-hover' => esc_html__('On Image Hover', 'easy-elementor-addons'),
                 ]
+            ]
+        );
+
+        $this->add_control(
+            'name_tag', [
+                'label' => esc_html__('Name HTML Tag', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => eead_html_tags(),
+                'default' => 'h4',
             ]
         );
 
@@ -1605,7 +1628,10 @@ class TeamCarousel extends Widget_Base {
     protected function get_image($item, $index) {
         $settings = $this->get_settings_for_display();
         $image_url = Group_Control_Image_Size::get_attachment_image_src($item['image']['id'], 'thumbnail', $settings);
-        $image_alt = \Elementor\Control_Media::get_image_alt($item['image']);
+        $image_alt = trim((string) \Elementor\Control_Media::get_image_alt($item['image']));
+        if ('' === $image_alt) {
+            $image_alt = (string) $item['name'];
+        }
         if ($image_url) {
             $image_html = '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '">';
         } else {
@@ -1613,7 +1639,12 @@ class TeamCarousel extends Widget_Base {
         }
 
         if (!empty($item['link']['url'])) {
-            $image_html = sprintf('<a %1$s>%2$s</a>', $this->get_render_attribute_string('link-' . $index), $image_html);
+            // With a linked name below, the photo link is a duplicate: one tab stop per member.
+            $this->add_link_attributes('img-link-' . $index, $item['link']);
+            if ('' !== trim((string) $item['name'])) {
+                $this->add_render_attribute('img-link-' . $index, ['tabindex' => '-1', 'aria-hidden' => 'true']);
+            }
+            $image_html = sprintf('<a %1$s>%2$s</a>', $this->get_render_attribute_string('img-link-' . $index), $image_html);
         }
 
         echo wp_kses_post($image_html);
@@ -1629,11 +1660,12 @@ class TeamCarousel extends Widget_Base {
 
     protected function get_member_name($item, $index) {
         $member_name = '';
+        $tag = eead_check_allowed_html_tags($this->get_settings_for_display('name_tag'), 'h4');
         if ($item['name'] != '') {
             if (!empty($item['link']['url'])) {
-                $member_name .= sprintf('<%1$s %2$s><a %3$s>%4$s</a></%1$s>', 'h4', 'class="eead-team-member-name"', $this->get_render_attribute_string('link-' . $index), esc_html($item['name']));
+                $member_name .= sprintf('<%1$s %2$s><a %3$s>%4$s</a></%1$s>', $tag, 'class="eead-team-member-name"', $this->get_render_attribute_string('link-' . $index), esc_html($item['name']));
             } else {
-                $member_name .= sprintf('<%1$s %2$s>%3$s</%1$s>', 'h4', 'class="eead-team-member-name"', esc_html($item['name']));
+                $member_name .= sprintf('<%1$s %2$s>%3$s</%1$s>', $tag, 'class="eead-team-member-name"', esc_html($item['name']));
             }
         }
         echo wp_kses_post($member_name);
@@ -1665,6 +1697,7 @@ class TeamCarousel extends Widget_Base {
         for ($i = 1; $i <= 4; $i++) {
             if (!empty($item['social_link_' . $i]['url']) && !empty($item['social_icon_' . $i])) {
                 $this->add_link_attributes('social-link-' . $i . $index, $item['social_link_' . $i]);
+                $this->add_render_attribute('social-link-' . $i . $index, 'aria-label', eead_social_label($item['social_link_' . $i]['url'], $item['name'], $item['social_icon_' . $i]));
                 ?>
                 <a <?php $this->print_render_attribute_string('social-link-' . $i . $index); ?>>
                     <?php Icons_Manager::render_icon($item['social_icon_' . $i], ['aria-hidden' => 'true']); ?>

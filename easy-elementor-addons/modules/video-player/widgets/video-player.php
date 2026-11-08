@@ -105,6 +105,53 @@ class VideoPlayer extends Widget_Base {
         );
 
         $this->add_control(
+            'captions_url', [
+                'label' => esc_html__('Captions File (.vtt)', 'easy-elementor-addons'),
+                'description' => esc_html__('Optional WebVTT subtitles. Upload the .vtt file to the Media Library and paste its URL.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::URL,
+                'options' => false,
+                'placeholder' => 'https://example.com/captions.vtt',
+                'condition' => [
+                    'video_type' => 'self_hosted',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'captions_lang', [
+                'label' => esc_html__('Captions Language Code', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'placeholder' => 'en',
+                'default' => 'en',
+                'condition' => [
+                    'video_type' => 'self_hosted',
+                    'captions_url[url]!' => '',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'captions_default', [
+                'label' => esc_html__('Show Captions by Default', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'condition' => [
+                    'video_type' => 'self_hosted',
+                    'captions_url[url]!' => '',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'video_title', [
+                'label' => esc_html__('Video Title', 'easy-elementor-addons'),
+                'description' => esc_html__('Read out by screen readers for the player and its play button.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'label_block' => true,
+                'separator' => 'before'
+            ]
+        );
+
+        $this->add_control(
             'start_time', [
                 'label' => esc_html__('Start Time (seconds)', 'easy-elementor-addons'),
                 'type' => Controls_Manager::NUMBER,
@@ -158,6 +205,7 @@ class VideoPlayer extends Widget_Base {
         $this->add_control(
             'autoplay', [
                 'label' => esc_html__('Autoplay', 'easy-elementor-addons'),
+                'description' => esc_html__('Browsers only autoplay muted videos, so autoplaying videos start muted.', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER
             ]
         );
@@ -201,6 +249,17 @@ class VideoPlayer extends Widget_Base {
         );
 
         $this->add_control(
+            'vimeo_dnt', [
+                'label' => esc_html__('Privacy Mode', 'easy-elementor-addons'),
+                'description' => esc_html__('When on, Vimeo does not track the session or set cookies (Do Not Track).', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'condition' => [
+                    'video_type' => 'vimeo',
+                ]
+            ]
+        );
+
+        $this->add_control(
             'yt_setting_header', [
                 'label' => esc_html__('Youtube Options', 'easy-elementor-addons'),
                 'type' => Controls_Manager::HEADING,
@@ -226,7 +285,7 @@ class VideoPlayer extends Widget_Base {
             'yt_privacy_mode', [
                 'label' => esc_html__('Privacy Mode', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
-                'description' => esc_html__('If switched off, YouTube will save visitors data on your website only when video is played.', 'easy-elementor-addons'),
+                'description' => esc_html__('When on, YouTube does not store information about visitors unless they play the video.', 'easy-elementor-addons'),
                 'condition' => [
                     'video_type' => 'youtube',
                 ]
@@ -407,7 +466,10 @@ class VideoPlayer extends Widget_Base {
             'class' => 'eead-video-overlay',
             'role' => 'button',
             'tabindex' => '0',
-            'aria-label' => esc_html__('Play video', 'easy-elementor-addons')
+            'aria-label' => $this->get_title_text() !== '' ? sprintf(
+                /* translators: %s: video title */
+                esc_html__('Play video: %s', 'easy-elementor-addons'), $this->get_title_text()
+            ) : esc_html__('Play video', 'easy-elementor-addons')
         ]);
 
         $thumb_url = $this->get_thumbnail_url();
@@ -461,8 +523,21 @@ class VideoPlayer extends Widget_Base {
                 $this->add_render_attribute('video_player', 'class', 'eead-custom-play-button');
             }
 
+            if ($this->get_title_text() !== '') {
+                $this->add_render_attribute('video_player', 'aria-label', $this->get_title_text());
+            }
             ?>
-            <video <?php $this->print_render_attribute_string('video_player'); ?>></video>
+            <video <?php $this->print_render_attribute_string('video_player'); ?>><?php
+                if (!empty($settings['captions_url']['url'])) {
+                    printf(
+                        '<track kind="captions" src="%1$s" srclang="%2$s" label="%3$s"%4$s>',
+                        esc_url($settings['captions_url']['url']),
+                        esc_attr($settings['captions_lang'] ? $settings['captions_lang'] : 'en'),
+                        esc_attr__('Captions', 'easy-elementor-addons'),
+                        'yes' === $settings['captions_default'] ? ' default' : ''
+                    );
+                }
+            ?></video>
             <?php
         } else {
             $embed_params = $this->get_embed_params();
@@ -470,8 +545,11 @@ class VideoPlayer extends Widget_Base {
 
             $embed_attr = [
                 'class' => 'eead-video-iframe',
-                'allow' => 'autoplay;encrypted-media'
+                'allow' => 'autoplay; encrypted-media; fullscreen; picture-in-picture'
             ];
+            if ($this->get_title_text() !== '') {
+                $embed_attr['title'] = $this->get_title_text();
+            }
 
             $allowed_tags = [
                 'iframe' => [
@@ -516,8 +594,12 @@ class VideoPlayer extends Widget_Base {
             }
 
             $params['wmode'] = 'opaque';
-            $params['start'] = $settings['start_time'];
-            $params['end'] = $settings['end_time'];
+            if (!empty($settings['start_time'])) {
+                $params['start'] = absint($settings['start_time']);
+            }
+            if (!empty($settings['end_time'])) {
+                $params['end'] = absint($settings['end_time']);
+            }
         } else if ($settings['video_type'] == 'vimeo') {
             $params_dictionary = [
                 'autoplay' => 'autoplay',
@@ -529,11 +611,19 @@ class VideoPlayer extends Widget_Base {
                 $params['color'] = str_replace('#', '', $settings['vimeo_controls_color']);
             }
             $params['autopause'] = '0';
+            if ('yes' === $settings['vimeo_dnt']) {
+                $params['dnt'] = '1';
+            }
         }
 
         foreach ($params_dictionary as $setting_name => $param_name) {
             $param_value = $settings[$setting_name] == 'yes' ? '1' : '0';
             $params[$param_name] = $param_value;
+        }
+
+        // Browsers block autoplay with sound.
+        if ('yes' === $settings['autoplay'] && isset($params_dictionary['mute'])) {
+            $params[$params_dictionary['mute']] = '1';
         }
 
         return $params;
@@ -546,7 +636,9 @@ class VideoPlayer extends Widget_Base {
         if ($settings['video_type'] == 'youtube') {
             $embed_settings['privacy'] = $settings['yt_privacy_mode'] == 'yes' ? true : NULL;
         } else if ($settings['video_type'] == 'vimeo') {
-            $embed_settings['start'] = $settings['start_time'];
+            if (!empty($settings['start_time'])) {
+                $embed_settings['start'] = absint($settings['start_time']);
+            }
         }
 
         $thumb_url = $this->get_thumbnail_url();
@@ -607,15 +699,22 @@ class VideoPlayer extends Widget_Base {
             }
         }
 
-        if ($settings['mute'] == 'yes') {
+        if ($settings['mute'] == 'yes' || $settings['autoplay'] == 'yes') {
             $params['muted'] = '';
         }
+
+        // Without it iOS opens the video full screen and will not autoplay.
+        $params['playsinline'] = '';
 
         if ($settings['download_button'] != 'yes') {
             $params['controlsList'] = 'nodownload';
         }
 
         return $params;
+    }
+
+    protected function get_title_text() {
+        return trim((string) $this->get_settings_for_display('video_title'));
     }
 
     protected function get_video_url() {

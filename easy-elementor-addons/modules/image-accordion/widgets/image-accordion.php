@@ -6,6 +6,7 @@ use Elementor\Controls_Manager;
 use Elementor\Group_Control_Border;
 use Elementor\Group_Control_Box_Shadow;
 use Elementor\Group_Control_Typography;
+use Elementor\Group_Control_Image_Size;
 use Elementor\Widget_Base;
 use Elementor\Repeater;
 use Elementor\Utils;
@@ -153,6 +154,13 @@ class ImageAccordion extends Widget_Base {
                 ],
                 'fields' => $repeater->get_controls(),
                 'title_field' => '{{image_accordion_title}}',
+            ]
+        );
+
+        $this->add_group_control(
+            Group_Control_Image_Size::get_type(), [
+                'name' => 'thumbnail',
+                'default' => 'full',
             ]
         );
 
@@ -498,11 +506,20 @@ class ImageAccordion extends Widget_Base {
             <?php foreach ($settings['image_accordions'] as $key => $img_accordion) { ?>
                 <?php
                 $active = '';
-                $tag = $img_accordion['image_accordion_link_image'] == 'yes' ? 'a' : 'div';
+                $tag = $img_accordion['image_accordion_link_image'] == 'yes' && !empty($img_accordion['image_accordion_link']['url']) ? 'a' : 'div';
                 $active = $img_accordion['image_accordion_is_active'];
 
                 if ($tag === 'a') {
                     $this->add_link_attributes('eead-image-accordion-' . $key, $img_accordion['image_accordion_link']);
+                }
+
+                // Chosen image size rather than always the full upload.
+                $bg = $img_accordion['image_accordion_bg']['url'];
+                if (!empty($img_accordion['image_accordion_bg']['id'])) {
+                    $sized = Group_Control_Image_Size::get_attachment_image_src($img_accordion['image_accordion_bg']['id'], 'thumbnail', $settings);
+                    if ($sized) {
+                        $bg = $sized;
+                    }
                 }
 
                 $this->add_render_attribute(
@@ -510,9 +527,26 @@ class ImageAccordion extends Widget_Base {
                         'class' => [
                             'eead-image-accordion-item',
                             $active === 'yes' ? 'eead-tab-active' : ''],
-                        'style' => "background-image: url(" . esc_url($img_accordion['image_accordion_bg']['url']) . ");",
+                        'style' => "background-image: url(" . esc_url($bg) . ");",
                     ]
                 );
+
+                // Not a link: still reachable by keyboard, so it can be opened
+                // (click mode: a toggle button; hover mode: focus opens it).
+                if ($tag === 'div') {
+                    $this->add_render_attribute('eead-image-accordion-' . $key, 'tabindex', '0');
+                    if ('on-click' === $settings['image_accordion_action_type']) {
+                        $this->add_render_attribute('eead-image-accordion-' . $key, [
+                            'role' => 'button',
+                            'aria-expanded' => $active === 'yes' ? 'true' : 'false',
+                        ]);
+                    }
+                }
+                if ($tag === 'a' || 'on-click' === $settings['image_accordion_action_type']) {
+                    if (!empty($img_accordion['image_accordion_title'])) {
+                        $this->add_render_attribute('eead-image-accordion-' . $key, 'aria-label', wp_strip_all_tags($img_accordion['image_accordion_title']));
+                    }
+                }
                 ?>
 
                 <<?php echo esc_attr($tag); ?> <?php $this->print_render_attribute_string('eead-image-accordion-' . $key); ?> >

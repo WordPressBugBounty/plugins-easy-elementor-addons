@@ -593,6 +593,39 @@ class IconList extends Widget_Base {
             ]
         );
 
+        $this->add_responsive_control(
+            'icon_box_size', [
+                'label' => esc_html__('Icon Box Size', 'easy-elementor-addons'),
+                'description' => esc_html__('A fixed box around the icon or number, e.g. for a background circle.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => ['px' => ['min' => 10, 'max' => 120]],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-icon-list-items .eead-il-icon' => 'display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: {{SIZE}}{{UNIT}}; height: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_responsive_control(
+            'icon_box_radius', [
+                'label' => esc_html__('Icon Box Radius', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px', '%'],
+                'range' => ['%' => ['max' => 50], 'px' => ['max' => 60]],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-icon-list-items .eead-il-icon' => 'border-radius: {{SIZE}}{{UNIT}};',
+                ],
+            ]
+        );
+
+        $this->add_group_control(
+            Group_Control_Typography::get_type(), [
+                'name' => 'number_typography',
+                'label' => esc_html__('Number Typography', 'easy-elementor-addons'),
+                'selector' => '{{WRAPPER}} .eead-icon-list-items .eead-il-icon',
+            ]
+        );
+
         $this->start_controls_tabs('tabs_icon_style');
 
         $this->start_controls_tab(
@@ -608,6 +641,16 @@ class IconList extends Widget_Base {
                 'selectors' => [
                     '{{WRAPPER}} .eead-icon-list-items .eead-il-block' => 'color: {{VALUE}};',
                     '{{WRAPPER}} .eead-icon-list-items .eead-il-block .eead-il-icon svg' => 'fill: {{VALUE}};'
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'icon_bg_color', [
+                'label' => esc_html__('Icon Background', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-icon-list-items .eead-il-icon' => 'background-color: {{VALUE}};',
                 ],
             ]
         );
@@ -638,6 +681,16 @@ class IconList extends Widget_Base {
                 'selectors' => [
                     '{{WRAPPER}} .eead-icon-list-item .eead-il-block:hover' => 'color: {{VALUE}};',
                     '{{WRAPPER}} .eead-icon-list-item .eead-il-block:hover .eead-il-icon svg' => 'fill: {{VALUE}};'
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'icon_bg_color_hover', [
+                'label' => esc_html__('Icon Background', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-icon-list-item .eead-il-block:hover .eead-il-icon' => 'background-color: {{VALUE}};',
                 ],
             ]
         );
@@ -677,6 +730,11 @@ class IconList extends Widget_Base {
             <ul class="eead-icon-list-items">
                 <?php
                 $count = 1;
+                // Items without text aren't shown; leave them out of the numbering
+                // and of the last-row maths too.
+                $settings['list_items'] = array_values(array_filter((array) $settings['list_items'], function ($list) {
+                    return '' !== trim((string) $list['text']);
+                }));
                 if ($settings['list_view'] == 'grid') {
                     $list_items = count($settings['list_items']);
                     $last_row_items = $list_items % $list_column == 0 ? $list_column : $list_items % $list_column;

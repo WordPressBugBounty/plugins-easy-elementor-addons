@@ -85,7 +85,8 @@ class EEAD_Widget_Loader {
         // The Maps JavaScript API requires a key; without one the map shows an error.
         wp_register_script('gmap-api', add_query_arg(['key' => rawurlencode($gmap_access_token), 'libraries' => 'marker'], 'https://maps.googleapis.com/maps/api/js'), [], EEAD_VERSION, true);
         wp_register_script('plyr', EEAD_URL . 'assets/lib/plyr/plyr.min.js', ['jquery'], EEAD_VERSION, true);
-        wp_register_script('countdown', EEAD_URL . 'assets/lib/countdown/countdown.min.js', ['jquery'], EEAD_VERSION, true);
+        // No 'countdown' handle: the Countdown ticker is in frontend.js, and registering
+        // that generic name first hijacked themes that enqueue their own countdown.js.
         wp_register_script('image-compare', EEAD_URL . 'assets/lib/image-compare/image-compare-viewer.js', ['jquery'], EEAD_VERSION, true);
         wp_register_script('micromodal', EEAD_URL . 'assets/lib/micromodal/micromodal.min.js', ['jquery'], EEAD_VERSION, true);
         wp_register_script('morphext', EEAD_URL . 'assets/lib/morphext/morphext' . $suffix . '.js', ['jquery'], EEAD_VERSION, true);
@@ -109,6 +110,12 @@ class EEAD_Widget_Loader {
      */
     public function enqueue_frontend_scripts() {
         wp_enqueue_script('eead-frontend-script', EEAD_URL . 'assets/js/frontend.js', ['jquery', 'elementor-frontend'], EEAD_VERSION, true);
+        wp_localize_script('eead-frontend-script', 'eeadFrontend', [
+            'prev' => esc_html__('Previous', 'easy-elementor-addons'),
+            'next' => esc_html__('Next', 'easy-elementor-addons'),
+            /* translators: %d: slide number */
+            'goTo' => esc_html__('Go to slide %d', 'easy-elementor-addons'),
+        ]);
     }
 
     /**

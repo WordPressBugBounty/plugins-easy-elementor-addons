@@ -305,6 +305,42 @@ class PieChart extends Widget_Base {
 			]
 		);
 
+		$this->add_control(
+			'chart_tooltip_percent', [
+				'label' => esc_html__('Show Percentage in Tooltip', 'easy-elementor-addons'),
+				'type' => Controls_Manager::SWITCHER,
+				'condition' => [
+					'chart_tooltip_enabled' => 'true'
+				]
+			]
+		);
+
+		$this->add_control(
+			'chart_value_prefix', [
+				'label' => esc_html__('Value Prefix', 'easy-elementor-addons'),
+				'type' => Controls_Manager::TEXT,
+				'placeholder' => '$',
+				'description' => esc_html__('Shown before each value in tooltips and read by screen readers.', 'easy-elementor-addons'),
+			]
+		);
+
+		$this->add_control(
+			'chart_value_suffix', [
+				'label' => esc_html__('Value Suffix', 'easy-elementor-addons'),
+				'type' => Controls_Manager::TEXT,
+				'placeholder' => '%',
+			]
+		);
+
+		$this->add_control(
+			'chart_animate_in_view', [
+				'label' => esc_html__('Animate When Scrolled Into View', 'easy-elementor-addons'),
+				'description' => esc_html__('Draws the chart when the visitor reaches it rather than on page load.', 'easy-elementor-addons'),
+				'type' => Controls_Manager::SWITCHER,
+				'default' => 'yes',
+			]
+		);
+
 		$this->end_controls_section();
 
 		$this->start_controls_section(
@@ -573,16 +609,27 @@ class PieChart extends Widget_Base {
 		$data_chart = $this->get_chart_data();
 		$data_options = $this->get_chart_options();
 
+		// A canvas is a picture to screen readers: describe it with the data itself.
+		$parts = [];
+		foreach ((array) $settings['chart_data'] as $item) {
+			if (is_numeric($item['value'])) {
+				$parts[] = trim($item['label'] . ' ' . $settings['chart_value_prefix'] . $item['value'] . $settings['chart_value_suffix']);
+			}
+		}
+		$title = trim((string) $settings['chart_title']);
+		$label = ('' !== $title ? $title : __('Pie chart', 'easy-elementor-addons')) . ($parts ? ': ' . implode(', ', $parts) : '');
+
 		$this->add_render_attribute('canvas', [
 			'class' => 'eead-pie-chart',
-			'aria-label' => !empty($settings['chart_title']) ? esc_attr($settings['chart_title']) : ''
+			'role' => 'img',
+			'aria-label' => $label
 		]);
 		?>
 
 		<div class="elementor-eead-pie-chart eead-elements">
 			<?php $this->render_chart_title('before'); ?>
 
-			<div class="eead-pie-chart-container" data-chart="<?php echo esc_attr(json_encode($data_chart)); ?>" data-options="<?php echo esc_attr(json_encode($data_options)); ?>">
+			<div class="eead-pie-chart-container" data-in-view="<?php echo 'yes' === $settings['chart_animate_in_view'] ? 'yes' : 'no'; ?>" data-format="<?php echo esc_attr(wp_json_encode(['prefix' => (string) $settings['chart_value_prefix'], 'suffix' => (string) $settings['chart_value_suffix'], 'percent' => 'yes' === $settings['chart_tooltip_percent']])); ?>" data-chart="<?php echo esc_attr(json_encode($data_chart)); ?>" data-options="<?php echo esc_attr(json_encode($data_options)); ?>">
 				<canvas <?php $this->print_render_attribute_string('canvas'); ?>></canvas>
 			</div>
 
@@ -607,7 +654,8 @@ class PieChart extends Widget_Base {
 		$chart_data = $settings['chart_data'];
 
 		foreach ($chart_data as $item_data) {
-			$data['datasets'][0]['data'][] = !empty($item_data['value']) ? $item_data['value'] : '';
+			// is_numeric, so a value of 0 stays 0 instead of becoming an empty string.
+			$data['datasets'][0]['data'][] = is_numeric($item_data['value']) ? (float) $item_data['value'] : 0;
 			$data['datasets'][0]['backgroundColor'][] = !empty($item_data['color']) ? $item_data['color'] : '';
 			$data['labels'][] = !empty($item_data['label']) ? $item_data['label'] : '';
 		}

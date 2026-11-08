@@ -10,6 +10,7 @@
                 'eead-animated-heading.default': EEA.animatedHeading,
                 'eead-business-hour.default': EEA.businessHours,
                 'eead-circular-progressbar.default': EEA.circularProgressBar,
+                'eead-drop-bar.default': EEA.dropBar,
                 'eead-countdown.default': EEA.countdown,
                 'eead-counter.default': EEA.counterBlock,
                 'eead-filterable-gallery.default': EEA.filterableGallery,
@@ -18,6 +19,7 @@
                 'eead-image-comparison.default': EEA.imageComparison,
                 'eead-image-accordion.default': EEA.imageAccordion,
                 'eead-image-gallery.default': EEA.imageGallery,
+                'eead-image-hover-effect.default': EEA.imageHoverEffect,
                 'eead-pie-chart.default': EEA.pieChart,
                 'eead-one-page-nav.default': EEA.onePageNav,
                 'eead-lottie.default': EEA.Lottie,
@@ -30,9 +32,11 @@
                 'eead-popup-video.default': EEA.popupVideo,
                 'eead-horizontal-tab.default': EEA.horizontalTabsBlock,
                 'eead-vertical-tab.default': EEA.verticalTabsBlock,
+                'eead-vertical-timeline.default': EEA.verticalTimeline,
                 'eead-sticky-video.default': EEA.stickyVideo,
                 'eead-video-player.default': EEA.videoPlayer,
                 'eead-slider.default': EEA.sliderBlock,
+                'eead-social-share.default': EEA.socialShare,
                 'eead-team-carousel.default': EEA.teamCarousel,
                 'eead-testimonial-carousel.default': EEA.testimonialCarousel,
                 'eead-twitter-feed.default': EEA.twitterFeed,
@@ -107,6 +111,62 @@
             (EEA.registry[key] = EEA.registry[key] || []).push({el: $scope[0], destroy: destroy});
         },
 
+        /**
+         * Weekday (0 = Sunday) and minute of the day in a timezone: an IANA name
+         * via Intl when possible, else a fixed offset in minutes.
+         */
+        zonedNow: function (tz, offset) {
+            var date = new Date();
+            if (tz && /\//.test(tz) && window.Intl) {
+                try {
+                    var parts = {};
+                    new Intl.DateTimeFormat('en-US', {timeZone: tz, weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23'})
+                        .formatToParts(date).forEach(function (p) {
+                            parts[p.type] = p.value;
+                        });
+                    return {
+                        day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(parts.weekday),
+                        minute: (parseInt(parts.hour, 10) % 24) * 60 + parseInt(parts.minute, 10)
+                    };
+                } catch (err) {
+                }
+            }
+            var shifted = new Date(date.getTime() + (parseFloat(offset) || 0) * 60000);
+            return {day: shifted.getUTCDay(), minute: shifted.getUTCHours() * 60 + shifted.getUTCMinutes()};
+        },
+
+        /** Mirrors BusinessHour::is_open_at(): an end at or before the start runs past midnight. */
+        isOpenAt: function (schedule, day, minute) {
+            var today = schedule[day] || [], yesterday = schedule[(day + 6) % 7] || [], i;
+            for (i = 0; i < today.length; i++) {
+                if (minute >= today[i][0] && (today[i][1] > today[i][0] ? minute < today[i][1] : true)) {
+                    return true;
+                }
+            }
+            for (i = 0; i < yesterday.length; i++) {
+                if (yesterday[i][1] <= yesterday[i][0] && minute < yesterday[i][1]) {
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        /** Say a short status message to screen readers (one shared polite live region). */
+        announce: function (message) {
+            var region = document.getElementById('eead-live-region');
+            if (!region) {
+                region = document.createElement('div');
+                region.id = 'eead-live-region';
+                region.className = 'elementor-screen-only';
+                region.setAttribute('aria-live', 'polite');
+                document.body.appendChild(region);
+            }
+            region.textContent = '';
+            setTimeout(function () {
+                region.textContent = message;
+            }, 50);
+        },
+
         /** Update an ARIA attribute only on elements whose markup already declares it. */
         aria: function ($el, name, value) {
             $el.filter('[' + name + ']').attr(name, value);
@@ -121,6 +181,23 @@
                 e.preventDefault();
                 $(this).trigger('click');
             }
+        },
+
+        /**
+         * Owl renders its arrows as role="presentation" buttons holding only an
+         * icon, and its dots as empty buttons: give them names screen readers can use.
+         */
+        owlA11y: function ($ele) {
+            var t = window.eeadFrontend || {};
+            var label = function () {
+                $ele.find('.owl-prev').removeAttr('role').attr('aria-label', t.prev || 'Previous');
+                $ele.find('.owl-next').removeAttr('role').attr('aria-label', t.next || 'Next');
+                $ele.find('.owl-dot').each(function (i) {
+                    $(this).attr('aria-label', (t.goTo || 'Go to slide %d').replace('%d', i + 1));
+                });
+            };
+            label();
+            $ele.off('refreshed.owl.carousel.eeadA11y').on('refreshed.owl.carousel.eeadA11y', label);
         },
 
         /** Owl carousel responsive map built from Elementor's active breakpoints. */
@@ -148,16 +225,21 @@
 
         accordionBlock: function ($scope) {
             var $accordions = EEA.own($scope, '.eead-each-accordion'),
-                oneAtATime = EEA.own($scope, '.eead-accordion-container').data('one-at-a-time') === 'yes';
+                oneAtATime = EEA.own($scope, '.eead-accordion-container').data('one-at-a-time') === 'yes',
+                ns = EEA.ns($scope, 'Accordion');
 
             if (!$accordions.length) {
                 return;
             }
 
+            function title($item) {
+                return $item.children('.eead-accordion-title');
+            }
+
             function setState($item, open) {
                 var $content = $item.children('.eead-accordion-content').stop(true, true);
                 $item.toggleClass('eead-open', open);
-                EEA.aria($item.children('.eead-accordion-title'), 'aria-expanded', open ? 'true' : 'false');
+                EEA.aria(title($item), 'aria-expanded', open ? 'true' : 'false');
                 if (open) {
                     $content.slideDown();
                 } else {
@@ -165,26 +247,55 @@
                 }
             }
 
+            function open($item) {
+                if (oneAtATime) {
+                    $item.siblings('.eead-open').each(function () {
+                        setState($(this), false);
+                    });
+                }
+                setState($item, true);
+            }
+
             $accordions.each(function () {
-                EEA.aria($(this).children('.eead-accordion-title'), 'aria-expanded', $(this).hasClass('eead-open') ? 'true' : 'false');
+                EEA.aria(title($(this)), 'aria-expanded', $(this).hasClass('eead-open') ? 'true' : 'false');
             });
 
             $accordions.children('.eead-accordion-title')
                 .off('.eeadAccordion')
                 .on('click.eeadAccordion', function () {
-                    var $item = $(this).parent('.eead-each-accordion');
+                    var $item = $(this).closest('.eead-each-accordion');
                     if (!$item.hasClass('eead-open')) {
-                        if (oneAtATime) {
-                            $item.siblings('.eead-open').each(function () {
-                                setState($(this), false);
-                            });
-                        }
-                        setState($item, true);
+                        open($item);
                     } else {
                         setState($item, false);
                     }
                 })
                 .on('keydown.eeadAccordion', EEA.activateOnKey);
+
+            /* Deep links: #item-id opens that item (on load and when the hash changes). */
+            function fromHash() {
+                var hash = window.location.hash.slice(1),
+                    $item;
+                if (!hash) {
+                    return;
+                }
+                try {
+                    hash = decodeURIComponent(hash);
+                } catch (err) {
+                    return;
+                }
+                $item = $accordions.filter(function () {
+                    return this.id === hash;
+                });
+                if ($item.length && !$item.hasClass('eead-open')) {
+                    open($item);
+                }
+            }
+
+            if ($accordions.filter('[id]').length) {
+                fromHash();
+                $(window).off(ns).on('hashchange' + ns, EEA.guard($scope, ns, fromHash));
+            }
         },
 
         advancedMap: function ($scope) {
@@ -208,6 +319,7 @@
                 // Read via attr() so jQuery doesn't coerce numeric-looking IDs.
                 var mapId = $.trim($el.attr('data-map-id') || '');
                 var useAdvanced = mapId !== '' && !!(google.maps.marker && google.maps.marker.AdvancedMarkerElement);
+                var mapType = $el.attr('data-map-type');
                 var mapOption = {
                     zoom: zoom,
                     scrollwheel: scrollwheel,
@@ -216,7 +328,7 @@
                     streetViewControl: streetViewControl,
                     mapTypeControl: mapTypeControl,
                     center: new google.maps.LatLng(0, 0),
-                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                    mapTypeId: /^(roadmap|satellite|hybrid|terrain)$/.test(mapType) ? mapType : 'roadmap'
                 };
 
                 if (useAdvanced) {
@@ -238,6 +350,9 @@
 
                 // add markers
                 $markers.each(function () {
+                    if (!isFinite(parseFloat($(this).attr('data-lat'))) || !isFinite(parseFloat($(this).attr('data-lng')))) {
+                        return;
+                    }
                     if (useAdvanced) {
                         add_advanced_marker($(this), map);
                     } else {
@@ -293,14 +408,12 @@
                 var content;
 
                 if (icon_img) {
-                    var size = parseInt($marker.attr('data-icon-size'), 10);
+                    var size = parseInt($marker.attr('data-icon-size'), 10) || 50;
                     content = document.createElement('img');
                     content.src = icon_img;
                     content.alt = '';
-                    if (size > 0) {
-                        content.style.width = size + 'px';
-                        content.style.height = size + 'px';
-                    }
+                    content.style.width = size + 'px';
+                    content.style.height = size + 'px';
                     content.style.display = 'block';
                 } else if (google.maps.marker.PinElement) {
                     var pin = new google.maps.marker.PinElement();
@@ -312,6 +425,9 @@
                     map: map,
                     position: position
                 };
+                if ($marker.attr('data-title')) {
+                    markerOptions.title = $marker.attr('data-title');
+                }
                 if (content) {
                     markerOptions.content = content;
                 }
@@ -370,10 +486,13 @@
                 var latlng = new google.maps.LatLng($marker.attr('data-lat'), $marker.attr('data-lng'));
                 var icon_img = $marker.attr('data-icon');
 
-                if (icon_img != '') {
-                    var icon = {
-                        url: $marker.attr('data-icon'),
-                        scaledSize: new google.maps.Size($marker.attr('data-icon-size'), $marker.attr('data-icon-size'))
+                var icon;
+                if (icon_img) {
+                    // An emptied size slider would scale the pin to 0x0.
+                    var size = parseInt($marker.attr('data-icon-size'), 10) || 50;
+                    icon = {
+                        url: icon_img,
+                        scaledSize: new google.maps.Size(size, size)
                     };
                 }
 
@@ -382,6 +501,7 @@
                     position: latlng,
                     map: map,
                     icon: icon,
+                    title: $marker.attr('data-title') || undefined,
                     animation: google.maps.Animation.DROP,
                 });
 
@@ -437,8 +557,13 @@
                     bounds.extend(new google.maps.LatLng(lat, lng));
                 });
 
-                // If only 1 marker exist
-                if (map.markers.length == 1) {
+                if (!map.markers.length) {
+                    return;
+                }
+
+                // One marker, or several on the same spot: fitBounds on a single
+                // point would zoom all the way in, so use the Zoom setting instead.
+                if (map.markers.length == 1 || bounds.getNorthEast().equals(bounds.getSouthWest())) {
                     map.setCenter(bounds.getCenter());
                     map.setZoom(zoom);
                 } else {
@@ -459,14 +584,35 @@
             }
 
             EEA.release($scope, 'typed');
+            EEA.release($scope, 'rotate');
 
             if (!$animatedHeading.length || !$settings) {
                 return;
             }
 
             if ($settings.layout === 'animated') {
-                $animatedHeading.Morphext($settings);
+                // Words go in as text, never HTML: they arrive decoded from JSON.
+                var words = $.isArray($settings.words) ? $settings.words : [];
+                var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                var animation = reduce ? '' : ($settings.animation || '');
+                var index = -1;
+                var showWord = function () {
+                    index = (index + 1) % words.length;
+                    $animatedHeading.empty().append($('<span class="animated"></span>').addClass(animation).text(words[index]));
+                };
+
+                if (!words.length) {
+                    return;
+                }
+                showWord();
+                if (words.length > 1) {
+                    var timer = setInterval(showWord, parseInt($settings.speed, 10) || 2500);
+                    EEA.keep($scope, 'rotate', function () {
+                        clearInterval(timer);
+                    });
+                }
             } else if ($settings.layout === 'typed') {
+                $settings.showCursor = $settings.showCursor !== 'no';
                 var typed = new Typed($animatedHeading[0], $settings);
                 EEA.keep($scope, 'typed', function () {
                     typed.destroy();
@@ -483,6 +629,28 @@
             var $settings = $container.data('settings');
             var timeNotation = $settings.timeNotation;
             var business_hour_style = $settings.business_hour_style;
+
+            EEA.release($scope, 'bhStatus');
+            if ($.isArray($settings.schedule) || $.isPlainObject($settings.schedule)) {
+                var refreshStatus = function () {
+                    var now = EEA.zonedNow($settings.tz, $settings.offset);
+                    var open = EEA.isOpenAt($settings.schedule, now.day, now.minute);
+                    $container.find('.eead-bh-open-status')
+                        .toggleClass('eead-bh-is-open', open).toggleClass('eead-bh-is-closed', !open)
+                        .each(function () {
+                            $(this).children('.eead-bh-status-open').prop('hidden', !open);
+                            $(this).children('.eead-bh-status-closed').prop('hidden', open);
+                        });
+                    $container.find('.eead-business-hour-row[data-day]').each(function () {
+                        $(this).toggleClass('active-day', +$(this).attr('data-day') === now.day);
+                    });
+                };
+                refreshStatus();
+                var statusTimer = setInterval(refreshStatus, 30000);
+                EEA.keep($scope, 'bhStatus', function () {
+                    clearInterval(statusTimer);
+                });
+            }
 
             if (business_hour_style != 'dynamic')
                 return;
@@ -527,77 +695,253 @@
 
         circularProgressBar: function ($scope) {
             var container = $scope.find('.eead-circular-progressbar');
-            var percentage = container.attr('data-number');
-            var radius = container.attr('data-radius');
-            const circumference = 2 * Math.PI * radius;
-            const dashOffset = circumference - (percentage / 100) * circumference;
-            if ((container.length > 0)) {
-                container.waypoint(function () {
-                    setTimeout(function () {
-                        container.find('circle:nth-child(2)').css({
-                            'stroke-dashoffset': dashOffset
-                        }, 1000);
-                    }, 400);
-                    this.destroy();
-                }, {
-                    offset: '90%',
+            if (!container.length) {
+                return;
+            }
+
+            var percentage = Math.max(0, Math.min(100, parseFloat(container.attr('data-number')) || 0)),
+                $bar = container.find('circle:nth-child(2)'),
+                $value = container.find('.eead-cb-value'),
+                reduce = EEA.reducedMotion(),
+                countUp = container.attr('data-count') === 'yes' && !reduce,
+                decimals = (String(percentage).split('.')[1] || '').length;
+
+            EEA.release($scope, 'cpb');
+
+            // pathLength="100": the offset is simply what is left of 100.
+            var fill = function () {
+                $bar.css('stroke-dashoffset', 100 - percentage);
+                if (!countUp) {
+                    return;
+                }
+                var duration = parseFloat(container.css('--eead-cb-duration')) || 1000,
+                    start = null,
+                    frame = function (now) {
+                        start = start || now;
+                        var t = Math.min(1, (now - start) / duration),
+                            eased = 1 - Math.pow(1 - t, 3);
+                        $value.text((percentage * eased).toFixed(decimals));
+                        if (t < 1) {
+                            raf = window.requestAnimationFrame(frame);
+                        }
+                    },
+                    raf = window.requestAnimationFrame(frame);
+                EEA.keep($scope, 'cpb', function () {
+                    window.cancelAnimationFrame(raf);
+                });
+            };
+
+            if (countUp) {
+                $value.text((0).toFixed(decimals));
+            }
+
+            if (reduce || typeof container.waypoint !== 'function') {
+                countUp = false;
+                $value.text(percentage);
+                fill();
+                return;
+            }
+
+            container.waypoint(function () {
+                setTimeout(fill, 200);
+                this.destroy();
+            }, {
+                offset: '90%',
+            });
+        },
+
+        countdown: function ($scope) {
+            var $countdown = $scope.find('.eead-countdown'),
+                $items = $countdown.find('.eead-countdown-items'),
+                expireType = $countdown.attr('data-expire-type') || '',
+                redirectUrl = $countdown.attr('data-redirect-url') || '',
+                expiryMessage = $countdown.find('template.eead-countdown-expiry').html() || '',
+                editMode = window.elementorFrontend && elementorFrontend.isEditMode(),
+                evergreen = parseInt($countdown.attr('data-evergreen'), 10),
+                end;
+
+            EEA.release($scope, 'countdown');
+
+            if (!$items.length) {
+                return;
+            }
+
+            var restart = $countdown.is('[data-evergreen]') && $countdown.attr('data-restart') === 'yes' && evergreen > 0,
+                key = 'eead-countdown-' + $countdown.attr('data-id') + '-' + evergreen,
+                remember = function () {
+                    if (!editMode) {
+                        try {
+                            window.localStorage.setItem(key, String(end));
+                        } catch (err) {
+                        }
+                    }
+                };
+
+            if ($countdown.is('[data-evergreen]')) {
+                // Per visitor: the deadline is remembered in the browser, keyed by
+                // widget and length so a new length starts afresh. Not in the editor.
+                var stored = null;
+                if (!editMode) {
+                    try {
+                        stored = parseInt(window.localStorage.getItem(key), 10);
+                    } catch (err) {
+                    }
+                }
+                end = stored > 0 ? stored : Date.now() + evergreen * 1000;
+                if (end <= Date.now() && restart) {
+                    end = Date.now() + evergreen * 1000;
+                }
+                remember();
+            } else {
+                end = Date.parse($items.attr('data-date') || '');
+            }
+
+            if (!end || isNaN(end)) {
+                return;
+            }
+
+            // The largest shown unit takes everything above it, so with Days
+            // turned off 2 days 3 hours reads 51 hours, not 3.
+            var units = [];
+            $.each([['days', 86400], ['hours', 3600], ['minutes', 60], ['seconds', 1]], function (i, unit) {
+                var $el = $items.find('[data-' + unit[0] + ']');
+                if ($el.length) {
+                    units.push({$el: $el, size: unit[1]});
+                }
+            });
+
+            var timer = null;
+            var finish = function () {
+                if (expireType === 'text') {
+                    $countdown.html(expiryMessage);
+                } else if (expireType === 'hide') {
+                    if (editMode) {
+                        $countdown.css('opacity', 0.4);
+                    } else {
+                        $countdown.hide();
+                    }
+                } else if (expireType === 'url' && redirectUrl && !editMode) {
+                    window.location.href = redirectUrl;
+                }
+            };
+            // Remaining time is read from the clock on every tick, so a throttled
+            // background tab doesn't drift.
+            var tick = function () {
+                var left = Math.max(0, Math.floor((end - Date.now()) / 1000)),
+                    rest = left;
+                $.each(units, function (i, unit) {
+                    var value = Math.floor(rest / unit.size);
+                    rest -= value * unit.size;
+                    unit.$el.text(value < 10 ? '0' + value : value);
+                });
+                if (left <= 0 && restart) {
+                    end = Date.now() + evergreen * 1000;
+                    remember();
+                    return evergreen;
+                }
+                if (left <= 0) {
+                    clearInterval(timer);
+                    finish();
+                }
+                return left;
+            };
+
+            if (tick() > 0) {
+                timer = setInterval(tick, 1000);
+                EEA.keep($scope, 'countdown', function () {
+                    clearInterval(timer);
                 });
             }
         },
 
-        countdown: function ($scope) {
-            var $coundDown = $scope.find('.eead-countdown'),
-                $expire_type = $coundDown.data('expire-type') !== '' ? $coundDown.data('expire-type') : '',
-                $expiry_message = $coundDown.find('template.eead-countdown-expiry').html() || '',
-                $redirect_url = $coundDown.data('redirect-url') !== '' ? $coundDown.data('redirect-url') : '';
+        dropBar: function ($scope) {
+            var button = EEA.own($scope, '.eead-dropbar-button')[0],
+                drop = EEA.own($scope, '.eead-drop')[0],
+                ns = EEA.ns($scope, 'Drop');
+            EEA.release($scope, 'drop');
+            if (!button || !drop || !window.UIkit) {
+                return;
+            }
 
-            EEA.release($scope, 'countdown');
+            button.setAttribute('role', 'button');
+            button.setAttribute('aria-controls', drop.id);
 
-            var $countdownItems = $coundDown.find('.eead-countdown-items');
-            $countdownItems.countdown({
-                end: function end() {
-                    if ($expire_type == 'text') {
-                        $coundDown.html($expiry_message);
-                    } else if ($expire_type === 'url') {
-                        if (elementorFrontend.isEditMode() == false) {
-                            window.location.href = $redirect_url;
+            // Enter/Space open it from the keyboard too (hover mode has no key path).
+            $(button).off(ns).on('keydown' + ns, function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    var component = UIkit.drop(drop);
+                    if (component) {
+                        if (drop.classList.contains('uk-open')) {
+                            component.hide(false);
+                        } else {
+                            component.show();
                         }
                     }
                 }
             });
 
-            EEA.keep($scope, 'countdown', function () {
-                $countdownItems.each(function () {
-                    var instance = $(this).data('countdown');
-                    if (instance) {
-                        instance.stop();
-                        $(this).removeData('countdown');
-                    }
-                });
+            // UIkit's flip doesn't keep the panel on narrow screens, and it places
+            // it again on every scroll and resize; each time it does, nudge it back
+            // inside the viewport. The nudge itself fits, so it doesn't loop.
+            var clamp = function () {
+                var rect = drop.getBoundingClientRect(),
+                    gap = 8,
+                    vw = document.documentElement.clientWidth,
+                    shift = 0;
+                if (rect.right > vw - gap) {
+                    shift = vw - gap - rect.right;
+                }
+                if (rect.left + shift < gap) {
+                    shift = gap - rect.left;
+                }
+                if (shift) {
+                    drop.style.left = (parseFloat(getComputedStyle(drop).left) + shift) + 'px';
+                }
+            };
+            var observer = new MutationObserver(function () {
+                if (drop.classList.contains('uk-open')) {
+                    clamp();
+                }
+            });
+            observer.observe(drop, {attributes: true, attributeFilter: ['style', 'class']});
+            EEA.keep($scope, 'drop', function () {
+                observer.disconnect();
             });
         },
 
         counterBlock: function ($scope) {
             var $ele = $scope.find('.eead-counter-box');
             var $odometer = $ele.find('.eead-odometer');
-            if (!$odometer.length) {
+            if (!$odometer.length || typeof Odometer === 'undefined') {
                 return;
             }
             var decimals = (String($odometer.attr('data-count') || '').split('.')[1] || '').length;
-            var format = $odometer.data('comma') == 'yes' ? '(,ddd)' : (decimals ? '(d)' : 'd');
+            // Odometer format: the character in brackets groups thousands, the one after is the decimal mark.
+            var separator = $odometer.attr('data-separator') || ',';
+            var radix = separator === '.' ? ',' : '.';
+            // A plain space collapses to nothing inside Odometer's inline-block mark.
+            separator = separator === ' ' ? '\u00a0' : separator;
+            var format = $odometer.attr('data-comma') === 'yes' ? '(' + separator + 'ddd)' : (decimals ? '(d)' : 'd');
             if (decimals) {
-                format += '.' + new Array(decimals + 1).join('d');
+                format += radix + new Array(decimals + 1).join('d');
+            }
+            var still = EEA.reducedMotion() || typeof $ele.waypoint !== 'function';
+            var od = new Odometer({
+                el: $odometer[0],
+                format: format,
+                duration: parseInt($odometer.attr('data-duration'), 10) || 2000,
+                value: still ? $odometer.data('count') : $odometer.data('start')
+            });
+            var run = function () {
+                od.update($odometer.data('count'));
+            };
+
+            if (still) {
+                return;
             }
             $ele.waypoint(function () {
-                var od = new Odometer({
-                    el: $odometer[0],
-                    format: format,
-                    value: $odometer.data('start'),
-                });
-                setTimeout(function () {
-                    od.render();
-                    od.update($odometer.data('count'));
-                }, 1000);
+                setTimeout(run, 150);
                 this.destroy();
             }, {
                 offset: '90%'
@@ -806,6 +1150,64 @@
             }
         },
 
+        verticalTimeline: function ($scope) {
+            var root = EEA.own($scope, '.eead-vertical-timeline')[0];
+            if (!root) {
+                return;
+            }
+            var progress = root.classList.contains('eead-vt-progress-on'),
+                reveal = root.classList.contains('eead-vt-reveal-on'),
+                inner = root.querySelector('.eead-vt-inner'),
+                items = [].slice.call(root.querySelectorAll('.eead-vt-each-wrap')),
+                ns = EEA.ns($scope, 'Timeline');
+
+            if (reveal) {
+                if (elementorFrontend.isEditMode() || EEA.reducedMotion() || !('IntersectionObserver' in window)) {
+                    items.forEach(function (item) {
+                        item.classList.add('eead-vt-in');
+                    });
+                } else {
+                    root.classList.add('eead-vt-reveal-ready');
+                    var io = new IntersectionObserver(function (entries) {
+                        entries.forEach(function (entry) {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add('eead-vt-in');
+                                io.unobserve(entry.target);
+                            }
+                        });
+                    }, {rootMargin: '0px 0px -10% 0px'});
+                    items.forEach(function (item) {
+                        io.observe(item);
+                    });
+                }
+            }
+
+            if (progress && inner) {
+                var ticking = false;
+                // The line is filled down to the middle of the viewport.
+                var update = function () {
+                    ticking = false;
+                    var box = inner.getBoundingClientRect(),
+                        mark = window.innerHeight / 2,
+                        pct = box.height ? Math.max(0, Math.min(1, (mark - box.top) / box.height)) : 0;
+                    root.style.setProperty('--eead-vt-progress', (pct * 100).toFixed(2) + '%');
+                    items.forEach(function (item) {
+                        var point = item.querySelector('.eead-vt-point') || item,
+                            r = point.getBoundingClientRect();
+                        item.classList.toggle('eead-vt-passed', r.top + r.height / 2 <= mark);
+                    });
+                };
+                var request = function () {
+                    if (!ticking) {
+                        ticking = true;
+                        window.requestAnimationFrame(update);
+                    }
+                };
+                $(window).off(ns).on('scroll' + ns + ' resize' + ns + ' load' + ns, EEA.guard($scope, ns, request));
+                update();
+            }
+        },
+
         horizontalTabsBlock: function ($scope) {
             EEA.tabsBlock($scope, 'ht');
         },
@@ -819,7 +1221,41 @@
             var $tabs = EEA.own($scope, '.eead-' + prefix + '-tab'),
                 $contents = EEA.own($scope, '.eead-' + prefix + '-content'),
                 activeTab = 'eead-' + prefix + '-active-tab',
-                activeContent = 'eead-' + prefix + '-active-content';
+                activeContent = 'eead-' + prefix + '-active-content',
+                ns = EEA.ns($scope, 'Tabs' + prefix),
+                vertical = prefix === 'vt';
+
+            if (!$tabs.length) {
+                return;
+            }
+
+            // One tab stop for the tab list (WAI-ARIA tabs): only the selected tab is tabbable.
+            var roving = $tabs.filter('[aria-controls]').length > 0;
+
+            function activate($tab, focus) {
+                var id = $tab.data('tabid');
+                if (!id) {
+                    return;
+                }
+                $tabs.removeClass(activeTab);
+                EEA.aria($tabs, 'aria-selected', 'false');
+                $tab.addClass(activeTab);
+                EEA.aria($tab, 'aria-selected', 'true');
+                if (roving) {
+                    $tabs.attr('tabindex', '-1');
+                    $tab.attr('tabindex', '0');
+                }
+                if (focus) {
+                    $tab.trigger('focus');
+                }
+
+                $contents.removeClass(activeContent);
+                $contents.filter('.eead-' + prefix + '-content-' + id).addClass(activeContent);
+                // Sliders, carousels and maps in a hidden panel measured 0 wide; let them re-measure.
+                setTimeout(function () {
+                    window.dispatchEvent(new Event('resize'));
+                }, 30);
+            }
 
             $tabs.each(function () {
                 EEA.aria($(this), 'aria-selected', $(this).hasClass(activeTab) ? 'true' : 'false');
@@ -827,18 +1263,49 @@
 
             $tabs.off('.eeadTabs')
                 .on('click.eeadTabs', function () {
-                    var $tab_id = $(this).data('tabid');
-                    if ($tab_id) {
-                        $tabs.removeClass(activeTab);
-                        EEA.aria($tabs, 'aria-selected', 'false');
-                        $(this).addClass(activeTab);
-                        EEA.aria($(this), 'aria-selected', 'true');
-
-                        $contents.removeClass(activeContent);
-                        $contents.filter('.eead-' + prefix + '-content-' + $tab_id).addClass(activeContent);
-                    }
+                    activate($(this), false);
                 })
-                .on('keydown.eeadTabs', EEA.activateOnKey);
+                .on('keydown.eeadTabs', function (e) {
+                    var index = $tabs.index(this), next = null,
+                        prevKey = vertical ? 'ArrowUp' : 'ArrowLeft',
+                        nextKey = vertical ? 'ArrowDown' : 'ArrowRight';
+                    if (e.key === nextKey) {
+                        next = (index + 1) % $tabs.length;
+                    } else if (e.key === prevKey) {
+                        next = (index - 1 + $tabs.length) % $tabs.length;
+                    } else if (e.key === 'Home') {
+                        next = 0;
+                    } else if (e.key === 'End') {
+                        next = $tabs.length - 1;
+                    }
+                    if (next !== null) {
+                        e.preventDefault();
+                        activate($tabs.eq(next), true);
+                        return;
+                    }
+                    EEA.activateOnKey.call(this, e);
+                });
+
+            // Deep links: #tab-id opens that tab and brings it into view.
+            function fromHash() {
+                var hash = decodeURIComponent((window.location.hash || '').slice(1)),
+                    $panel;
+                if (!hash) {
+                    return;
+                }
+                $panel = $contents.filter(function () {
+                    return this.getAttribute('data-hash') === hash;
+                });
+                if ($panel.length) {
+                    activate($tabs.filter('[aria-controls="' + $panel.attr('id') + '"]'), false);
+                    $scope[0].scrollIntoView({block: 'start'});
+                }
+            }
+
+            if ($contents.filter('[data-hash]').length) {
+                fromHash();
+                $(window).off(ns).on('hashchange' + ns, EEA.guard($scope, ns, fromHash));
+            }
         },
 
         horizontalTimelineCarousel: function ($scope) {
@@ -866,6 +1333,7 @@
                         {items: params.items}
                     )
                 });
+                EEA.owlA11y($ele);
             }
 
             function equalizeHeights(selector1, selector2) {
@@ -897,10 +1365,97 @@
         },
 
         hotspotBlock: function ($scope) {
-            $scope.find('.eead-open-onclick .eead-hotspot-item > a').on('click', function (e) {
-                e.preventDefault();
-                $(this).parent('.eead-hotspot-item').toggleClass('eead-active');
+            var $wrap = $scope.find('.eead-hotspot'),
+                $items = $wrap.find('.eead-hotspot-item'),
+                onClick = $wrap.hasClass('eead-open-onclick'),
+                ns = EEA.ns($scope, 'Hotspot');
+
+            if (!$items.length) {
+                return;
+            }
+
+            // Keep the tooltip on screen: left/right tooltips that don't fit go
+            // below the spot, others slide sideways with the arrow still on the spot.
+            function place($item) {
+                var content = $item.children('.eead-hotspot-content')[0],
+                    gap = 8, vw, pos, rect, shift = 0;
+                if (!content) {
+                    return;
+                }
+                pos = content.getAttribute('data-pos') || '';
+                content.className = content.className.replace(/\beead-(top|bottom|left|right)-(left|middle|right)\b/g, '').trim() + ' eead-' + pos;
+                content.style.removeProperty('--eead-hs-shift');
+                vw = document.documentElement.clientWidth;
+                rect = content.getBoundingClientRect();
+                if (/^(left|right)-middle$/.test(pos) && (rect.left < gap || rect.right > vw - gap)) {
+                    content.className = content.className.replace('eead-' + pos, 'eead-bottom-middle');
+                    rect = content.getBoundingClientRect();
+                }
+                if (rect.right > vw - gap) {
+                    shift = vw - gap - rect.right;
+                }
+                if (rect.left + shift < gap) {
+                    shift = gap - rect.left;
+                }
+                if (shift) {
+                    content.style.setProperty('--eead-hs-shift', Math.round(shift) + 'px');
+                }
+            }
+
+            function setOpen($item, open) {
+                if (open) {
+                    place($item);
+                }
+                $item.toggleClass('eead-active', open);
+                EEA.aria($item.children('a'), 'aria-expanded', open ? 'true' : 'false');
+            }
+
+            $items.off(ns);
+            $items.on('mouseenter' + ns + ' focusin' + ns, function () {
+                place($(this));
+                if (!onClick) {
+                    EEA.aria($(this).children('a'), 'aria-expanded', 'true');
+                }
+            }).on('mouseleave' + ns + ' focusout' + ns, function () {
+                if (!onClick) {
+                    EEA.aria($(this).children('a'), 'aria-expanded', 'false');
+                }
             });
+
+            $items.children('a').on('click' + ns, function (e) {
+                e.preventDefault();
+                if (!onClick) {
+                    return;
+                }
+                var $item = $(this).parent('.eead-hotspot-item'),
+                    open = !$item.hasClass('eead-active');
+                // One open at a time.
+                $items.not($item).each(function () {
+                    setOpen($(this), false);
+                });
+                setOpen($item, open);
+            });
+
+            if (onClick) {
+                // Click outside or Escape closes the open tooltip.
+                $(document).off(ns).on('click' + ns, EEA.guard($scope, ns, function (e) {
+                    if (!$(e.target).closest($items).length) {
+                        $items.filter('.eead-active').each(function () {
+                            setOpen($(this), false);
+                        });
+                    }
+                })).on('keydown' + ns, EEA.guard($scope, ns, function (e) {
+                    if (e.key === 'Escape') {
+                        var $open = $items.filter('.eead-active');
+                        if ($open.length) {
+                            $open.each(function () {
+                                setOpen($(this), false);
+                            });
+                            $open.first().children('a').trigger('focus');
+                        }
+                    }
+                }));
+            }
         },
 
         imageComparison: function ($scope) {
@@ -935,7 +1490,59 @@
                 fluidMode: false
             };
 
-            new ImageCompare($image_compare[0], options).mount();
+            var viewer = new ImageCompare($image_compare[0], options);
+            viewer.mount();
+
+            // The library is pointer-only; make the divider a keyboard slider.
+            var control = $image_compare[0].querySelector('.icv__control');
+            if (!control || typeof viewer._slideCompare !== 'function') {
+                return;
+            }
+            var vertical = !!$settings.orientation,
+                pos = parseFloat($settings.starting_point);
+            pos = isNaN(pos) ? 50 : pos;
+            control.setAttribute('tabindex', '0');
+            control.setAttribute('role', 'slider');
+            control.setAttribute('aria-label', $settings.slider_label || 'Comparison slider');
+            control.setAttribute('aria-orientation', vertical ? 'vertical' : 'horizontal');
+            control.setAttribute('aria-valuemin', '0');
+            control.setAttribute('aria-valuemax', '100');
+
+            var moveTo = function (value) {
+                var rect = $image_compare[0].getBoundingClientRect();
+                pos = Math.max(0, Math.min(100, value));
+                // _slideCompare ignores the exact ends; nudge inside so 0/100 still land.
+                var p = Math.max(0.01, Math.min(99.99, pos));
+                viewer._slideCompare({
+                    clientX: rect.left + rect.width * p / 100,
+                    clientY: rect.top + rect.height * p / 100
+                });
+                control.setAttribute('aria-valuenow', Math.round(pos));
+                control.setAttribute('aria-valuetext', Math.round(pos) + '%');
+            };
+            control.setAttribute('aria-valuenow', Math.round(pos));
+
+            // Keep the value in step when the slider is dragged.
+            $image_compare.on('mouseup touchend', function () {
+                var rect = $image_compare[0].getBoundingClientRect(),
+                    c = control.getBoundingClientRect();
+                pos = vertical ? (c.top + c.height / 2 - rect.top) / rect.height * 100 : (c.left + c.width / 2 - rect.left) / rect.width * 100;
+                control.setAttribute('aria-valuenow', Math.round(pos));
+            });
+
+            control.addEventListener('keydown', function (e) {
+                var step = {ArrowLeft: -1, ArrowDown: vertical ? 1 : -1, ArrowRight: 1, ArrowUp: vertical ? -1 : 1, PageDown: vertical ? 10 : -10, PageUp: vertical ? -10 : 10}[e.key];
+                if (e.key === 'Home') {
+                    moveTo(0);
+                } else if (e.key === 'End') {
+                    moveTo(100);
+                } else if (step) {
+                    moveTo(pos + step);
+                } else {
+                    return;
+                }
+                e.preventDefault();
+            });
         },
 
         imageAccordion: function ($scope) {
@@ -943,7 +1550,7 @@
 
             if ($accordionContainer.length > 0) {
                 var $accordion = $scope.find('.eead-image-accordion-item');
-                $accordion.on('click', function (e) {
+                $accordion.off('.eeadIa').on('click.eeadIa', function (e) {
                     var $this = $(this);
                     if ($this.hasClass('eead-tab-active')) {
                         return;
@@ -951,17 +1558,57 @@
                     e.preventDefault();
 
                     $accordion.removeClass('eead-tab-active');
+                    EEA.aria($accordion, 'aria-expanded', 'false');
                     $this.addClass('eead-tab-active');
+                    EEA.aria($this, 'aria-expanded', 'true');
+                }).on('keydown.eeadIa', function (e) {
+                    // Enter on a link item behaves as a click already; Space too for the button ones.
+                    if (this.tagName !== 'A') {
+                        EEA.activateOnKey.call(this, e);
+                    }
                 });
             } else {
-                $scope.find('.eead-image-accordion-on-hover').on('mouseenter', function () {
+                // Keyboard focus counts as hover, so a focused item doesn't open alongside the default one.
+                $scope.find('.eead-image-accordion-on-hover').off('.eeadIa').on('mouseenter.eeadIa focusin.eeadIa', function () {
                     $(this).find('.eead-image-accordion-item.eead-tab-active').removeClass('eead-tab-active').addClass('eead-trigger');
-                });
-
-                $scope.find('.eead-image-accordion-on-hover').on('mouseleave', function () {
+                }).on('mouseleave.eeadIa focusout.eeadIa', function (e) {
+                    if (e.type === 'focusout' && (this.contains(e.relatedTarget) || this.matches(':hover'))) {
+                        return;
+                    }
+                    if (e.type === 'mouseleave' && this.contains(document.activeElement)) {
+                        return;
+                    }
                     $(this).find('.eead-image-accordion-item.eead-trigger').addClass('eead-tab-active').removeClass('eead-trigger');
                 });
             }
+        },
+
+        imageHoverEffect: function ($scope) {
+            // Touch screens have no hover: on a whole-box link the first tap shows
+            // the hidden content, a second tap on the same box follows the link.
+            var box = EEA.own($scope, 'a.eead-ihe')[0];
+            if (!box) {
+                return;
+            }
+            if (!box.eeadTouchBound) {
+                box.eeadTouchBound = true;
+                box.addEventListener('touchstart', function () {
+                    box.eeadTouch = true;
+                }, {passive: true});
+            }
+            $(box).off('.eeadIhe').on('click.eeadIhe', function (e) {
+                if (!box.eeadTouch) {
+                    return;
+                }
+                box.eeadTouch = false;
+                if (!box.classList.contains('eead-ihe-revealed')) {
+                    e.preventDefault();
+                    box.classList.add('eead-ihe-revealed');
+                    box.focus();
+                }
+            }).on('blur.eeadIhe', function () {
+                box.classList.remove('eead-ihe-revealed');
+            });
         },
 
         imageGallery: function ($scope, $) {
@@ -984,12 +1631,28 @@
                     });
                 });
 
-                $gallery_container.on('click', '.eead-ig-filter', function () {
+                // The lightbox only steps through the images the filter shows.
+                var lightboxEl = document.getElementById($gallery_container.attr('id'));
+                var startLightbox = function (filter) {
+                    $gallery.find('.eead-ig-item-box').each(function () {
+                        $(this).toggleClass('eead-ig-out', !!filter && filter !== '*' && !$(this).is(filter));
+                    });
+                    var uid = lightboxEl.getAttribute('lg-uid');
+                    if (uid && window.lgData && window.lgData[uid]) {
+                        window.lgData[uid].destroy(true);
+                    }
+                    lightGallery(lightboxEl, {
+                        selector: '.eead-ig-item-box:not(.eead-ig-out) .eead-ig-lightbox',
+                        thumbnail: false,
+                    });
+                };
+
+                $gallery_container.off('.eeadIg').on('click.eeadIg', '.eead-ig-filter', function () {
                     var $this = $(this),
                         filterValue = $this.attr('data-filter');
 
-                    $this.siblings().removeClass('eead-ig-active');
-                    $this.addClass('eead-ig-active');
+                    $this.siblings().removeClass('eead-ig-active').attr('aria-pressed', 'false');
+                    $this.addClass('eead-ig-active').attr('aria-pressed', 'true');
                     $gallery.isotope({
                         itemSelector: '.eead-ig-item-box',
                         layoutMode: layout,
@@ -998,15 +1661,13 @@
                         transitionDuration: $settings.duration + 'ms',
                         filter: filterValue
                     });
-                });
+                    startLightbox(filterValue);
+                }).on('keydown.eeadIg', '.eead-ig-filter', EEA.activateOnKey);
 
                 $gallery_container.addClass('eead-isotope-initialized');
 
                 // Init Popup
-                lightGallery(document.getElementById($gallery_container.attr('id')), {
-                    selector: '.eead-ig-lightbox',
-                    thumbnail: false,
-                });
+                startLightbox(filterValue);
             }
         },
 
@@ -1014,21 +1675,71 @@
             var $container = $scope.find('.eead-pie-chart-container'),
                 $canvas = $scope.find('.eead-pie-chart'),
                 data = $container.data('chart') || {},
-                options = $container.data('options') || {};
-            new Chart($canvas, {
-                type: 'pie',
-                data: data,
-                options: {
-                    cutout: options.cutoutPercentage,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        tooltip: options.tooltips,
-                        legend: options.legend
-                    },
-                    animation: options.animation
+                options = $container.data('options') || {},
+                format = $container.data('format') || {},
+                observer = null;
+
+            EEA.release($scope, 'pieChart');
+            if (!$canvas.length || typeof Chart === 'undefined') {
+                return;
+            }
+
+            var tooltip = $.extend({}, options.tooltips || {}, {
+                callbacks: {
+                    // Prefix/suffix, and optionally the slice's share of the whole.
+                    label: function (ctx) {
+                        var value = ctx.parsed,
+                            text = (ctx.label ? ctx.label + ': ' : '') + (format.prefix || '') + value + (format.suffix || '');
+                        if (format.percent) {
+                            var total = ctx.dataset.data.reduce(function (sum, v) {
+                                return sum + (parseFloat(v) || 0);
+                            }, 0);
+                            if (total > 0) {
+                                text += ' (' + Math.round(value / total * 1000) / 10 + '%)';
+                            }
+                        }
+                        return text;
+                    }
                 }
             });
 
+            var draw = function () {
+                var existing = Chart.getChart ? Chart.getChart($canvas[0]) : null;
+                if (existing) {
+                    existing.destroy();
+                }
+                var chart = new Chart($canvas, {
+                    type: 'pie',
+                    data: data,
+                    options: {
+                        cutout: options.cutoutPercentage,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: tooltip,
+                            legend: options.legend
+                        },
+                        animation: EEA.reducedMotion() ? false : options.animation
+                    }
+                });
+                EEA.keep($scope, 'pieChart', function () {
+                    chart.destroy();
+                });
+            };
+
+            if ($container.attr('data-in-view') === 'yes' && window.IntersectionObserver && !EEA.reducedMotion()) {
+                observer = new IntersectionObserver(function (entries) {
+                    if (entries[entries.length - 1].isIntersecting) {
+                        observer.disconnect();
+                        draw();
+                    }
+                }, {threshold: 0.3});
+                observer.observe($container[0]);
+                EEA.keep($scope, 'pieChart', function () {
+                    observer.disconnect();
+                });
+            } else {
+                draw();
+            }
         },
 
         onePageNav: function ($scope) {
@@ -1050,6 +1761,7 @@
             // Remove handlers left by a previous init of this widget.
             $(window).off(ns);
             $(document).off(ns);
+            EEA.release($scope, 'opnWheel');
 
             function getTarget($link) {
                 var rowId = $link.data('row-id');
@@ -1064,18 +1776,27 @@
                 return nav_el.find('.eead-one-page-nav-item.active').first();
             }
 
+            // Each returns whether it moved, so the caller only cancels the native
+            // scroll when the navigation actually took over.
             function goPrev() {
-                var $prev = activeItem().prev();
-                if ($prev.length > 0) {
+                var $active = activeItem(),
+                    $prev = $active.prev();
+                if ($active.length && $prev.length > 0) {
                     $prev.find('a').trigger('click');
+                    return true;
                 }
+                return false;
             }
 
             function goNext() {
-                var $next = activeItem().next();
+                var $active = activeItem(),
+                    // Above the first section nothing is active yet: go to the first.
+                    $next = $active.length ? $active.next() : nav_el.find('.eead-one-page-nav-item').first();
                 if ($next.length > 0) {
                     $next.find('a').trigger('click');
+                    return true;
                 }
+                return false;
             }
 
             $links.off('click' + ns).on('click' + ns, function (e) {
@@ -1091,12 +1812,19 @@
 
                 $('html, body').animate({
                     scrollTop: $(target).offset().top - $top_offset
-                }, $scroll_speed);
+                }, EEA.reducedMotion() ? 0 : $scroll_speed);
 
                 nav_el.find('.eead-one-page-nav-item').removeClass('active');
                 $(this).parent().addClass('active');
+                markCurrent();
                 return false;
             });
+
+            // Screen readers: the dot of the section in view is the current one.
+            function markCurrent() {
+                $links.removeAttr('aria-current');
+                activeItem().children('a').attr('aria-current', 'true');
+            }
 
             function updateDot() {
                 var winHeight = $(window).height(),
@@ -1112,6 +1840,7 @@
                         inView = (top - winHeight / 2 < scrollTop) && (top >= scrollTop || top + $target.height() - winHeight / 2 > scrollTop);
                     $(this).parent().toggleClass('active', inView);
                 });
+                markCurrent();
             }
 
             function requestUpdateDot() {
@@ -1144,26 +1873,36 @@
                     animationTime = 800,
                     startY = null;
 
-                $(document).on('wheel' + ns, EEA.guard($scope, ns, function (e) {
-                    var deltaY = e.originalEvent ? e.originalEvent.deltaY : 0;
-                    if (!deltaY) {
+                // A native, non-passive listener: jQuery's document-level wheel handler is
+                // passive in modern browsers, so the page scrolled natively *and* jumped.
+                var onWheel = function (e) {
+                    if (!document.documentElement.contains($scope[0])) {
+                        document.removeEventListener('wheel', onWheel);
+                        return;
+                    }
+                    var deltaY = e.deltaY;
+                    if (!deltaY || e.ctrlKey) {
                         return;
                     }
 
                     var timeNow = new Date().getTime();
-                    if (timeNow - lastAnimation < quietPeriod + animationTime) {
+                    if ($('html,body').is(':animated') || timeNow - lastAnimation < quietPeriod + animationTime) {
+                        // Mid-jump: swallow the wheel so it doesn't fight the animation.
+                        if (activeItem().length) {
+                            e.preventDefault();
+                        }
                         return;
                     }
 
-                    if (!$('html,body').is(':animated')) {
-                        if (deltaY > 0) {
-                            goNext();
-                        } else {
-                            goPrev();
-                        }
+                    if (deltaY > 0 ? goNext() : goPrev()) {
+                        e.preventDefault();
+                        lastAnimation = timeNow;
                     }
-                    lastAnimation = timeNow;
-                }));
+                };
+                document.addEventListener('wheel', onWheel, {passive: false});
+                EEA.keep($scope, 'opnWheel', function () {
+                    document.removeEventListener('wheel', onWheel);
+                });
 
                 // When Screen Touch swiped
                 if ($scroll_touch === 'on') {
@@ -1204,20 +1943,27 @@
             if ($scroll_keys === 'on') {
                 $(document).on('keydown' + ns, EEA.guard($scope, ns, function (e) {
                     var tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
-                    if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) {
+                    // Leave the keys to fields and to widgets that use them (tabs, sliders, menus).
+                    if (e.isDefaultPrevented() || e.altKey || e.ctrlKey || e.metaKey ||
+                            tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable ||
+                            $(e.target).closest('[role="tablist"], [role="slider"], [role="menu"], [role="listbox"], [role="dialog"], [role="tabpanel"]').length) {
                         return;
                     }
+                    var moved;
                     switch (e.which) {
                         case 38:
                         case 33:
-                            goPrev();
+                            moved = goPrev();
                             break;
                         case 40:
                         case 34:
-                            goNext();
+                            moved = goNext();
                             break;
                         default:
                             return;
+                    }
+                    if (moved) {
+                        e.preventDefault();
                     }
                 }));
             }
@@ -1228,26 +1974,36 @@
 
             EEA.release($scope, 'lottie');
 
-            if (!$container.length) {
+            if (!$container.length || typeof lottie === 'undefined') {
                 return;
             }
 
             var settings = JSON.parse($container.attr('data-settings') || '{}'),
-                action = settings.autoplay ? settings.action : settings.action_alt;
+                still = EEA.reducedMotion(),
+                autoplay = !!settings.autoplay && !still,
+                action = settings.autoplay ? settings.action : settings.action_alt,
+                loop = settings.loop !== false,
+                visible = true,
+                hoverPaused = false,
+                observer = null;
 
             if (!settings.path) {
                 return;
             }
 
-            let animation = lottie.loadAnimation({
+            var animation = lottie.loadAnimation({
                 container: $container[0],
                 renderer: settings.renderer,
-                autoplay: settings.autoplay,
+                // Viewport start and off-screen pausing are handled below.
+                autoplay: autoplay && settings.trigger !== 'viewport',
                 path: settings.path,
-                loop: true,
+                loop: loop
             });
 
             EEA.keep($scope, 'lottie', function () {
+                if (observer) {
+                    observer.disconnect();
+                }
                 animation.destroy();
             });
 
@@ -1255,6 +2011,34 @@
 
             animation.setDirection(settings.reverse);
             animation.setSpeed(settings.speed);
+
+            // Reduced motion: hold the first frame instead of playing.
+            if (still) {
+                animation.addEventListener('DOMLoaded', function () {
+                    animation.goToAndStop(settings.reverse == '-1' ? animation.totalFrames - 1 : 0, true);
+                });
+                return;
+            }
+
+            // Autoplay: start when in view (if chosen) and pause while off-screen.
+            if (autoplay && window.IntersectionObserver) {
+                visible = settings.trigger !== 'viewport';
+                observer = new IntersectionObserver(function (entries) {
+                    visible = entries[entries.length - 1].isIntersecting;
+                    if (visible && !hoverPaused && animation.isPaused) {
+                        animation.play();
+                    } else if (!visible) {
+                        animation.pause();
+                    }
+                }, {threshold: 0.1});
+                observer.observe($container[0]);
+                // A play-once animation is done for good: don't restart it on the next scroll.
+                animation.addEventListener('complete', function () {
+                    if (!loop && observer) {
+                        observer.disconnect();
+                    }
+                });
+            }
 
             switch (action) {
                 case 'play':
@@ -1265,12 +2049,29 @@
                         animation.pause();
                     });
                     break;
+                case 'click':
+                    // Play from the start on each click (or toggle while it loops).
+                    $container.css('cursor', 'pointer').on('click.eeadLottie', function (e) {
+                        if (this.tagName !== 'A') {
+                            e.preventDefault();
+                        }
+                        if (loop && !animation.isPaused) {
+                            animation.pause();
+                        } else {
+                            animation.goToAndPlay(settings.reverse == '-1' ? animation.totalFrames - 1 : 0, true);
+                        }
+                    });
+                    break;
                 case 'pause':
                     $container.on('mouseenter.eeadLottie', function () {
+                        hoverPaused = true;
                         animation.pause();
                     });
                     $container.on('mouseleave.eeadLottie', function () {
-                        animation.play();
+                        hoverPaused = false;
+                        if (visible) {
+                            animation.play();
+                        }
                     });
                     break;
                 case 'reverse':
@@ -1333,6 +2134,20 @@
             EEA.own($scope, '.eead-marquee').each(function () {
                 EEA.textMarqueeRow($scope, this);
             });
+
+            // Pause button: stops every row of this widget until pressed again.
+            var toggle = EEA.own($scope, '.eead-tm-toggle')[0];
+            $scope[0].eeadTmPaused = false;
+            if (toggle) {
+                toggle.setAttribute('aria-pressed', 'false');
+                $(toggle).off('.eeadTm').on('click.eeadTm', function () {
+                    var paused = !$scope[0].eeadTmPaused;
+                    $scope[0].eeadTmPaused = paused;
+                    toggle.setAttribute('aria-pressed', paused ? 'true' : 'false');
+                    toggle.setAttribute('aria-label', toggle.getAttribute(paused ? 'data-label-play' : 'data-label-pause'));
+                    $scope[0].classList.toggle('eead-tm-paused', paused);
+                });
+            }
         },
 
         textMarqueeRow: function ($scope, el) {
@@ -1412,7 +2227,7 @@
 
             function tick(now) {
                 var dt = last === null ? 0 : Math.min((now - last) / 1000, 0.1),
-                    target = hovering ? hoverFactor : 1;
+                    target = $scope[0].eeadTmPaused ? 0 : (hovering ? hoverFactor : 1);
                 last = now;
 
                 factor += (target - factor) * Math.min(1, dt * 5);
@@ -1637,9 +2452,20 @@
             function sortValue(row, col) {
                 var cell = cellAt(row, col),
                     text = cell ? cell.textContent.trim() : '',
-                    numeric = text.replace(/[\s,%]/g, '').replace(/^[^\d.\-]+|[^\d.]+$/g, '');
-                if (numeric !== '' && !isNaN(numeric) && /\d/.test(numeric)) {
-                    return {num: parseFloat(numeric), text: text};
+                    // A number with an optional currency sign or code before it and a
+                    // unit after it ($1,200 / USD 30 / 45% / 10 GB). Words before the
+                    // digits rule it out, so "Jan 5, 2024" isn't read as 52024.
+                    match = text.match(/^(?:[A-Z]{3}\s*)?[^\w\s\-\u2212]*\s*([\-\u2212]?\d[\d,]*(?:\.\d+)?)(?:\s*[^\d\s][^\d]*)?$/),
+                    date;
+                if (match) {
+                    return {num: parseFloat(match[1].replace(/,/g, '').replace('\u2212', '-')), text: text};
+                }
+                // Dates with a four-digit year: 2024-01-15, Jan 5, 2024, 5 March 2024.
+                if (/\d{4}/.test(text) && /[a-z\-\/]/i.test(text)) {
+                    date = Date.parse(text);
+                    if (!isNaN(date)) {
+                        return {num: date, text: text};
+                    }
                 }
                 return {num: null, text: text.toLowerCase()};
             }
@@ -1765,6 +2591,15 @@
                         render();
                     });
                 });
+            }
+
+            if (settings.sortable && settings.sortCol >= 0) {
+                var initial = table.querySelector('thead th[data-col="' + settings.sortCol + '"]');
+                if (initial) {
+                    state.col = settings.sortCol;
+                    state.dir = settings.sortDir === -1 ? -1 : 1;
+                    initial.setAttribute('aria-sort', state.dir === 1 ? 'ascending' : 'descending');
+                }
             }
 
             if (search) {
@@ -1938,6 +2773,24 @@
                 lists[depth].appendChild(li);
                 links.push(a);
             });
+
+            // A shared link such as page/#take-payments: the id only exists now that
+            // the table has given headings their anchors, so the browser could not
+            // jump on load. Do it here, with the same offset as a click.
+            if (!editMode && window.location.hash) {
+                var landing = null;
+                try {
+                    landing = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+                } catch (err) {
+                }
+                if (landing && links.some(function (link) {
+                    return link.eeadTarget === landing;
+                })) {
+                    setTimeout(function () {
+                        window.scrollTo({top: landing.getBoundingClientRect().top + window.pageYOffset - offset(), behavior: 'auto'});
+                    }, 60);
+                }
+            }
 
             if (!settings.highlight && !settings.progress) {
                 return;
@@ -2210,8 +3063,12 @@
                 var update = function () {
                     ticking = false;
                     var vh = window.innerHeight,
-                        startY = vh * (settings.start === undefined ? 95 : settings.start) / 100,
-                        endY = vh * (settings.end === undefined ? 45 : settings.end) / 100,
+                        a = settings.start === undefined ? 95 : settings.start,
+                        b = settings.end === undefined ? 45 : settings.end,
+                        // The start line has to sit below the finish line; reversed
+                        // values would otherwise snap straight to fully shown.
+                        startY = vh * Math.max(a, b) / 100,
+                        endY = vh * Math.min(a, b) / 100,
                         top = frame.getBoundingClientRect().top,
                         p = Math.min(1, Math.max(0, (startY - top) / Math.max(1, startY - endY)));
                     frame.style.setProperty('--eead-apim-p', p.toFixed(3));
@@ -2229,13 +3086,23 @@
                 return;
             }
 
+            var repeat = settings.trigger === 'repeat';
             el.classList.add('eead-apim-once');
+            // A quarter of the image, or a quarter of the screen for an image too
+            // tall to ever show a quarter of itself at once.
+            var threshold = Math.min(0.25, window.innerHeight * 0.25 / Math.max(1, frame.offsetHeight));
             observer = new IntersectionObserver(function (entries) {
-                if (entries[entries.length - 1].isIntersecting) {
+                var entry = entries[entries.length - 1];
+                // isIntersecting turns true at the first visible pixel, before the threshold.
+                if (entry.intersectionRatio >= threshold - 0.001) {
                     el.classList.add('eead-apim-shown');
-                    observer.disconnect();
+                    if (!repeat) {
+                        observer.disconnect();
+                    }
+                } else if (repeat && !entry.isIntersecting) {
+                    el.classList.remove('eead-apim-shown');
                 }
-            }, {threshold: 0.25});
+            }, {threshold: threshold});
             observer.observe(frame);
             EEA.keep($scope, 'apim', function () {
                 observer.disconnect();
@@ -2248,7 +3115,8 @@
                 var params = JSON.parse($ele.attr('data-params'));
                 $ele.owlCarousel({
                     loop: JSON.parse(params.loop),
-                    autoplay: JSON.parse(params.autoplay),
+                    // No self-moving carousel for visitors who turned motion off.
+                    autoplay: JSON.parse(params.autoplay) && !EEA.reducedMotion(),
                     autoplayTimeout: params.pause,
                     autoplayHoverPause: JSON.parse(params.pause_on_hover),
                     nav: JSON.parse(params.arrows),
@@ -2270,42 +3138,147 @@
                         stagePadding: params.stagepadding
                     })
                 });
+                EEA.owlA11y($ele);
             }
         },
 
         popupModal: function ($scope) {
-            var $open = $scope.find('.eead-popup-modal-trigger-btn');
+            var $open = $scope.find('.eead-popup-modal-trigger-btn'),
+                id = $open.data('id'),
+                modalId = 'eead-popup-modal-' + id,
+                popupNs = '.eeadPopup' + $scope.data('id');
+
+            if (!id || typeof MicroModal === 'undefined') {
+                return;
+            }
+
+            var show = function () {
+                MicroModal.show(modalId, {
+                    awaitOpenAnimation: true,
+                    awaitCloseAnimation: true,
+                    openClass: 'eead-open-modal',
+                    disableScroll: true,
+                    onShow: function (modal) {
+                        // Sliders/carousels in a template measured 0 while hidden.
+                        setTimeout(function () {
+                            window.dispatchEvent(new Event('resize'));
+                        }, 50);
+                        // MicroModal skips the close button when picking what to focus,
+                        // so focus could land inside a video frame, where Escape is lost.
+                        // Start on the dialog itself instead.
+                        var box = modal.querySelector('[role="dialog"]'),
+                            focused = false,
+                            focusBox = function () {
+                                if (!focused) {
+                                    focused = true;
+                                    setTimeout(function () {
+                                        box.focus();
+                                    }, 0);
+                                }
+                            };
+                        if (box) {
+                            box.setAttribute('tabindex', '-1');
+                            // MicroModal focuses after its open animation ends; go after it.
+                            modal.addEventListener('animationend', focusBox, {once: true});
+                            setTimeout(focusBox, 700);
+                        }
+                    },
+                    onClose: function (modal) {
+                        // Stop embedded video and audio: re-setting an iframe's src
+                        // unloads the player, and media elements are paused.
+                        $(modal).find('iframe').each(function () {
+                            var src = this.getAttribute('src');
+                            if (src && /youtube|vimeo|dailymotion|wistia|soundcloud|spotify/.test(src)) {
+                                this.setAttribute('src', src);
+                            }
+                        });
+                        $(modal).find('video, audio').each(function () {
+                            this.pause();
+                        });
+                    }
+                });
+            };
+
             if ($open.hasClass('eead-popup-modal-trigger-selector')) {
-                var $trigger = $open.attr('data-selector');
                 var $triggers;
                 try {
-                    $triggers = $(document).find($trigger);
+                    $triggers = $(document).find($open.attr('data-selector'));
                 } catch (e) {
-                    return;
+                    $triggers = $();
                 }
-                var popupNs = '.eeadPopup' + $scope.data('id');
                 $triggers.off('click' + popupNs).on('click' + popupNs, function (e) {
                     e.preventDefault();
-                    var $id = $open.data('id');
-                    MicroModal.show('eead-popup-modal-' + $id, {
-                        awaitOpenAnimation: true,
-                        awaitCloseAnimation: true,
-                        openClass: 'eead-open-modal',
-                        disableScroll: true
-                    })
+                    show();
                 });
             } else {
-                $open.on('click', function (e) {
+                $open.off('click' + popupNs).on('click' + popupNs, function (e) {
                     e.preventDefault();
-                    var $id = $(this).data('id');
-                    MicroModal.show('eead-popup-modal-' + $id, {
-                        awaitOpenAnimation: true,
-                        awaitCloseAnimation: true,
-                        openClass: 'eead-open-modal',
-                        disableScroll: true
-                    })
+                    show();
                 });
             }
+
+            // Open automatically: after a delay, at a scroll depth or on exit intent,
+            // then not again for the chosen number of days (per visitor).
+            var auto = $scope.find('.eead-popup-modal-trigger').data('auto');
+            $(window).off(popupNs);
+            $(document).off(popupNs);
+            EEA.release($scope, 'popupAuto');
+            if (!auto || (window.elementorFrontend && elementorFrontend.isEditMode())) {
+                return;
+            }
+
+            var key = 'eead-popup-' + id,
+                seen = 0, done = false, timer = 0;
+            try {
+                seen = parseInt(window.localStorage.getItem(key), 10) || 0;
+            } catch (err) {
+            }
+            if (auto.again > 0 && seen && Date.now() - seen < auto.again * 86400000) {
+                return;
+            }
+
+            var fire = function () {
+                if (done || document.querySelector('.eead-popup-modal.eead-open-modal')) {
+                    return;
+                }
+                done = true;
+                $(window).off(popupNs);
+                $(document).off(popupNs);
+                clearTimeout(timer);
+                try {
+                    window.localStorage.setItem(key, String(Date.now()));
+                } catch (err) {
+                }
+                show();
+            };
+            var touch = window.matchMedia && window.matchMedia('(hover: none)').matches;
+
+            if (auto.type === 'delay') {
+                timer = setTimeout(fire, auto.delay * 1000);
+            } else if (auto.type === 'scroll') {
+                var check = function () {
+                    var max = document.documentElement.scrollHeight - window.innerHeight;
+                    if (max <= 0 || window.pageYOffset / max * 100 >= auto.scroll) {
+                        fire();
+                    }
+                };
+                $(window).on('scroll' + popupNs, EEA.guard($scope, popupNs, check));
+                check();
+            } else if (auto.type === 'exit') {
+                if (touch) {
+                    timer = setTimeout(fire, 30000);
+                } else {
+                    $(document).on('mouseout' + popupNs, EEA.guard($scope, popupNs, function (e) {
+                        // Leaving through the top edge, towards the tabs and address bar.
+                        if (!e.relatedTarget && e.clientY <= 0) {
+                            fire();
+                        }
+                    }));
+                }
+            }
+            EEA.keep($scope, 'popupAuto', function () {
+                clearTimeout(timer);
+            });
         },
 
         popupVideo: function ($scope) {
@@ -2316,7 +3289,15 @@
             if (video_type == 'custom') {
                 lightGallery(document.getElementById(video_id), {
                     selector: 'this',
-                    counter: false
+                    counter: false,
+                    videoMaxWidth: video_width
+                });
+                // Without an href, Enter and Space have to open it.
+                $video.on('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
                 });
             } else {
                 var settings = JSON.parse($video.attr('data-settings'));
@@ -2324,16 +3305,16 @@
                     selector: 'this',
                     counter: false,
                     videoMaxWidth: video_width,
-                    youtubePlayerParams: {
-                        autoplay: settings.autoplay,
-                        controls: settings.controls,
-                        mute: settings.mute,
-                        start: settings.start,
-                        end: settings.end,
-                        loop: settings.loop,
-                        modestbranding: 0,
-                        rel: 0
-                    },
+                    // Unset values are left out instead of being sent as "undefined".
+                    youtubePlayerParams: $.extend({modestbranding: 0, rel: 0}, (function () {
+                        var p = {};
+                        $.each(['autoplay', 'controls', 'mute', 'start', 'end', 'loop', 'playlist'], function (i, k) {
+                            if (settings[k] !== undefined && settings[k] !== false && settings[k] !== null) {
+                                p[k] = settings[k];
+                            }
+                        });
+                        return p;
+                    })()),
                     vimeoPlayerParams: {
                         autoplay: settings.autoplay,
                         loop: settings.loop,
@@ -2347,79 +3328,163 @@
         },
 
         progressBar: function ($scope) {
-            var $el = $scope.find('.eead-progressbar');
-            if (($el.length > 0)) {
-                $el.each(function (index) {
-                    var $this = $(this);
-                    var delay_time = parseInt(index * 100 + 300);
-                    $this.waypoint(function () {
-                        setTimeout(function () {
-                            $this.find('.eead-progressbar-length').animate({
-                                width: $this.attr('data-width') + '%'
-                            }, 1000);
-                        }, delay_time);
-                        this.destroy();
-                    }, {
-                        offset: '90%',
-                    });
+            var $container = $scope.find('.eead-progressbar-container'),
+                $el = $scope.find('.eead-progressbar'),
+                duration = parseInt($container.attr('data-duration'), 10),
+                still = EEA.reducedMotion();
+            duration = isNaN(duration) ? 1000 : duration;
+
+            $el.each(function (index) {
+                var $this = $(this),
+                    target = Math.max(0, Math.min(100, parseFloat($this.attr('data-width')) || 0)),
+                    $bar = $this.find('.eead-progressbar-length'),
+                    // The percentage sits beside or inside the bar depending on the style.
+                    $label = $this.closest('.eead-progress').find('.eead-progressbar-percentage'),
+                    fill = function () {
+                        if (still || !duration) {
+                            $bar.css('width', target + '%');
+                            return;
+                        }
+                        // The number counts up with the bar instead of showing the end value first.
+                        $label.text('0%');
+                        $bar.stop(true).css('width', 0).animate({width: target + '%'}, {
+                            duration: duration,
+                            step: function (now, fx) {
+                                if (fx.prop === 'width') {
+                                    $label.text(Math.round(Math.min(now, target)) + '%');
+                                }
+                            },
+                            complete: function () {
+                                $label.text(target + '%');
+                            }
+                        });
+                    };
+
+                if (still || typeof $this.waypoint !== 'function') {
+                    $bar.css('width', target + '%');
+                    return;
+                }
+                if (duration) {
+                    $label.text('0%');
+                }
+                $this.waypoint(function () {
+                    setTimeout(fill, index * 100 + 150);
+                    this.destroy();
+                }, {
+                    offset: '90%',
                 });
-            }
+            });
         },
 
         toggleBlock: function ($scope, $) {
             var $container = EEA.own($scope, '.eead-toggle-container'),
                 $toggle_switch = EEA.own($scope, '.eead-toggle-switch-checkbox'),
                 $label_primary = EEA.own($scope, '.eead-toggle-label-primary'),
-                $label_secondary = EEA.own($scope, '.eead-toggle-label-secondary');
+                $label_secondary = EEA.own($scope, '.eead-toggle-label-secondary'),
+                hash = $container.attr('data-hash'),
+                ns = EEA.ns($scope, 'Toggle');
 
-            $toggle_switch.on('click', function () {
-                $container.toggleClass('eead-switch-on');
-                if ($(this).prop('checked')) {
-                    $toggle_switch.prop('checked', true);
-                } else {
-                    $toggle_switch.prop('checked', false);
+            var set = function (on) {
+                if ($container.hasClass('eead-switch-on') === on) {
+                    $toggle_switch.prop('checked', on);
+                    return;
                 }
+                $container.toggleClass('eead-switch-on', on);
+                $toggle_switch.prop('checked', on);
+                // Carousels, maps etc. in the shown content measure 0 while hidden.
+                window.dispatchEvent(new Event('resize'));
+            };
+
+            $toggle_switch.on('change', function () {
+                set($(this).prop('checked'));
             });
 
             $label_primary.on('click', function () {
-                $container.removeClass('eead-switch-on');
-                $toggle_switch.prop('checked', false);
+                set(false);
             });
 
             $label_secondary.on('click', function () {
-                $container.addClass('eead-switch-on');
-                $toggle_switch.prop('checked', true);
+                set(true);
             });
+
+            if (hash && !elementorFrontend.isEditMode()) {
+                var fromHash = function () {
+                    if (decodeURIComponent(window.location.hash.slice(1)) === hash) {
+                        set(true);
+                    }
+                };
+                fromHash();
+                $(window).off(ns).on('hashchange' + ns, EEA.guard($scope, ns, fromHash));
+                // A link to the hash that is already in the URL fires no hashchange.
+                $(document).off(ns).on('click' + ns, 'a[href$="#' + hash + '"]', EEA.guard($scope, ns, function () {
+                    set(true);
+                }));
+            }
         },
 
         switcherBlock: function ($scope) {
-            var $active_tab = $scope.find('.eead-switcher-active-tab');
+            var $container = $scope.find('.eead-switcher-container').first(),
+                $tabs = $container.find('.eead-switcher-tab'),
+                ns = EEA.ns($scope, 'Switcher');
 
-            if ($active_tab.length) {
-                $scope.find('.eead-switcher-slider').css({
-                    'width': $active_tab.outerWidth() + 'px',
-                    'left': $active_tab.position().left + 'px'
-                });
+            if (!$tabs.length) {
+                return;
             }
 
-            $scope.find('.eead-switcher-tab').on('click', function () {
-                if ($(this).hasClass('eead-switcher-active-tab')) {
+            // The sliding pill follows the active option; measured again when fonts
+            // or the window change its size.
+            var placePill = function () {
+                var $active = $tabs.filter('.eead-switcher-active-tab');
+                if ($active.length) {
+                    $container.find('.eead-switcher-slider').css({
+                        'width': $active.outerWidth() + 'px',
+                        'left': $active.position().left + 'px'
+                    });
+                }
+            };
+
+            var activate = function ($tab, focus) {
+                if (!$tab.hasClass('eead-switcher-active-tab')) {
+                    $tabs.removeClass('eead-switcher-active-tab').attr({'aria-selected': 'false', tabindex: '-1'});
+                    $container.find('.eead-switcher-content').removeClass('eead-switcher-active-content');
+                    $tab.addClass('eead-switcher-active-tab').attr({'aria-selected': 'true', tabindex: '0'});
+                    $container.find('.eead-switcher-content-' + $tab.attr('data-switchid')).addClass('eead-switcher-active-content');
+                    placePill();
+                    // Sliders/carousels in the newly shown content re-measure.
+                    setTimeout(function () {
+                        window.dispatchEvent(new Event('resize'));
+                    }, 30);
+                }
+                if (focus) {
+                    $tab.trigger('focus');
+                }
+            };
+
+            placePill();
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(placePill);
+            }
+            $(window).off(ns).on('resize' + ns + ' load' + ns, EEA.guard($scope, ns, placePill));
+
+            $tabs.off('.eeadSwitcher').on('click.eeadSwitcher', function () {
+                activate($(this), false);
+            }).on('keydown.eeadSwitcher', function (e) {
+                var index = $tabs.index(this), next = null;
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    next = (index + 1) % $tabs.length;
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    next = (index - 1 + $tabs.length) % $tabs.length;
+                } else if (e.key === 'Home') {
+                    next = 0;
+                } else if (e.key === 'End') {
+                    next = $tabs.length - 1;
+                }
+                if (next !== null) {
+                    e.preventDefault();
+                    activate($tabs.eq(next), true);
                     return;
                 }
-
-                var $container = $(this).closest('.eead-switcher-container');
-
-                $container.find('.eead-switcher-slider').css({
-                    'width': $(this).outerWidth() + 'px',
-                    'left': $(this).position().left + 'px'
-                });
-
-                $container.find('.eead-switcher-tab').removeClass('eead-switcher-active-tab');
-                $container.find('.eead-switcher-content').removeClass('eead-switcher-active-content');
-
-                $(this).addClass('eead-switcher-active-tab');
-                var clickedTabId = $(this).attr('data-switchid');
-                $container.find('.eead-switcher-content-' + clickedTabId).addClass('eead-switcher-active-content');
+                EEA.activateOnKey.call(this, e);
             });
         },
 
@@ -2451,11 +3516,11 @@
                 videoIsActive = 'on';
             });
 
-            $scope.find('.eead-sticky-player-close').on('click', function () {
+            $scope.find('.eead-sticky-player-close').off('.eeadSticky').on('click.eeadSticky', function () {
                 stickyVideo.removeClass('out').addClass('in');
                 player.pause();
                 videoIsActive = 'off';
-            });
+            }).on('keydown.eeadSticky', EEA.activateOnKey);
 
             if (overlay === 'yes' && autoplay) {
                 player.play();
@@ -2469,38 +3534,37 @@
                 });
             }
 
+            var ns = EEA.ns($scope, 'StickyVideo');
+            $(window).off(ns);
+
             if (sticky == 'yes') {
-                setTimeout(function () {
-                    videoContainer.css('height', stickyVideo.height() + 'px');
-                    var stickyPoint = videoContainer.offset().top + videoContainer.height();
-                    stickyVideo.attr('data-sticky-point', stickyPoint);
-                }, 1000);
-
-                var ns = EEA.ns($scope, 'StickyVideo');
-                $(window).off(ns);
-
-                $(window).on('resize' + ns, EEA.guard($scope, ns, function () {
-                    videoContainer.css('height', stickyVideo.height() + 'px');
-                    var stickyPoint = videoContainer.offset().top + videoContainer.height();
-                    stickyVideo.attr('data-sticky-point', stickyPoint);
-                }));
-
-                $(window).on('scroll' + ns, EEA.guard($scope, ns, function () {
-                    var scrollTop = $(window).scrollTop();
-                    var stickyPoint = stickyVideo.attr('data-sticky-point');
-
-                    var scrollBottom = $(document).height() - scrollTop;
-
-                    if (scrollBottom > jQuery(window).height() + 400) {
-                        if (scrollTop > stickyPoint) {
-                            if (videoIsActive == 'on') {
-                                stickyVideo.removeClass('in').addClass('out');
-                            }
-                        } else {
-                            stickyVideo.removeClass('out').addClass('in');
-                        }
+                var floatsHere = function () {
+                    return stickyVideo.attr('data-mobile') !== 'no' || !window.matchMedia('(max-width: 767px)').matches;
+                };
+                // The placeholder keeps the page from jumping while the player floats.
+                var keepSpace = function () {
+                    if (!stickyVideo.hasClass('out')) {
+                        videoContainer.css('height', stickyVideo.height() + 'px');
                     }
+                };
+                // Measured on every check rather than once after load, so content that
+                // loads later and moves the video doesn't throw the float point off.
+                var check = function () {
+                    var gone = videoContainer[0].getBoundingClientRect().bottom < 0;
+                    if (gone && videoIsActive === 'on' && floatsHere()) {
+                        stickyVideo.removeClass('in').addClass('out');
+                    } else if (!gone || !floatsHere()) {
+                        stickyVideo.removeClass('out').addClass('in');
+                    }
+                };
+
+                setTimeout(keepSpace, 300);
+                $(window).on('load' + ns, keepSpace);
+                $(window).on('resize' + ns, EEA.guard($scope, ns, function () {
+                    keepSpace();
+                    check();
                 }));
+                $(window).on('scroll' + ns, EEA.guard($scope, ns, check));
             }
         },
 
@@ -2551,12 +3615,19 @@
             $(window).off(ns).on('resize' + ns, EEA.guard($scope, ns, resizeVideo));
 
             function playIframeVideo() {
-                var lazyLoad = iframe.data('lazy-load');
-                if (lazyLoad) {
-                    iframe.attr('src', lazyLoad);
+                // Load the iframe once, with autoplay on wherever it sits in the query.
+                var src = iframe.data('lazy-load') || iframe[0].src;
+                if (!autoplay && src) {
+                    try {
+                        var url = new URL(src, window.location.href);
+                        url.searchParams.set('autoplay', '1');
+                        src = url.toString();
+                    } catch (e) {
+                        src = src.replace(/([?&])autoplay=0/, '$1autoplay=1');
+                    }
                 }
-                if (!autoplay) {
-                    iframe[0].src = iframe[0].src.replace('&autoplay=0', '&autoplay=1');
+                if (src && iframe[0].src !== src) {
+                    iframe[0].src = src;
                 }
                 overlay.remove();
                 hasOverlay = false;
@@ -2568,6 +3639,47 @@
             }
         },
 
+        socialShare: function ($scope) {
+            var $copy = $scope.find('.eead-share-copy'),
+                $native = $scope.find('.eead-share-native');
+
+            // The device share sheet only where the browser has one.
+            if ($native.length && navigator.share) {
+                $native.prop('hidden', false);
+            }
+            $native.off('.eeadShare').on('click.eeadShare', function (e) {
+                e.preventDefault();
+                navigator.share({title: $(this).attr('data-title'), url: $(this).attr('data-url')}).catch(function () {
+                });
+            });
+
+            $copy.off('.eeadShare').on('click.eeadShare', function (e) {
+                e.preventDefault();
+                var $btn = $(this), url = $btn.attr('data-url'),
+                    $text = $btn.find('.eead-social-share-text'),
+                    label = $btn.attr('aria-label'),
+                    done = function () {
+                        // Brief confirmation, read out by screen readers too.
+                        $btn.addClass('eead-share-copied').attr('aria-label', $btn.attr('data-done'));
+                        var original = $text.text();
+                        $text.text($btn.attr('data-done'));
+                        EEA.announce($btn.attr('data-done'));
+                        setTimeout(function () {
+                            $btn.removeClass('eead-share-copied').attr('aria-label', label);
+                            $text.text(original);
+                        }, 2000);
+                    };
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(url).then(done, function () {
+                        window.prompt('', url);
+                    });
+                } else {
+                    // Older browsers / plain http: a selectable field the visitor can copy.
+                    window.prompt('', url);
+                }
+            });
+        },
+
         sliderBlock: function ($scope) {
             var $slider = $scope.find('.eead-slider');
             var titleAnim = $slider.attr('data-title-anim');
@@ -2577,21 +3689,26 @@
                 var params = JSON.parse($slider.attr('data-params'));
                 var sliderObj = {
                     infinite: JSON.parse(params.loop),
-                    autoplay: JSON.parse(params.autoplay),
+                    // No self-moving slides for visitors who turned motion off.
+                    autoplay: JSON.parse(params.autoplay) && !EEA.reducedMotion(),
                     speed: params.speed,
                     autoplaySpeed: params.pause || 3000,
                     pauseOnHover: JSON.parse(params.pause_on_hover),
                     arrows: JSON.parse(params.arrows),
                     dots: JSON.parse(params.dots),
                     adaptiveHeight: JSON.parse(params.auto_height),
-                    prevArrow: '<div class="slick-prev slick-arrow"><i class="' + params.prev_icon + '"></div>',
-                    nextArrow: '<div class="slick-next slick-arrow"><i class="' + params.next_icon + '"></div>',
+                    // Divs (so theme button styles don't leak in) made into real controls.
+                    // Slick only inserts arrows given as an HTML string; outerHTML keeps the values escaped.
+                    prevArrow: $('<div class="slick-prev slick-arrow" role="button" tabindex="0"><i aria-hidden="true"></i></div>').attr('aria-label', params.prev_label || 'Previous slide').find('i').attr('class', params.prev_icon).end().prop('outerHTML'),
+                    nextArrow: $('<div class="slick-next slick-arrow" role="button" tabindex="0"><i aria-hidden="true"></i></div>').attr('aria-label', params.next_label || 'Next slide').find('i').attr('class', params.next_icon).end().prop('outerHTML'),
                     fade: $slider.attr('data-transition') == 'fade' ? true : false,
                     appendArrows: $scope.find('.slick-nav'),
                     appendDots: $scope.find('.slick-dots-wrap')
                 };
 
                 $slider.on('init', function (event, slick) {
+                    // Slick strips tabindex from non-button arrows while building them.
+                    $scope.find('.slick-nav .slick-arrow').not('.slick-hidden').attr('tabindex', '0');
                     $(this).find('.slick-current .eead-slide-caption').addClass('eead-animate');
                     if (titleAnim !== 'none') {
                         $(this).find('.slick-current .eead-slide-cap-title').addClass(titleAnim);
@@ -2605,6 +3722,9 @@
                 });
 
                 $slider.slick(sliderObj);
+
+                // Enter/Space on the arrow divs, as on a button.
+                $scope.find('.slick-nav').off('keydown.eeadSlider').on('keydown.eeadSlider', '.slick-arrow', EEA.activateOnKey);
 
                 $slider.on('beforeChange', function (event, slick, currentSlide) {
                     $(this).find('.slick-slide .eead-slide-caption').removeClass('eead-animate');
@@ -2640,7 +3760,7 @@
                 var params = JSON.parse($ele.attr('data-params'));
                 $ele.owlCarousel({
                     loop: JSON.parse(params.loop),
-                    autoplay: JSON.parse(params.autoplay),
+                    autoplay: JSON.parse(params.autoplay) && !EEA.reducedMotion(),
                     autoplayTimeout: params.pause,
                     autoplayHoverPause: JSON.parse(params.pause_on_hover),
                     nav: JSON.parse(params.arrows),
@@ -2662,6 +3782,7 @@
                         stagePadding: params.stagepadding
                     })
                 });
+                EEA.owlA11y($ele);
             }
         },
 
@@ -2671,7 +3792,7 @@
                 var params = JSON.parse($ele.attr('data-params'));
                 $ele.owlCarousel({
                     loop: JSON.parse(params.loop),
-                    autoplay: JSON.parse(params.autoplay),
+                    autoplay: JSON.parse(params.autoplay) && !EEA.reducedMotion(),
                     autoplayTimeout: params.pause,
                     autoplayHoverPause: JSON.parse(params.pause_on_hover),
                     nav: JSON.parse(params.arrows),
@@ -2693,6 +3814,7 @@
                         stagePadding: params.stagepadding
                     })
                 });
+                EEA.owlA11y($ele);
             }
         },
 

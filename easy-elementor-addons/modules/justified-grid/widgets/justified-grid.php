@@ -272,10 +272,20 @@ class JustifiedGrid extends Widget_Base {
                 if (!$src) {
                     continue;
                 }
-                $meta = $id ? wp_get_attachment_metadata($id) : [];
                 // Each photo grows in proportion to its width-to-height ratio, which keeps rows level.
-                $ratio = (!empty($meta['width']) && !empty($meta['height'])) ? round($meta['width'] / $meta['height'], 4) : 1.5;
-                $alt = $id ? get_post_meta($id, '_wp_attachment_image_alt', true) : '';
+                // Taken from the size actually shown: a cropped size (Thumbnail is square) has
+                // other proportions than the original upload.
+                $size = !empty($settings['image_size']) ? $settings['image_size'] : 'medium_large';
+                $ratio = 1.5;
+                if ($id && 'custom' === $size && !empty($settings['image_custom_dimension']['width']) && !empty($settings['image_custom_dimension']['height'])) {
+                    $ratio = round($settings['image_custom_dimension']['width'] / $settings['image_custom_dimension']['height'], 4);
+                } elseif ($id) {
+                    $shown = wp_get_attachment_image_src($id, 'custom' === $size ? 'full' : $size);
+                    if ($shown && !empty($shown[1]) && !empty($shown[2])) {
+                        $ratio = round($shown[1] / $shown[2], 4);
+                    }
+                }
+                $alt = $id ? trim((string) get_post_meta($id, '_wp_attachment_image_alt', true)) : '';
                 $caption = '';
                 if ('none' !== $settings['caption'] && $id) {
                     $caption = 'title' === $settings['caption_source'] ? get_the_title($id) : wp_get_attachment_caption($id);
@@ -287,6 +297,13 @@ class JustifiedGrid extends Widget_Base {
                 if ('none' !== $settings['link_to'] && $full) {
                     $tag = 'a';
                     $attrs .= ' href="' . esc_url($full) . '"';
+                    // An image without alt text would leave the link nameless.
+                    if ('' === $alt) {
+                        $label = $caption ? $caption : ($id ? get_the_title($id) : '');
+                        if ('' !== trim((string) $label)) {
+                            $attrs .= ' aria-label="' . esc_attr($label) . '"';
+                        }
+                    }
                     if ('lightbox' === $settings['link_to']) {
                         $attrs .= ' data-elementor-open-lightbox="yes" data-elementor-lightbox-slideshow="' . esc_attr($slideshow) . '"';
                         if ($caption) {
@@ -297,7 +314,12 @@ class JustifiedGrid extends Widget_Base {
                     }
                 }
                 echo '<' . $tag . ' ' . $attrs . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- attributes escaped above.
-                echo '<img src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" loading="lazy" decoding="async">';
+                if ($id && 'custom' !== $size) {
+                    // Responsive srcset, so small screens fetch smaller files.
+                    echo eead_kses_image(wp_get_attachment_image($id, $size, false, ['alt' => $alt, 'loading' => 'lazy', 'decoding' => 'async'])); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                } else {
+                    echo '<img src="' . esc_url($src) . '" alt="' . esc_attr($alt) . '" loading="lazy" decoding="async">';
+                }
                 if ($caption) {
                     echo '<span class="eead-jgal-cap">' . esc_html($caption) . '</span>';
                 }

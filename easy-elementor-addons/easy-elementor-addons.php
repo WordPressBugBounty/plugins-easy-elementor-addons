@@ -4,7 +4,7 @@
  * Plugin Name: Easy Elementor Addons - Addons Pack for Elementor Page Builder
  * Plugin URI: https://demo.hashthemes.com/easy-elementor-addons/
  * Description: Level up with Easy Elementor Addons – adds powerful widgets and sleek design tools to your favorite Elementor page builder.
- * Version: 2.5.0
+ * Version: 2.5.1
  * Author: HashThemes
  * Author URI: https://hashthemes.com/
  * Text Domain: easy-elementor-addons
@@ -19,7 +19,7 @@ if (!defined('WPINC')) {
     die();
 }
 
-define('EEAD_VERSION', '2.5.0');
+define('EEAD_VERSION', '2.5.1');
 
 define('EEAD_FILE', __FILE__);
 define('EEAD_PLUGIN_BASENAME', plugin_basename(EEAD_FILE));
@@ -62,8 +62,28 @@ if (!class_exists('Easy_Elementor_Addons')) {
             require EEAD_PATH . 'inc/icon-manager.php';
             require EEAD_PATH . 'inc/sticky-container.php';
             require EEAD_PATH . 'inc/admin-menu/admin-menu-class.php';
+
+            add_action('init', array($this, 'maybe_clear_elementor_css'));
+
             // Template library is disabled until the import feature is complete.
             // require EEAD_PATH . 'templates/templates.php';
+        }
+
+        /**
+         * Elementor caches each page's generated CSS, so selectors a widget
+         * changes in an update keep pointing at the old markup until that
+         * cache is rebuilt. Clear it once whenever the plugin version changes.
+         */
+        public function maybe_clear_elementor_css() {
+            if (get_option('eead_version') === EEAD_VERSION) {
+                return;
+            }
+
+            update_option('eead_version', EEAD_VERSION);
+
+            if (isset(\Elementor\Plugin::$instance->files_manager)) {
+                \Elementor\Plugin::$instance->files_manager->clear_cache();
+            }
         }
 
         public function required_plugins_notice() {

@@ -619,6 +619,59 @@ class Marquee extends Widget_Base {
         );
 
         $this->add_control(
+            'pause_button', [
+                'label' => esc_html__('Pause Button', 'easy-elementor-addons'),
+                'description' => esc_html__('A small play/pause toggle over the marquee, so every visitor can stop the movement, including on touch screens and with the keyboard.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'render_type' => 'template'
+            ]
+        );
+
+        $this->add_control(
+            'pause_button_position', [
+                'label' => esc_html__('Button Position', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'bottom-right',
+                'options' => [
+                    'top-left' => esc_html__('Top Left', 'easy-elementor-addons'),
+                    'top-right' => esc_html__('Top Right', 'easy-elementor-addons'),
+                    'bottom-left' => esc_html__('Bottom Left', 'easy-elementor-addons'),
+                    'bottom-right' => esc_html__('Bottom Right', 'easy-elementor-addons'),
+                ],
+                'prefix_class' => 'eead-tm-toggle-',
+                'condition' => [
+                    'pause_button' => 'yes'
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'pause_button_color', [
+                'label' => esc_html__('Button Color', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-tm-toggle' => 'color: {{VALUE}};',
+                ],
+                'condition' => [
+                    'pause_button' => 'yes'
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'pause_button_bg', [
+                'label' => esc_html__('Button Background', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-tm-toggle' => 'background-color: {{VALUE}};',
+                ],
+                'condition' => [
+                    'pause_button' => 'yes'
+                ]
+            ]
+        );
+
+        $this->add_control(
             'edge_fade', [
                 'label' => esc_html__('Fade Edges', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
@@ -1760,6 +1813,9 @@ class Marquee extends Widget_Base {
             }
             ?>
         </div>
+        <?php if ('yes' === $settings['pause_button']) { ?>
+            <button type="button" class="eead-tm-toggle" aria-pressed="false" aria-label="<?php esc_attr_e('Pause the scrolling text', 'easy-elementor-addons'); ?>" data-label-play="<?php esc_attr_e('Play the scrolling text', 'easy-elementor-addons'); ?>" data-label-pause="<?php esc_attr_e('Pause the scrolling text', 'easy-elementor-addons'); ?>"><span class="eead-tm-toggle-icon" aria-hidden="true"></span></button>
+        <?php } ?>
         <?php
     }
 

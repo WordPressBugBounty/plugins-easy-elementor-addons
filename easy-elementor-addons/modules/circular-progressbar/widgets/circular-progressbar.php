@@ -127,6 +127,67 @@ class CircularProgressbar extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'number_suffix', [
+                'label' => esc_html__('Number Suffix', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'default' => '%',
+            ]
+        );
+
+        $this->add_control(
+            'title_tag', [
+                'label' => esc_html__('Title HTML Tag', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => eead_html_tags(),
+                'default' => 'h4',
+            ]
+        );
+
+        $this->add_control(
+            'start_position', [
+                'label' => esc_html__('Start Position', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'right',
+                'options' => [
+                    'top' => esc_html__('Top (12 o\'clock)', 'easy-elementor-addons'),
+                    'right' => esc_html__('Right (3 o\'clock)', 'easy-elementor-addons'),
+                    'bottom' => esc_html__('Bottom (6 o\'clock)', 'easy-elementor-addons'),
+                    'left' => esc_html__('Left (9 o\'clock)', 'easy-elementor-addons'),
+                ],
+                'selectors_dictionary' => [
+                    'top' => '-90deg',
+                    'right' => '0deg',
+                    'bottom' => '90deg',
+                    'left' => '180deg',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-circular-progressbar svg' => 'transform: rotate({{VALUE}});',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            // Not 'animation_duration': Elementor's Motion Effects control already uses that name on every widget.
+            'cpb_animation_duration', [
+                'label' => esc_html__('Animation Duration (ms)', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'range' => ['px' => ['min' => 0, 'max' => 5000, 'step' => 100]],
+                'default' => ['size' => 1000],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-circular-progressbar' => '--eead-cb-duration: {{SIZE}}ms;',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'count_up', [
+                'label' => esc_html__('Count Up Number', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'default' => 'yes',
+            ]
+        );
+
         $this->add_responsive_control(
             'alignment', [
                 'label' => esc_html__('Alignment', 'easy-elementor-addons'),
@@ -252,32 +313,47 @@ class CircularProgressbar extends Widget_Base {
     /** Render Layout */
     protected function render() {
         $settings = $this->get_settings_for_display();
-        $radius = isset($settings['circle_size']['size']) ? intval($settings['circle_size']['size']) : 200;
-        $stroke_width = isset($settings['circle_stroke']['size']) ? intval($settings['circle_stroke']['size']) : 10;
-        $circle_size = $radius + $stroke_width / 2;
-        $dasharray = 2 * M_PI * $radius;
+        $percent = isset($settings['progressbar_percentage']['size']) && is_numeric($settings['progressbar_percentage']['size']) ? max(0, min(100, (float) $settings['progressbar_percentage']['size'])) : 0;
+        $radius = !empty($settings['circle_size']['size']) ? intval($settings['circle_size']['size']) : 80;
+        $stroke_width = !empty($settings['circle_stroke']['size']) ? intval($settings['circle_stroke']['size']) : 10;
+        $center = $radius + $stroke_width / 2;
         $svg_size = $radius * 2 + $stroke_width;
+        $suffix = isset($settings['number_suffix']) ? $settings['number_suffix'] : '%';
+        $title = trim((string) $settings['progressbar_title']);
+
+        $this->add_render_attribute('bar', [
+            'class' => ['eead-circular-progressbar', $percent <= 0 ? 'eead-cb-empty' : ''],
+            'data-number' => $percent,
+            'data-count' => 'yes' === $settings['count_up'] ? 'yes' : 'no',
+            'role' => 'progressbar',
+            'aria-valuemin' => 0,
+            'aria-valuemax' => 100,
+            'aria-valuenow' => $percent,
+        ]);
+        if ($title !== '') {
+            $this->add_render_attribute('bar', 'aria-label', $title);
+        }
+        /*
+         * pathLength="100" makes the dash maths a plain percentage whatever the
+         * radius, and the geometry also comes from CSS variables, so the
+         * tablet/mobile Circle Size and Bar Width really resize the ring. The
+         * attributes are the desktop fallback.
+         */
         ?>
-        <div class="eead-circular-progressbar" data-number="<?php echo esc_attr($settings['progressbar_percentage']['size']); ?>" data-radius="<?php echo esc_attr($radius); ?>">
+        <div <?php $this->print_render_attribute_string('bar'); ?>>
             <div class="eead-circular-progressbar-box">
                 <div class="eead-cb-percent">
-                    <svg style="height:<?php echo esc_attr($svg_size); ?>px;width:<?php echo esc_attr($svg_size); ?>px">
-                        <circle fill="none" cx="<?php echo esc_attr($circle_size); ?>" cy="<?php echo esc_attr($circle_size); ?>" r="<?php
-                              echo esc_attr($radius);
-                              ?>" stroke-width="<?php echo esc_attr($stroke_width); ?>"></circle>
-                        <circle fill="none" cx="<?php echo esc_attr($circle_size); ?>" cy="<?php echo esc_attr($circle_size); ?>" r="<?php
-                              echo esc_attr($radius);
-                              ?>" stroke-dasharray="<?php echo esc_attr($dasharray); ?>" stroke-dashoffset="<?php echo esc_attr($dasharray); ?>" stroke-width="<?php echo esc_attr($stroke_width); ?>"></circle>
+                    <svg aria-hidden="true" focusable="false" width="<?php echo esc_attr($svg_size); ?>" height="<?php echo esc_attr($svg_size); ?>">
+                        <circle fill="none" cx="<?php echo esc_attr($center); ?>" cy="<?php echo esc_attr($center); ?>" r="<?php echo esc_attr($radius); ?>" stroke-width="<?php echo esc_attr($stroke_width); ?>"></circle>
+                        <circle fill="none" cx="<?php echo esc_attr($center); ?>" cy="<?php echo esc_attr($center); ?>" r="<?php echo esc_attr($radius); ?>" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" stroke-width="<?php echo esc_attr($stroke_width); ?>"></circle>
                     </svg>
 
-                    <div class="eead-cb-number">
-                        <?php echo esc_html($settings['progressbar_percentage']['size']); ?>%
-                    </div>
+                    <div class="eead-cb-number" aria-hidden="true"><span class="eead-cb-value"><?php echo esc_html($percent + 0); ?></span><?php echo esc_html($suffix); ?></div>
                 </div>
 
-                <h4 class="eead-cb-title">
-                    <?php echo esc_html($settings['progressbar_title']); ?>
-                </h4>
+                <?php if ($title !== '') { ?>
+                    <<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_tag'], 'h4')); ?> class="eead-cb-title"><?php echo esc_html($title); ?></<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_tag'], 'h4')); ?>>
+                <?php } ?>
             </div>
         </div>
         <?php

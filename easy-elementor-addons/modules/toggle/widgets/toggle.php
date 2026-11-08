@@ -250,6 +250,31 @@ class Toggle extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'content_animation', [
+                'label' => esc_html__('Switch Animation', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => [
+                    'none' => esc_html__('None', 'easy-elementor-addons'),
+                    'fade' => esc_html__('Fade', 'easy-elementor-addons'),
+                    'slide' => esc_html__('Slide Up', 'easy-elementor-addons'),
+                    'zoom' => esc_html__('Zoom', 'easy-elementor-addons'),
+                ],
+                'default' => 'none'
+            ]
+        );
+
+        $this->add_control(
+            'secondary_hash', [
+                'label' => esc_html__('Secondary URL Hash', 'easy-elementor-addons'),
+                'description' => esc_html__('Optional, e.g. lifetime. Visiting the page with #lifetime, or clicking a link to #lifetime, switches to the secondary content.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
         $this->end_controls_section();
 
         /* Style Settings */
@@ -785,6 +810,13 @@ class Toggle extends Widget_Base {
         if ($settings['default_display'] == 'secondary') {
             $this->add_render_attribute('toggle-container', 'class', 'eead-switch-on');
         }
+        if (!empty($settings['content_animation']) && 'none' !== $settings['content_animation']) {
+            $this->add_render_attribute('toggle-container', 'class', 'eead-toggle-anim-' . $settings['content_animation']);
+        }
+        $hash = sanitize_title(ltrim((string) $settings['secondary_hash'], '#'));
+        if ('' !== $hash) {
+            $this->add_render_attribute('toggle-container', 'data-hash', $hash);
+        }
         ?>
 
         <div <?php $this->print_render_attribute_string('toggle-container'); ?>>
@@ -843,15 +875,19 @@ class Toggle extends Widget_Base {
 
                 <div class="eead-toggle-switch">
                     <label class="eead-toggle-switch-label">
-                        <input class="eead-toggle-switch-checkbox" type="checkbox" <?php checked(('secondary' === $settings['default_display']), true); ?>>
+                        <?php
+                        // On = secondary content, so the switch is named after the secondary label.
+                        $switch_label = '' !== trim((string) $settings['secondary_label']) ? $settings['secondary_label'] : esc_html__('Show secondary content', 'easy-elementor-addons');
+                        ?>
+                        <input class="eead-toggle-switch-checkbox" type="checkbox" role="switch" aria-label="<?php echo esc_attr($switch_label); ?>" <?php checked(('secondary' === $settings['default_display']), true); ?>>
 
                         <?php if ($settings['switch_style'] == 'style3') { ?>
-                            <span class="eead-toggle-slider"></span>
-                            <span class="eead-toggle-slider1"></span>
-                            <span class="eead-toggle-slider2"></span>
+                            <span class="eead-toggle-slider" aria-hidden="true"></span>
+                            <span class="eead-toggle-slider1" aria-hidden="true"></span>
+                            <span class="eead-toggle-slider2" aria-hidden="true"></span>
                         <?php } elseif ($settings['switch_style'] == 'style4') {
                             ?>
-                            <svg class="eead-svg-toggle" viewBox="0 0 292 142" xmlns="http://www.w3.org/2000/svg">
+                            <svg class="eead-svg-toggle" aria-hidden="true" focusable="false" viewBox="0 0 292 142" xmlns="http://www.w3.org/2000/svg">
                                 <path class="eead-svg-toggle-background" d="M71 142C31.7878 142 0 110.212 0 71C0 31.7878 31.7878 0 71 0C110.212 0 119 30 146 30C173 30 182 0 221 0C260 0 292 31.7878 292 71C292 110.212 260.212 142 221 142C181.788 142 173 112 146 112C119 112 110.212 142 71 142Z" />
                                 <rect class="eead-svg-toggle-icon on" x="64" y="39" width="12" height="64" rx="6" />
                                 <path class="eead-svg-toggle-icon off" fill-rule="evenodd" d="M221 91C232.046 91 241 82.0457 241 71C241 59.9543 232.046 51 221 51C209.954 51 201 59.9543 201 71C201 82.0457 209.954 91 221 91ZM221 103C238.673 103 253 88.6731 253 71C253 53.3269 238.673 39 221 39C203.327 39 189 53.3269 189 71C189 88.6731 203.327 103 221 103Z" />

@@ -130,6 +130,29 @@ class TestimonialCarousel extends Widget_Base {
                         ]
                     ]
                 ],
+                'default' => [
+                    [
+                        'name' => esc_html__('Emma Clark', 'easy-elementor-addons'),
+                        'designation' => esc_html__('Marketing Manager', 'easy-elementor-addons'),
+                        'testimonial_content' => esc_html__('Working with this team was a pleasure. They understood what we needed and delivered ahead of schedule.', 'easy-elementor-addons'),
+                        'show_rating' => 'yes',
+                        'rating' => ['size' => 5, 'unit' => 's'],
+                    ],
+                    [
+                        'name' => esc_html__('Liam Johnson', 'easy-elementor-addons'),
+                        'designation' => esc_html__('Small Business Owner', 'easy-elementor-addons'),
+                        'testimonial_content' => esc_html__('Our new website brought in more enquiries in the first month than the old one did all year.', 'easy-elementor-addons'),
+                        'show_rating' => 'yes',
+                        'rating' => ['size' => 5, 'unit' => 's'],
+                    ],
+                    [
+                        'name' => esc_html__('Sofia Martinez', 'easy-elementor-addons'),
+                        'designation' => esc_html__('Product Designer', 'easy-elementor-addons'),
+                        'testimonial_content' => esc_html__('Friendly, fast and thorough. Every question got a clear answer, and the result looks fantastic.', 'easy-elementor-addons'),
+                        'show_rating' => 'yes',
+                        'rating' => ['size' => 5, 'unit' => 's'],
+                    ],
+                ],
                 'title_field' => '{{ name }}',
             ]
         );
@@ -426,6 +449,24 @@ class TestimonialCarousel extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'name_tag', [
+                'label' => esc_html__('Name HTML Tag', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => eead_html_tags(),
+                'default' => 'h4',
+                'separator' => 'before',
+            ]
+        );
+
+        $this->add_control(
+            'show_empty_stars', [
+                'label' => esc_html__('Show Empty Stars', 'easy-elementor-addons'),
+                'description' => esc_html__('Faded stars make up the five, so 4 reads as 4 out of 5.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+            ]
+        );
+
         $this->end_controls_section();
 
         $this->start_controls_section(
@@ -550,7 +591,21 @@ class TestimonialCarousel extends Widget_Base {
         $this->add_control(
             'auto_height', [
                 'label' => esc_html__('Auto Height', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SWITCHER
+                'type' => Controls_Manager::SWITCHER,
+                'condition' => [
+                    'equal_height!' => 'yes',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'equal_height', [
+                'label' => esc_html__('Equal Height', 'easy-elementor-addons'),
+                'description' => esc_html__('Stretch every testimonial box to the height of the tallest one.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'condition' => [
+                    'auto_height!' => 'yes',
+                ]
             ]
         );
 
@@ -1658,7 +1713,7 @@ class TestimonialCarousel extends Widget_Base {
         $testimonials = $settings['testimonials'];
 
         $params = array(
-            'items' => $settings['slides_to_show']['size'] ? (int) $settings['slides_to_show']['size'] : 3,
+            'items' => !empty($settings['slides_to_show']['size']) ? (int) $settings['slides_to_show']['size'] : 3,
             'items_tablet' => isset($settings['slides_to_show_tablet']['size']) ? (int) $settings['slides_to_show_tablet']['size'] : 2,
             'items_mobile' => isset($settings['slides_to_show_mobile']['size']) ? (int) $settings['slides_to_show_mobile']['size'] : 1,
             'margin' => isset($settings['slides_margin']['size']) && $settings['slides_margin']['size'] !== null ? (int) $settings['slides_margin']['size'] : 20,
@@ -1670,8 +1725,8 @@ class TestimonialCarousel extends Widget_Base {
             'dots' => $settings['dots'] == 'yes' ? true : false,
             'arrows' => $settings['arrows'] == 'yes' ? true : false,
             'pause_on_hover' => $settings['pause_on_hover'] == 'yes' ? true : false,
-            'auto_height' => $settings['auto_height'] == 'yes' ? true : false,
-            'stagepadding' => $settings['slides_stagepadding']['size'] && $settings['slides_stagepadding']['size'] !== null ? (int) $settings['slides_stagepadding']['size'] : 0,
+            'auto_height' => $settings['auto_height'] == 'yes' && $settings['equal_height'] != 'yes' ? true : false,
+            'stagepadding' => !empty($settings['slides_stagepadding']['size']) ? (int) $settings['slides_stagepadding']['size'] : 0,
             'stagepadding_tablet' => isset($settings['slides_stagepadding_tablet']['size']) && $settings['slides_stagepadding_tablet']['size'] !== null ? (int) $settings['slides_stagepadding_tablet']['size'] : 0,
             'stagepadding_mobile' => isset($settings['slides_stagepadding_mobile']['size']) && $settings['slides_stagepadding_mobile']['size'] !== null ? (int) $settings['slides_stagepadding_mobile']['size'] : 0,
             'focus_center_slide' => $settings['focus_center_slide'] == 'yes' ? true : false,
@@ -1693,7 +1748,8 @@ class TestimonialCarousel extends Widget_Base {
             'class' => [
                 'eead-testimonial-carousel',
                 'owl-carousel',
-                'eead-tc-hover-arrow-' . ($settings['show_on_hover'] ? 'on' : 'off'),
+                'eead-tc-hover-arrow-' . (!empty($settings['show_on_hover']) ? 'on' : 'off'),
+                'yes' === $settings['equal_height'] && 'yes' !== $settings['auto_height'] ? 'eead-tc-equal-height' : '',
             ],
             'data-params' => $params
         ]);
@@ -1751,12 +1807,19 @@ class TestimonialCarousel extends Widget_Base {
     protected function render_rating($item) {
         $stars = '';
         if ($item['show_rating'] == 'yes') {
-            $rating_count = isset($item['rating']['size']) ? $item['rating']['size'] : 5;
+            $rating_count = isset($item['rating']['size']) && is_numeric($item['rating']['size']) ? max(0, min(5, (int) $item['rating']['size'])) : 5;
+            /* translators: %d: rating out of 5 */
+            $label = sprintf(esc_html__('Rated %d out of 5', 'easy-elementor-addons'), $rating_count);
             ?>
-            <div class="eead-testimonial-rating">
+            <div class="eead-testimonial-rating" role="img" aria-label="<?php echo esc_attr($label); ?>">
                 <?php
                 for ($i = 0; $i < $rating_count; $i++) {
-                    $stars .= '<i class="icofont-star"></i>';
+                    $stars .= '<i class="icofont-star" aria-hidden="true"></i>';
+                }
+                if ('yes' === $this->get_settings_for_display('show_empty_stars')) {
+                    for ($i = $rating_count; $i < 5; $i++) {
+                        $stars .= '<i class="icofont-star eead-testimonial-star-empty" aria-hidden="true"></i>';
+                    }
                 }
                 echo wp_kses_post($stars);
                 ?>
@@ -1767,15 +1830,23 @@ class TestimonialCarousel extends Widget_Base {
 
     protected function render_thumb($item) {
         $settings = $this->get_settings_for_display();
+        if (empty($item['image']['url'])) {
+            return;
+        }
+        $image_alt = \Elementor\Control_Media::get_image_alt($item['image']);
+        // The person's name stands in for missing alt text.
+        if ('' === trim((string) $image_alt) && isset($item['name'])) {
+            $image_alt = trim((string) $item['name']);
+        }
+        $image_id = !empty($item['image']['id']) ? (int) $item['image']['id'] : 0;
+        $image_size = !empty($settings['thumbnail_size']) ? $settings['thumbnail_size'] : 'full';
         ?>
         <div class="eead-testimonial-image">
             <?php
-            $image_url = Group_Control_Image_Size::get_attachment_image_src($item['image']['id'], 'thumbnail', $settings);
-            $image_alt = \Elementor\Control_Media::get_image_alt($item['image']);
-            if ($image_url) {
-                echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '">';
+            if ($image_id && wp_attachment_is_image($image_id)) {
+                echo eead_kses_image(wp_get_attachment_image($image_id, $image_size, false, ['alt' => $image_alt])); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             } else {
-                echo '<img src="' . esc_url($item['image']['url']) . '" alt="' . esc_attr($image_alt) . '">';
+                echo '<img src="' . esc_url($item['image']['url']) . '" alt="' . esc_attr($image_alt) . '" loading="lazy" decoding="async">';
             }
             ?>
         </div>
@@ -1801,14 +1872,21 @@ class TestimonialCarousel extends Widget_Base {
     }
 
     protected function render_name($item) {
+        if ('' === trim((string) $item['name'])) {
+            return;
+        }
+        $tag = eead_check_allowed_html_tags($this->get_settings_for_display('name_tag'), 'h4');
         ?>
-        <h4 class="eead-testimonial-name">
+        <<?php echo esc_attr($tag); ?> class="eead-testimonial-name">
             <?php echo esc_html($item['name']); ?>
-        </h4>
+        </<?php echo esc_attr($tag); ?>>
         <?php
     }
 
     protected function render_designation($item) {
+        if ('' === trim((string) $item['designation'])) {
+            return;
+        }
         ?>
         <div class="eead-testimonial-designation">
             <?php echo esc_html($item['designation']); ?>

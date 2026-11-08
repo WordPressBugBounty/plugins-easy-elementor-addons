@@ -11,6 +11,7 @@ use Elementor\Icons_Manager;
 use Elementor\Group_Control_Border;
 use Elementor\Group_Control_Box_Shadow;
 use Elementor\Group_Control_Background;
+use Elementor\Group_Control_Image_Size;
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
@@ -196,6 +197,14 @@ class ImageGallery extends Widget_Base {
                 ],
                 'prefix_class' => 'eead-ig-style-',
                 'render_type' => 'template'
+            ]
+        );
+
+        $this->add_group_control(
+            Group_Control_Image_Size::get_type(), [
+                'name' => 'thumbnail',
+                'default' => 'large',
+                'exclude' => ['custom'],
             ]
         );
 
@@ -936,7 +945,8 @@ class ImageGallery extends Widget_Base {
 
             <div class="eead-ig-wrap">
                 <?php
-                foreach ($images as $value) {
+                $image_size = !empty($settings['thumbnail_size']) ? $settings['thumbnail_size'] : 'large';
+                foreach ($images as $n => $value) {
                     $filter_label = $settings['gallery_type'] == 'filterable' ? $value['filter_label'] : '';
                     ?>
                     <div class="eead-ig-item-box <?php echo esc_attr($this->get_filter_class($filter_label)); ?>">
@@ -944,7 +954,7 @@ class ImageGallery extends Widget_Base {
                             <div class="eead-ig-item-thumbnail">
                                 <?php
                                 if (!empty($value['id'])) {
-                                    echo wp_get_attachment_image($value['id'], 'large', false, ['loading' => 'lazy']);
+                                    echo wp_get_attachment_image($value['id'], $image_size, false, ['loading' => 'lazy']);
                                 } else {
                                     ?>
                                     <img src="<?php echo esc_url($value['url']); ?>" alt="">
@@ -960,7 +970,12 @@ class ImageGallery extends Widget_Base {
                                     ?>
                                 </div>
                                 <?php if ($settings['show_lightbox'] == 'yes') { ?>
-                                    <a href="<?php echo esc_url($value['url']); ?>" class="eead-ig-lightbox" data-elementor-open-lightbox="no">
+                                    <?php
+                                    $alt = !empty($value['id']) ? trim((string) get_post_meta($value['id'], '_wp_attachment_image_alt', true)) : '';
+                                    /* translators: 1: image alt text or number */
+                                    $view_label = sprintf(esc_html__('View image: %s', 'easy-elementor-addons'), $alt !== '' ? $alt : $n + 1);
+                                    ?>
+                                    <a href="<?php echo esc_url($value['url']); ?>" class="eead-ig-lightbox" data-elementor-open-lightbox="no" aria-label="<?php echo esc_attr($view_label); ?>">
                                         <?php
                                         Icons_Manager::render_icon($settings['zoom_icon'], ['aria-hidden' => 'true']);
                                         ?>
@@ -1034,7 +1049,7 @@ class ImageGallery extends Widget_Base {
                 ?>
                 <div class="eead-ig-filter-list">
                     <?php if (!empty($settings['filter_all_label'])) { ?>
-                        <div class="eead-ig-filter eead-ig-active" data-filter="*">
+                        <div class="eead-ig-filter eead-ig-active" data-filter="*" role="button" tabindex="0" aria-pressed="true">
                             <?php echo esc_html($settings['filter_all_label']); ?>
                         </div>
                     <?php } ?>
@@ -1047,7 +1062,7 @@ class ImageGallery extends Widget_Base {
                         }
                         $active_class = empty($settings['filter_all_label']) && $index == 0 ? ' eead-ig-active' : '';
                         ?>
-                        <div class="eead-ig-filter<?php echo esc_attr($active_class); ?>" data-filter=".<?php echo esc_attr($this->get_filter_class($filter_label)); ?>">
+                        <div class="eead-ig-filter<?php echo esc_attr($active_class); ?>" data-filter=".<?php echo esc_attr($this->get_filter_class($filter_label)); ?>" role="button" tabindex="0" aria-pressed="<?php echo $active_class ? 'true' : 'false'; ?>">
                             <?php echo esc_html($filter_label); ?>
                         </div>
                         <?php

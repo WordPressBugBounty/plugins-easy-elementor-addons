@@ -64,8 +64,8 @@ class DualButton extends Widget_Base {
                     'vertical' => esc_html__('Vertical', 'easy-elementor-addons')
                 ],
                 'selectors_dictionary' => [
-                    'horizontal' => '--eead-dual-button-direction:row;--eead-dual-button-align-items:center;--eead-dual-button-left-offset:100%;--eead-dual-button-top-offset:50%;--eead-dual-button-sep-margin-left:calc(var(--eead-dual-button-gap, 0px)/2);--eead-dual-button-sep-margin-top:0;',
-                    'vertical' => '--eead-dual-button-direction:column;--eead-dual-button-align-items:stretch;--eead-dual-button-left-offset:50%;--eead-dual-button-top-offset:100%;--eead-dual-button-justify-content:center;--eead-dual-button-sep-margin-left:0;--eead-dual-button-sep-margin-top:calc(var(--eead-dual-button-gap, 0px)/2);',
+                    'horizontal' => '--eead-dual-button-direction:row;--eead-dual-grid-flow:column;--eead-dual-button-align-items:center;--eead-dual-button-left-offset:100%;--eead-dual-button-top-offset:50%;--eead-dual-button-sep-margin-left:calc(var(--eead-dual-button-gap, 0px)/2);--eead-dual-button-sep-margin-top:0;',
+                    'vertical' => '--eead-dual-button-direction:column;--eead-dual-grid-flow:row;--eead-dual-button-align-items:stretch;--eead-dual-button-left-offset:50%;--eead-dual-button-top-offset:100%;--eead-dual-button-justify-content:center;--eead-dual-button-sep-margin-left:0;--eead-dual-button-sep-margin-top:calc(var(--eead-dual-button-gap, 0px)/2);',
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .eead-dual-buttons' => '{{VALUE}}'
@@ -96,6 +96,15 @@ class DualButton extends Widget_Base {
                 'selectors' => [
                     '{{WRAPPER}} .eead-dual-buttons' => 'justify-content: {{VALUE}}'
                 ]
+            ]
+        );
+
+        $this->add_control(
+            'equal_width', [
+                'label' => esc_html__('Equal Width', 'easy-elementor-addons'),
+                'description' => esc_html__('Both buttons as wide as the longer one.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'prefix_class' => 'eead-dual-equal-',
             ]
         );
 
@@ -341,6 +350,22 @@ class DualButton extends Widget_Base {
             Group_Control_Box_Shadow::get_type(), [
                 'name' => 'box_shadow',
                 'selector' => '{{WRAPPER}} .eead-dual-buttons .eead-dual-button-container',
+            ]
+        );
+
+        // The shadow sits on the wrapper, so it needs its own corners to follow rounded buttons.
+        $this->add_responsive_control(
+            'box_shadow_radius', [
+                'label' => esc_html__('Shadow Border Radius', 'easy-elementor-addons'),
+                'description' => esc_html__('Match the outer corners of the buttons so the shadow follows their shape.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-dual-buttons .eead-dual-button-container' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};'
+                ],
+                'condition' => [
+                    'box_shadow_box_shadow_type' => 'yes'
+                ]
             ]
         );
 

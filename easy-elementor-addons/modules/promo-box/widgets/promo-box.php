@@ -197,6 +197,37 @@ class PromoBox extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'schedule', [
+                'label' => esc_html__('Schedule', 'easy-elementor-addons'),
+                'description' => esc_html__('Show the card only between two dates, e.g. for a sale. Times are in the site timezone. With page caching, the change shows once the cache refreshes.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'separator' => 'before',
+            ]
+        );
+
+        $this->add_control(
+            'show_from', [
+                'label' => esc_html__('Show From', 'easy-elementor-addons'),
+                'type' => Controls_Manager::DATE_TIME,
+                'description' => esc_html__('Leave empty to show right away.', 'easy-elementor-addons'),
+                'condition' => [
+                    'schedule' => 'yes'
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'show_until', [
+                'label' => esc_html__('Show Until', 'easy-elementor-addons'),
+                'type' => Controls_Manager::DATE_TIME,
+                'description' => esc_html__('Leave empty to keep it up.', 'easy-elementor-addons'),
+                'condition' => [
+                    'schedule' => 'yes'
+                ]
+            ]
+        );
+
         $this->end_controls_section();
 
         $this->start_controls_section(
@@ -644,8 +675,52 @@ class PromoBox extends Widget_Base {
     }
 
     /** Render Layout */
+    /**
+     * A scheduled card depends on the time, so Elementor's element cache must
+     * not store its output. (Older Elementor versions don't call this.)
+     */
+    protected function is_dynamic_content(): bool {
+        // The editor also calls this on the bare widget type, which has no settings.
+        if ($this->is_type_instance()) {
+            return false;
+        }
+        return 'yes' === $this->get_settings('schedule');
+    }
+
+    /** Whether now (site time) is inside the Show From / Show Until window. */
+    protected function in_schedule($settings) {
+        $now = current_datetime()->getTimestamp();
+        foreach (['show_from' => 1, 'show_until' => -1] as $key => $dir) {
+            if (empty($settings[$key])) {
+                continue;
+            }
+            try {
+                $at = (new \DateTime($settings[$key], wp_timezone()))->getTimestamp();
+            } catch (\Exception $e) {
+                continue;
+            }
+            if ($dir === 1 && $now < $at) {
+                return false;
+            }
+            if ($dir === -1 && $now > $at) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     protected function render() {
         $settings = $this->get_settings_for_display();
+
+        // Scheduled: outside the window it renders nothing (in the editor, a note instead).
+        if ('yes' === $settings['schedule'] && !$this->in_schedule($settings)) {
+            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+                echo '<div class="elementor-alert elementor-alert-info">' . esc_html__('This promo is outside its schedule, so it is hidden on the site.', 'easy-elementor-addons') . '</div>';
+            } else {
+                return;
+            }
+        }
+
         $has_link = !empty($settings['link']['url']);
         $box_link = $has_link && 'yes' === $settings['link_box'];
         $title_tag = eead_check_allowed_html_tags($settings['title_tag'], 'h3');
@@ -665,10 +740,10 @@ class PromoBox extends Widget_Base {
         ?>
         <<?php echo esc_attr($tag); ?> <?php $this->print_render_attribute_string('card'); ?>>
             <?php if ('' !== trim((string) $settings['ribbon'])) { ?>
-                <span class="eead-promo-ribbon-wrap" aria-hidden="true"><span class="eead-promo-ribbon"><?php echo esc_html($settings['ribbon']); ?></span></span>
+                <span class="eead-promo-ribbon-wrap"><span class="eead-promo-ribbon"><?php echo esc_html($settings['ribbon']); ?></span></span>
             <?php } ?>
             <?php if ($image) { ?>
-                <div class="eead-promo-media"><?php echo wp_kses_post($image); ?></div>
+                <div class="eead-promo-media"><?php echo eead_kses_image($image); ?></div>
             <?php } ?>
             <div class="eead-promo-body">
                 <?php if ('' !== $settings['badge']) { ?>
@@ -684,7 +759,7 @@ class PromoBox extends Widget_Base {
                     <div class="eead-promo-pricing">
                         <span class="eead-promo-price"><?php echo esc_html($settings['price']); ?></span>
                         <?php if ('' !== $settings['old_price']) { ?>
-                            <del class="eead-promo-old"><span class="screen-reader-text"><?php esc_html_e('Was', 'easy-elementor-addons'); ?> </span><?php echo esc_html($settings['old_price']); ?></del>
+                            <del class="eead-promo-old"><span class="elementor-screen-only"><?php esc_html_e('Was', 'easy-elementor-addons'); ?> </span><?php echo esc_html($settings['old_price']); ?></del>
                         <?php } ?>
                     </div>
                 <?php } ?>

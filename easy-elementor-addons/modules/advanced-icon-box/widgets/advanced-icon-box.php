@@ -11,6 +11,7 @@ use Elementor\Group_Control_Box_Shadow;
 use Elementor\Group_Control_Background;
 use Elementor\Icons_Manager;
 use Elementor\Utils;
+use Elementor\Group_Control_Image_Size;
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
@@ -101,6 +102,16 @@ class AdvancedIconBox extends Widget_Base {
                 'default' => [
                     'url' => Utils::get_placeholder_image_src(),
                 ],
+                'condition' => [
+                    'icon_type' => 'image'
+                ]
+            ]
+        );
+
+        $this->add_group_control(
+            Group_Control_Image_Size::get_type(), [
+                'name' => 'image',
+                'default' => 'full',
                 'condition' => [
                     'icon_type' => 'image'
                 ]
@@ -480,6 +491,27 @@ class AdvancedIconBox extends Widget_Base {
                 'type' => Controls_Manager::SELECT,
                 'default' => 'h3',
                 'options' => eead_html_tags(),
+            ]
+        );
+
+        $this->add_control(
+            'title_link', [
+                'label' => esc_html__('Title Link', 'easy-elementor-addons'),
+                'type' => Controls_Manager::URL,
+                'placeholder' => 'https://your-link.com',
+                'separator' => 'before'
+            ]
+        );
+
+        $this->add_control(
+            'link_whole_box', [
+                'label' => esc_html__('Link Whole Box', 'easy-elementor-addons'),
+                'description' => esc_html__('The whole box opens the Title Link. The Read More button keeps its own link.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'return_value' => 'yes',
+                'condition' => [
+                    'title_link[url]!' => '',
+                ]
             ]
         );
 
@@ -1429,12 +1461,6 @@ class AdvancedIconBox extends Widget_Base {
         $has_icon = !empty($settings['selected_icon']['value']);
         $has_image = !empty($settings['image']['url']);
 
-        if ($has_image && ('image' == $settings['icon_type'])) {
-            $this->add_render_attribute('image-icon', [
-                'src' => $settings['image']['url'],
-                'alt' => wp_strip_all_tags($settings['title_text'])
-            ]);
-        }
 
         $this->add_render_attribute('icon-class', 'class', 'eead-aib-icon');
 
@@ -1450,15 +1476,29 @@ class AdvancedIconBox extends Widget_Base {
                     if ($has_icon && 'icon' == $settings['icon_type']) {
                         Icons_Manager::render_icon($settings['selected_icon'], ['aria-hidden' => 'true']);
                     } elseif ($has_image && 'image' == $settings['icon_type']) {
-                        ?>
-                        <img <?php $this->print_render_attribute_string('image-icon'); ?>>
-                        <?php
+                        $this->render_image();
                     }
                     ?>
                 </span>
             </div>
             <?php
         }
+    }
+
+    /** The image icon, with srcset and the Media Library alt when it is an attachment. */
+    protected function render_image() {
+        $settings = $this->get_settings_for_display();
+        $alt = wp_strip_all_tags($settings['title_text']);
+
+        if (!empty($settings['image']['id'])) {
+            $html = Group_Control_Image_Size::get_attachment_image_html($settings, 'image', 'image');
+            // An image with no alt in the Media Library falls back to the title.
+            $html = str_replace('alt=""', 'alt="' . esc_attr($alt) . '"', $html);
+            echo eead_kses_image($html);
+            return;
+        }
+
+        printf('<img src="%1$s" alt="%2$s">', esc_url($settings['image']['url']), esc_attr($alt));
     }
 
     protected function render_heading() {
@@ -1478,9 +1518,22 @@ class AdvancedIconBox extends Widget_Base {
             if ($settings['title_text']) {
                 ?>
                 <<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_size'])); ?> class="eead-aib-title">
+                    <?php
+                    $has_link = !empty($settings['title_link']['url']);
+                    if ($has_link) {
+                        $this->add_link_attributes('title_link', $settings['title_link']);
+                        $this->add_render_attribute('title_link', 'class', 'eead-aib-title-link');
+                        echo '<a ' . $this->get_render_attribute_string('title_link') . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by Elementor.
+                    }
+                    ?>
                     <span <?php $this->print_render_attribute_string('title_text'); ?>>
                         <?php echo wp_kses($settings['title_text'], eead_allow_tags('title')); ?>
                     </span>
+                    <?php
+                    if ($has_link) {
+                        echo '</a>';
+                    }
+                    ?>
                 </<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_size'])); ?>>
                 <?php
             }
@@ -1520,7 +1573,15 @@ class AdvancedIconBox extends Widget_Base {
     public function render_svg_image() {
         $settings = $this->get_settings_for_display();
 
-        $align = $settings['text_align'] ? $settings['text_align'] : $settings['icon_position'];
+        // The alignment control that is in use: inline, left/right icon, or top.
+        // Controls whose condition is not met are left out of the settings.
+        if ('yes' === ($settings['icon_inline'] ?? '')) {
+            $align = $settings['inline_text_align'] ?? '';
+        } elseif (in_array($settings['icon_position'] ?? '', ['left', 'right'], true)) {
+            $align = $settings['icon_position'];
+        } else {
+            $align = $settings['text_align'] ?? '';
+        }
         $align = in_array($align, ['left', 'center', 'right'], true) ? $align : 'center';
         $title_separator_type = in_array($settings['title_separator_type'], $this->valid_svg_list()) ? $settings['title_separator_type'] : 'line';
         $svg_image = EEAD_PATH . 'assets/img/divider/' . $title_separator_type . '-' . $align . '.svg';
@@ -1582,7 +1643,7 @@ class AdvancedIconBox extends Widget_Base {
         $this->add_inline_editing_attributes('description_text', 'advanced');
         $this->add_inline_editing_attributes('title_text', 'none');
         ?>
-        <div class="eead-advanced-icon-box">
+        <div class="eead-advanced-icon-box<?php echo ('yes' === $settings['link_whole_box'] && !empty($settings['title_link']['url'])) ? ' eead-aib-linked' : ''; ?>">
             <?php
             if ('yes' !== $settings['icon_inline']) {
                 $this->render_icon();

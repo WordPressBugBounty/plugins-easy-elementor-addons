@@ -72,6 +72,18 @@ class StickyVideo extends Widget_Base {
         );
 
         $this->add_control(
+            'sticky_on_mobile', [
+                'label' => esc_html__('Float on Phones', 'easy-elementor-addons'),
+                'description' => esc_html__('A floating video can cover much of a small screen; switch off to float on larger screens only.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'default' => 'yes',
+                'condition' => [
+                    'is_sticky' => 'yes'
+                ]
+            ]
+        );
+
+        $this->add_control(
             'sticky_position', [
                 'label' => esc_html__('Position', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SELECT,
@@ -491,7 +503,8 @@ class StickyVideo extends Widget_Base {
                     'data-autoplay' => esc_attr($autoplay),
                     'data-overlay' => esc_attr($overlay),
                     'data-mute' => esc_attr($muted),
-                    'data-loop' => esc_attr($loop)
+                    'data-loop' => esc_attr($loop),
+                    'data-mobile' => 'yes' === $settings['sticky_on_mobile'] ? 'yes' : 'no',
                 ]
             );
             ?>
@@ -509,7 +522,7 @@ class StickyVideo extends Widget_Base {
                     echo wp_kses_post($this->get_self_hosted_player());
                 }
                 ?>
-                <span class="eead-sticky-player-close"></span>
+                <span class="eead-sticky-player-close" role="button" tabindex="0" aria-label="<?php esc_attr_e('Close the floating video', 'easy-elementor-addons'); ?>"></span>
             </div>
             <?php
             if ('yes' === $settings['overlay_options']) {
@@ -571,7 +584,8 @@ class StickyVideo extends Widget_Base {
         ob_start();
         ?>
         <video src="<?php echo esc_url($video); ?>" id="eead-player-<?php echo esc_attr($id); ?>" playsinline controls>
-            <source src="<?php echo esc_url($video); ?>" type="video/mp4">
+            <?php $video_type = wp_check_filetype((string) wp_parse_url($video, PHP_URL_PATH)); ?>
+            <source src="<?php echo esc_url($video); ?>" type="<?php echo esc_attr(!empty($video_type['type']) ? $video_type['type'] : 'video/mp4'); ?>">
             <?php echo esc_html__('Your browser does not support the video tag.', 'easy-elementor-addons'); ?>
         </video>
         <?php

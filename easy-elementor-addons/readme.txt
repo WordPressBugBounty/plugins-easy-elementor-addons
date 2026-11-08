@@ -3,7 +3,7 @@ Contributors: hashthemes
 Tags: elementor addons, elementor, elementor widgets, elementor templates, elementor extensions
 Requires at least: 6.3
 Tested up to: 7.1
-Stable tag: 2.5.0
+Stable tag: 2.5.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -11,22 +11,28 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Level up with Easy Elementor Addons – adds powerful widgets and sleek design tools to your favorite Elementor page builder.
 
 == Description ==
-Easy Elementor Addons is an all in one element pack extension for Elementor page builder. It provides 63 creative widgets to provide an outstanding look to your Elementor based WordPress website. The elements are multi concept and contain amazing features to make your website more effective by placing the spectacular widgets and enhance the engagement rate.
+Easy Elementor Addons is an all in one element pack extension for Elementor page builder. It provides 63 creative widgets to give your Elementor based WordPress website an outstanding look, from headings, buttons and galleries to pricing tables, data tables, marquees, timelines and charts. Every widget is built to engage your visitors and works on desktop, tablet and mobile.
 
-Easy Elementor Addons is a highly editable addon for Elementor with limitless possibilities. You can easily customize each element as per your preference and build a beautiful website beyond your imagination. The plugin has an intuitive UI where you can easily drag drop any elements of your choice and start the configuration. Also, you can follow the drag and drop process to reorder or shuffle any elements.
+Easy Elementor Addons is a highly editable addon for Elementor with limitless possibilities. You can customize each element as per your preference and build a beautiful website beyond your imagination. Drag any element onto the page, set it up in the Elementor panel and reorder it just as easily.
 
-Easy Elementor Addons is built using all the modern trends and is well optimized with speed and SEO. So, you can be assured that the extension won’t make any impact on the SEO or the speed of your WordPress website. 
+Easy Elementor Addons is built using modern standards and is optimized for speed, SEO and accessibility. Scripts load only on the pages that use them, widgets work with the keyboard and screen readers, and animations respect your visitors' reduced motion setting.
 
 <p><a href="https://demo.hashthemes.com/easy-elementor-addons/" target="_blank">See Demos of All Elementor Widgets</a></p>
 <p>Want to test all Elementor widgets and their settings without installing on your website? <a href="https://demo.tastewp.com/easy-elementor-addons" target="_blank">Test Dashboard Settings Here</a></p>
 
 <h3>Key Features:</h3>
 
-<p><strong>63 Elementor Widgets</strong> - A complete pack of creative widgets covering headings, buttons, galleries, sliders, tabs, timelines, pricing tables, team, testimonials, charts, maps and much more.</p>
+<p><strong>63 Elementor Widgets</strong> - A complete pack of creative widgets covering headings, buttons, galleries, sliders, tabs, timelines, pricing and comparison tables, data tables, marquees, team, testimonials, charts, maps and much more.</p>
 
-<p><strong>Enable Only the Widgets You Need</strong> - Every widget can be switched on or off from the plugin dashboard. Widgets you disable are never registered, so you only ever load what your site actually uses.</p>
+<p><strong>Enable Only the Widgets You Need</strong> - Every widget can be switched on or off from the plugin dashboard, where widgets are grouped by purpose with Enable/Disable All for each group. Widgets you disable are never registered, so you only ever load what your site actually uses.</p>
 
 <p><strong>Lean Asset Loading</strong> - Third party libraries such as carousels, charts and lightboxes are pulled in only by the widgets that need them, rather than loading on every page of your site.</p>
+
+<p><strong>Accessible by Design</strong> - Keyboard support and screen reader labels across carousels, tabs, toggles, hotspots, accordions and popups. Hover effects also show on keyboard focus and touch, and animations respect reduced motion.</p>
+
+<p><strong>SEO Friendly</strong> - FAQ schema for the Accordion, rich results for Star Rating, a Table of Contents built from your headings and a choice of HTML tag for titles across the widgets.</p>
+
+<p><strong>Privacy Friendly Embeds</strong> - Privacy mode for YouTube videos in Popup Video and Video Player, and for embedded X (Twitter) posts.</p>
 
 <p><strong>Sticky Container</strong> - Adds an Enable Sticky switch to Elementor's native Container element, so a nested container can stay in view while the visitor scrolls.</p>
 
@@ -44,131 +50,131 @@ Easy Elementor Addons is built using all the modern trends and is well optimized
 
 <h3>Elements Available in the Extension:</h3>
 
-<p>1) <a href="https://demo.hashthemes.com/easy-elementor-addons/accordion/" target="_blank">Accordions</a> - Displays the FAQ of your clients within a beautiful UI, with an option to keep only one item open at a time.</p>
+<p>1) <a href="https://demo.hashthemes.com/easy-elementor-addons/accordion-demo/" target="_blank">Accordion</a> - Display FAQs in a beautiful UI, with FAQ schema for search results, an option to keep one item open at a time and links that open an item by its ID.</p>
 
-<p>2) <a href="https://demo.hashthemes.com/easy-elementor-addons/advanced-button/" target="_blank">Advanced Button</a> - Allows you to place responsive buttons with different animations, hover effects and many more.</p>
+<p>2) <a href="https://demo.hashthemes.com/easy-elementor-addons/advanced-button-demo/" target="_blank">Advanced Button</a> - Place responsive buttons with icons, icon hover effects and many background animations, including the new Shutter In effect.</p>
 
-<p>3) <a href="https://demo.hashthemes.com/easy-elementor-addons/advanced-heading/" target="_blank">Advanced Heading</a> - Place a unique heading with border, animations, etc.</p>
+<p>3) <a href="https://demo.hashthemes.com/easy-elementor-addons/advanced-heading-demo/" target="_blank">Advanced Heading</a> - Create unique headings with split colors or gradients, borders, background text and animations.</p>
 
-<p>4) <a href="https://demo.hashthemes.com/easy-elementor-addons/advanced-icon-box/" target="_blank">Advanced Icon Box</a> - Lets you create an icon box where you can place an icon with the title, and description.</p>
+<p>4) <a href="https://demo.hashthemes.com/easy-elementor-addons/advanced-icon-box-demo/" target="_blank">Advanced Icon Box</a> - Create an icon box with an icon, title, description, badge and button, and link the title or the whole box.</p>
 
-<p>5) <a href="https://demo.hashthemes.com/easy-elementor-addons/advanced-map/" target="_blank">Advanced Map</a> - Add fully customizable maps with advanced styling and multiple location markers.</p>
+<p>5) <a href="https://demo.hashthemes.com/easy-elementor-addons/advanced-map-demo/" target="_blank">Advanced Map</a> - Add fully customizable Google Maps with map types, custom styles and multiple location markers with titles.</p>
 
-<p>6) <a href="https://demo.hashthemes.com/easy-elementor-addons/animated-heading/" target="_blank">Animated Heading</a> - Place the animated heading to display your deals, offers, discounts or features of your services in an eye catchy way.</p>
+<p>6) <a href="https://demo.hashthemes.com/easy-elementor-addons/animated-heading-demo/" target="_blank">Animated Heading</a> - Highlight your deals, offers or services with rotating or typed words, a blinking cursor and styled animated text.</p>
 
-<p>7) Appearing Image - Reveal an image with a wipe from any side, a color curtain, a circle or a zoom-out, once when it comes into view or in step with the scroll.</p>
+<p>7) <a href="https://demo.hashthemes.com/easy-elementor-addons/appearing-image-demo/" target="_blank">Appearing Image</a> - Reveal an image with a wipe from any side, a color curtain, a circle or a zoom-out, once or every time it comes into view, or in step with the scroll.</p>
 
-<p>8) <a href="https://demo.hashthemes.com/easy-elementor-addons/business-hour/" target="_blank">Business Hour</a> - Displays the timetable of the business hour of your company.</p>
+<p>8) <a href="https://demo.hashthemes.com/easy-elementor-addons/business-hour-demo/" target="_blank">Business Hour</a> - Display your opening hours as a timetable, with the current open or closed status in your own time zone.</p>
 
-<p>9) <a href="https://demo.hashthemes.com/easy-elementor-addons/circular-progress-bar/" target="_blank">Circular Progress Bar</a> - Displays the work progress of your company in a circular layout.</p>
+<p>9) <a href="https://demo.hashthemes.com/easy-elementor-addons/circular-progress-bar-demo/" target="_blank">Circular Progress Bar</a> - Show progress or skills in a circle that counts up, with a start position, suffix and title.</p>
 
-<p>10) Comparison Table - Compare plans or products side by side with ticks, crosses and text values, group headings, info tooltips, a highlighted column and buttons. The feature column stays in view on small screens.</p>
+<p>10) <a href="https://demo.hashthemes.com/easy-elementor-addons/comparison-table-demo/" target="_blank">Comparison Table</a> - Compare plans or products side by side with ticks, crosses and text values, group headings, info tooltips, badges, a highlighted column and buttons. The feature column stays in view on small screens.</p>
 
-<p>11) <a href="https://demo.hashthemes.com/easy-elementor-addons/countdown/" target="_blank">Countdown</a> - Create engaging countdown timers to highlight offers, events, or launches.</p>
+<p>11) <a href="https://demo.hashthemes.com/easy-elementor-addons/countdown-demo/" target="_blank">Countdown</a> - Create countdown timers for offers, events or launches, including evergreen timers that restart for each visitor, with a message or hidden timer on expiry.</p>
 
-<p>12) <a href="https://demo.hashthemes.com/easy-elementor-addons/counter/" target="_blank">Counter</a> - Let you place a beautiful stats counter of your business by highlighting the achievements.</p>
+<p>12) <a href="https://demo.hashthemes.com/easy-elementor-addons/counter-demo/" target="_blank">Counter</a> - Highlight your achievements with animated counters, thousands separators, prefixes and suffixes.</p>
 
-<p>13) Data Table - Build sortable, searchable tables in the editor or from pasted CSV, with column and row spans, icons, links, pagination and rows that stack as cards on mobile.</p>
+<p>13) <a href="https://demo.hashthemes.com/easy-elementor-addons/data-table-demo/" target="_blank">Data Table</a> - Build sortable, searchable tables in the editor or from pasted CSV, with column and row spans, icons, links, pagination and rows that stack as cards on mobile.</p>
 
-<p>14) <a href="https://demo.hashthemes.com/easy-elementor-addons/drop-bar/" target="_blank">Drop Bar</a> - Display a short information on the drop bar and display it in different positions, animation effects.</p>
+<p>14) <a href="https://demo.hashthemes.com/easy-elementor-addons/drop-bar-demo/" target="_blank">Drop Bar</a> - Show extra information in a drop panel that opens on hover or click, in different positions and with animation effects.</p>
 
-<p>15) <a href="https://demo.hashthemes.com/easy-elementor-addons/dual-button/" target="_blank">Dual Button</a> - Design stylish dual-action buttons with unique layouts and effects.</p>
+<p>15) <a href="https://demo.hashthemes.com/easy-elementor-addons/dual-button-demo/" target="_blank">Dual Button</a> - Design stylish dual-action buttons with a text or icon separator, icons, equal widths and a shadow that follows rounded buttons.</p>
 
-<p>16) <a href="https://demo.hashthemes.com/easy-elementor-addons/dual-heading/" target="_blank">Dual Heading</a> - Allows you to display the heading in dual effects.</p>
+<p>16) <a href="https://demo.hashthemes.com/easy-elementor-addons/dual-heading-demo/" target="_blank">Dual Heading</a> - Display a heading in two styles side by side, with an option to stack it on chosen devices.</p>
 
-<p>17) <a href="https://demo.hashthemes.com/easy-elementor-addons/feature-list/" target="_blank">Feature List</a> - Showcase features or services with icons, text, and custom layouts.</p>
+<p>17) <a href="https://demo.hashthemes.com/easy-elementor-addons/feature-list-demo/" target="_blank">Feature List</a> - Showcase features or services with icons or images, text and an optional connector line.</p>
 
-<p>18) <a href="https://demo.hashthemes.com/easy-elementor-addons/flip-box/" target="_blank">Flip Box</a> - Display your information, custom text or even product detail in a customizable flip box.</p>
+<p>18) <a href="https://demo.hashthemes.com/easy-elementor-addons/flip-box-demo/" target="_blank">Flip Box</a> - Display information, custom text or product details on a box that flips on hover, with several flip directions and effects.</p>
 
-<p>19) <a href="https://demo.hashthemes.com/easy-elementor-addons/image-gallery/" target="_blank">Image Gallery</a> - Build grid or masonry image galleries with lightbox, and optional filter tabs to sort images into groups.</p>
+<p>19) <a href="https://demo.hashthemes.com/easy-elementor-addons/horizontal-tab-demo/" target="_blank">Horizontal Tab</a> - Showcase different information in responsive horizontal tabs, with a chosen active tab and links that open a tab by its ID.</p>
 
-<p>20) <a href="https://demo.hashthemes.com/easy-elementor-addons/horizontal-tab/" target="_blank">Horizontal Tab</a> - Allows you to showcase different information in a responsive horizontal tab.</p>
+<p>20) <a href="https://demo.hashthemes.com/easy-elementor-addons/horizontal-timeline-demo/" target="_blank">Horizontal Timeline</a> - Display the history, milestones and success story of your company in a responsive horizontal timeline carousel.</p>
 
-<p>21) <a href="https://demo.hashthemes.com/easy-elementor-addons/horizontal-timeline/" target="_blank">Horizontal Timeline</a> - Adds a horizontal timeline to display the evolution, history and success story of your company in a responsive timeline.</p>
+<p>21) <a href="https://demo.hashthemes.com/easy-elementor-addons/hotspot-demo/" target="_blank">Hotspot</a> - Add hotspots with tooltips to different parts of an image, with pulse animations and tooltips that stay on screen.</p>
 
-<p>22) <a href="https://demo.hashthemes.com/easy-elementor-addons/hotspot/" target="_blank">Hotspot Block</a> - Add hotspot tooltips of different parts of the images.</p>
+<p>22) <a href="https://demo.hashthemes.com/easy-elementor-addons/icon-list-demo/" target="_blank">Icon List</a> - List your content with icons or images, with icon box size and background options.</p>
 
-<p>23) <a href="https://demo.hashthemes.com/easy-elementor-addons/icon-list/" target="_blank">Icon List</a> - List down your contents with beautiful icons or png images.</p>
+<p>23) <a href="https://demo.hashthemes.com/easy-elementor-addons/image-accordion-demo/" target="_blank">Image Accordion</a> - Show images side by side that expand on hover or click to reveal a title, description and link.</p>
 
-<p>24) <a href="https://demo.hashthemes.com/easy-elementor-addons/image-accordion/" target="_blank">Image Accordion</a> - Images are displayed in a stacked layout that expands or collapses when clicked, showing or hiding additional images or content</p>
+<p>24) <a href="https://demo.hashthemes.com/easy-elementor-addons/image-comparison-demo/" target="_blank">Image Comparison</a> - Compare before and after images with a draggable horizontal or vertical slider.</p>
 
-<p>25) <a href="https://demo.hashthemes.com/easy-elementor-addons/image-comparison/" target="_blank">Image Comparison</a> - To showcase the images before and after editing the images.</p>
+<p>25) <a href="https://demo.hashthemes.com/easy-elementor-addons/image-gallery-demo/" target="_blank">Image Gallery</a> - Build grid or masonry image galleries with a lightbox and optional filter tabs to sort images into groups.</p>
 
-<p>26) Image Hover Effects - Reveal a title, description and button over an image with 16 hover effects, including slide, zoom, blur, grayscale, shine, doors, circle and border reveals.</p>
+<p>26) <a href="https://demo.hashthemes.com/easy-elementor-addons/image-hover-effect-demo/" target="_blank">Image Hover Effects</a> - Reveal a title, description and button over an image with 16 hover effects, including slide, zoom, blur, grayscale, shine, doors, circle and border reveals.</p>
 
-<p>27) Image Stack - Show overlapping profile photos with name tooltips, a "+2k" bubble and a line of text such as "Trusted by 2,000+ teams".</p>
+<p>27) <a href="https://demo.hashthemes.com/easy-elementor-addons/image-stack-demo/" target="_blank">Image Stack</a> - Show overlapping profile photos with name tooltips, a "+2k" bubble and a line of text such as "Trusted by 2,000+ teams".</p>
 
-<p>28) Justified Grid - Show photos in neat, even rows that keep their shape, with captions, hover effects and a lightbox, with no extra scripts.</p>
+<p>28) <a href="https://demo.hashthemes.com/easy-elementor-addons/justified-grid-demo/" target="_blank">Justified Grid</a> - Show photos in neat, even rows that keep their shape, with captions, hover effects and a lightbox, with no extra scripts.</p>
 
-<p>29) <a href="https://demo.hashthemes.com/easy-elementor-addons/link-effect/" target="_blank">Link Effect</a> - Customize your hyperlink by adding different animation effects.</p>
+<p>29) <a href="https://demo.hashthemes.com/easy-elementor-addons/link-effect-demo/" target="_blank">Link Effect</a> - Add creative animated hover effects to your text links.</p>
 
-<p>30) <a href="https://demo.hashthemes.com/easy-elementor-addons/logo-carousel/" target="_blank">Logo Carousel</a> - Highlight the logo of your clients, partners, or sponsor in a beautiful carousel.</p>
+<p>30) <a href="https://demo.hashthemes.com/easy-elementor-addons/logo-carousel-demo/" target="_blank">Logo Carousel</a> - Highlight the logos of your clients, partners or sponsors in a carousel, with logo height, grayscale and opacity options.</p>
 
-<p>31) <a href="https://demo.hashthemes.com/easy-elementor-addons/logo-grid/" target="_blank">Logo Grid</a> - Highlight the logo of your clients, partners, or sponsor in a beautiful logo grid.</p>
+<p>31) <a href="https://demo.hashthemes.com/easy-elementor-addons/logo-grid-demo/" target="_blank">Logo Grid</a> - Highlight the logos of your clients, partners or sponsors in a grid, with logo height, grayscale and opacity options.</p>
 
-<p>32) <a href="https://demo.hashthemes.com/easy-elementor-addons/lottie/" target="_blank">Lottie</a> - Embed lightweight, animated Lottie files to enhance interactivity.</p>
+<p>32) <a href="https://demo.hashthemes.com/easy-elementor-addons/lottie-demo/" target="_blank">Lottie</a> - Embed lightweight Lottie animations that loop, play when in view or play on click.</p>
 
-<p>33) <a href="https://demo.hashthemes.com/easy-elementor-addons/one-page-navigation/" target="_blank">One Page Navigation</a> - Place an extra navigator to navigate different contents present in a single page.</p>
+<p>33) <a href="https://demo.hashthemes.com/easy-elementor-addons/marquee-demo/" target="_blank">Marquee</a> - Scroll text, icons, logos or your latest posts in an endless marquee in any direction, with separators, outline and gradient text, tilted and crossed ribbons, pause or slow down on hover, page scroll effects and drag to scroll.</p>
 
-<p>34) PDF Viewer - Embed a PDF from your Media Library or a link, with a title bar, open and download buttons, and a simple button on phones.</p>
+<p>34) <a href="https://demo.hashthemes.com/easy-elementor-addons/one-page-navigation-demo/" target="_blank">One Page Navigation</a> - Add dot navigation that scrolls between the sections of a single page.</p>
 
-<p>35) <a href="https://demo.hashthemes.com/easy-elementor-addons/pie-chart/" target="_blank">Pie Chart</a> - Display your company progress in a beautiful pie chart.</p>
+<p>35) <a href="https://demo.hashthemes.com/easy-elementor-addons/pdf-viewer-demo/" target="_blank">PDF Viewer</a> - Embed a PDF from your Media Library or a link, with a title bar, open and download buttons, and a simple button on phones.</p>
 
-<p>36) <a href="https://demo.hashthemes.com/easy-elementor-addons/popup/" target="_blank">Popup Modal</a> - Place an animated popup with different animations.</p>
+<p>36) <a href="https://demo.hashthemes.com/easy-elementor-addons/pie-chart-demo/" target="_blank">Pie Chart</a> - Display your data in pie or doughnut charts that animate into view, with tooltips and value prefixes and suffixes.</p>
 
-<p>37) <a href="https://demo.hashthemes.com/easy-elementor-addons/video-popup/" target="_blank">Popup Video</a> - Add eye-catching video popups to boost user engagement.</p>
+<p>37) <a href="https://demo.hashthemes.com/easy-elementor-addons/popup-modal-demo/" target="_blank">Popup Modal</a> - Open animated popups on click, automatically after a delay, on scroll or when the visitor is about to leave.</p>
 
-<p>38) <a href="https://demo.hashthemes.com/easy-elementor-addons/pricing-list/" target="_blank">Pricing List</a> - Showcase the pricing of your products in a unique fashion.</p>
+<p>38) <a href="https://demo.hashthemes.com/easy-elementor-addons/popup-video-demo/" target="_blank">Popup Video</a> - Play YouTube, Vimeo or self-hosted videos in a lightbox from an eye-catching play button.</p>
 
-<p>39) <a href="https://demo.hashthemes.com/easy-elementor-addons/pricing-table/" target="_blank">Pricing Table</a> - Display the pricing plan of your services in a beautifully designed pricing table.</p>
+<p>39) <a href="https://demo.hashthemes.com/easy-elementor-addons/pricing-list-demo/" target="_blank">Pricing List</a> - Showcase menu or product prices with images, old and new prices and badges.</p>
 
-<p>40) <a href="https://demo.hashthemes.com/easy-elementor-addons/progress-bar/" target="_blank">Progress Bar</a> - Allows you to showcase your work progress in an attractive progress bar.</p>
+<p>40) <a href="https://demo.hashthemes.com/easy-elementor-addons/pricing-table-demo/" target="_blank">Pricing Table</a> - Display your pricing plans with old prices, included and excluded features, badges, a footer note and equal heights.</p>
 
-<p>41) Promo Box - Promote a product or offer with an image on top, at the side or behind the text, plus a badge, corner ribbon, old and new price and a button.</p>
+<p>41) <a href="https://demo.hashthemes.com/easy-elementor-addons/progressbar-demo/" target="_blank">Progress Bar</a> - Showcase skills or progress in animated bars, each with its own color.</p>
 
-<p>42) <a href="https://demo.hashthemes.com/easy-elementor-addons/scroll-image/" target="_blank">Scroll Image</a> - Let’s you showcase a long and full width image in a short space. Automatically scroll the images when hovered over.</p>
+<p>42) <a href="https://demo.hashthemes.com/easy-elementor-addons/promo-box-demo/" target="_blank">Promo Box</a> - Promote a product or offer with an image on top, at the side or behind the text, plus a badge, corner ribbon, old and new price, a button and a schedule.</p>
 
-<p>43) <a href="https://demo.hashthemes.com/easy-elementor-addons/slider/" target="_blank">Slider Block</a> - Highlight your announcements, deals or even products in a responsive slider.</p>
+<p>43) <a href="https://demo.hashthemes.com/easy-elementor-addons/scroll-image-demo/" target="_blank">Scroll Image</a> - Show a long or full width image in a small space that scrolls up, down, left or right on hover.</p>
 
-<p>44) Social Icons - Link to 20+ social networks in official brand colors or your own, as filled, outline, soft or plain icons, with labels, tooltips and hover effects.</p>
+<p>44) <a href="https://demo.hashthemes.com/easy-elementor-addons/slider-demo/" target="_blank">Slider</a> - Highlight announcements, deals or products in a responsive slider with captions, buttons and a Ken Burns effect.</p>
 
-<p>45) <a href="https://demo.hashthemes.com/easy-elementor-addons/social-share/" target="_blank">Social Share</a> - Add social share buttons to share your pages or posts to different social media networks in a single click.</p>
+<p>45) <a href="https://demo.hashthemes.com/easy-elementor-addons/social-icons-demo/" target="_blank">Social Icons</a> - Link to 30+ social networks in official brand colors or your own, as filled, outline, soft or plain icons, with labels, tooltips and hover effects.</p>
 
-<p>46) Star Rating - Show a precise star rating with a score, label and caption, or a complete review card with quote, photo, name and source logo.</p>
+<p>46) <a href="https://demo.hashthemes.com/easy-elementor-addons/social-share-demo/" target="_blank">Social Share</a> - Let visitors share your pages or posts to social networks in a single click, copy the link or use their device's share menu.</p>
 
-<p>47) <a href="https://demo.hashthemes.com/easy-elementor-addons/step-flow/" target="_blank">Step Flow</a> - Present step-by-step processes with a clean and professional layout.</p>
+<p>47) <a href="https://demo.hashthemes.com/easy-elementor-addons/star-rating-demo/" target="_blank">Star Rating</a> - Show a precise star rating with a score, label and caption, or a complete review card with quote, photo, name and source logo.</p>
 
-<p>48) <a href="https://demo.hashthemes.com/easy-elementor-addons/sticky-video/" target="_blank">Sticky Video</a> - Keep videos visible while users scroll through the page.</p>
+<p>48) <a href="https://demo.hashthemes.com/easy-elementor-addons/step-flow-demo/" target="_blank">Step Flow</a> - Present step-by-step processes with icons, titles and direction arrows.</p>
 
-<p>49) <a href="https://demo.hashthemes.com/easy-elementor-addons/switcher/" target="_blank">Switcher</a> - To display multiple web contents in a switcher for comparison.</p>
+<p>49) <a href="https://demo.hashthemes.com/easy-elementor-addons/sticky-video-demo/" target="_blank">Sticky Video</a> - Keep a video playing in a corner while visitors scroll, on desktop and mobile.</p>
 
-<p>50) Table of Contents - Build a table of contents from the page headings automatically, with nested numbering, smooth scrolling, a sticky box, collapsing and the current section highlighted.</p>
+<p>50) <a href="https://demo.hashthemes.com/easy-elementor-addons/switcher-demo/" target="_blank">Switcher</a> - Switch between two sets of content, such as monthly and yearly pricing, with a toggle switch.</p>
 
-<p>51) <a href="https://demo.hashthemes.com/easy-elementor-addons/team-member/" target="_blank">Team</a> - Display your team members of your company/organization.</p>
+<p>51) <a href="https://demo.hashthemes.com/easy-elementor-addons/table-of-contents-demo/" target="_blank">Table of Contents</a> - Build a table of contents from the page headings automatically, with nested numbering, smooth scrolling, a sticky box, collapsing and the current section highlighted.</p>
 
-<p>52) <a href="https://demo.hashthemes.com/easy-elementor-addons/team-carousel/" target="_blank">Team Carousel</a> - Display your team members of your company/organization in an attractive carousel.</p>
+<p>52) <a href="https://demo.hashthemes.com/easy-elementor-addons/team-member-demo/" target="_blank">Team</a> - Introduce the members of your company or organization with photos, roles, bios and social links.</p>
 
-<p>53) <a href="https://demo.hashthemes.com/easy-elementor-addons/testimonial/" target="_blank">Testimonial</a> - Showcase the positive words given by your clients in a stunning way.</p>
+<p>53) <a href="https://demo.hashthemes.com/easy-elementor-addons/team-carousel-demo/" target="_blank">Team Carousel</a> - Introduce the members of your company or organization in a carousel.</p>
 
-<p>54) <a href="https://demo.hashthemes.com/easy-elementor-addons/testimonial-carousel/" target="_blank">Testimonial Carousel</a> - Showcase the positive words given by your client in a beautiful slider.</p>
+<p>54) <a href="https://demo.hashthemes.com/easy-elementor-addons/testimonial-demo/" target="_blank">Testimonial</a> - Showcase the kind words of your clients with photos, names and star ratings.</p>
 
-<p>55) Marquee - Scroll text, icons, logos or your latest posts in an endless marquee in any direction, with separators, outline and gradient text, tilted and crossed ribbons, pause or slow down on hover, page scroll effects and drag to scroll.</p>
+<p>55) <a href="https://demo.hashthemes.com/easy-elementor-addons/testimonial-carousel-demo/" target="_blank">Testimonial Carousel</a> - Showcase the kind words of your clients in a carousel with equal height slides.</p>
 
-<p>56) Text Scroll Reveal - Fill a heading word by word or letter by letter as visitors scroll, with color, fade, blur and rise effects, or play it once when it comes into view.</p>
+<p>56) <a href="https://demo.hashthemes.com/easy-elementor-addons/scroll-text-reveal-demo/" target="_blank">Text Scroll Reveal</a> - Fill a heading word by word or letter by letter as visitors scroll, with color, fade, blur and rise effects, or play it once when it comes into view.</p>
 
-<p>57) <a href="https://demo.hashthemes.com/easy-elementor-addons/toggle/" target="_blank">Toggle</a> - Display multiple contents and toggle them for comparison.</p>
+<p>57) <a href="https://demo.hashthemes.com/easy-elementor-addons/toggle-demo/" target="_blank">Toggle</a> - Switch between two pieces of content or saved templates, with switch animations and links that open a side by URL.</p>
 
-<p>58) <a href="https://demo.hashthemes.com/easy-elementor-addons/twitter-feed/" target="_blank">Twitter Feed</a> - Embed X (Twitter) posts and videos, or add a hashtag button, directly on your website.</p>
+<p>58) <a href="https://demo.hashthemes.com/easy-elementor-addons/twitter-feed-demo/" target="_blank">Twitter Feed</a> - Embed X (Twitter) posts and videos, or add a hashtag button, directly on your website.</p>
 
-<p>59) <a href="https://demo.hashthemes.com/easy-elementor-addons/vertical-tab/" target="_blank">Vertical Tab</a> - Allows you to showcase different information in a responsive vertical tab.</p>
+<p>59) <a href="https://demo.hashthemes.com/easy-elementor-addons/vertical-tab-demo/" target="_blank">Vertical Tab</a> - Showcase different information in responsive vertical tabs, with a chosen active tab and links that open a tab by its ID.</p>
 
-<p>60) <a href="https://demo.hashthemes.com/easy-elementor-addons/vertical-timeline/" target="_blank">Vertical Timeline</a> - Adds a vertical timeline to represent the evolution, history and success story of your company. Switches to a single column layout on tablet or mobile.</p>
+<p>60) <a href="https://demo.hashthemes.com/easy-elementor-addons/vertical-timeline-demo/" target="_blank">Vertical Timeline</a> - Tell the story of your company in a vertical timeline with a scroll progress line and items that reveal on scroll. Switches to a single column on tablet or mobile.</p>
 
-<p>61) <a href="https://demo.hashthemes.com/easy-elementor-addons/video-player/" target="_blank">Video Player</a> - Allow you to embed the videos from Youtube, Vimeo or from your local computer.</p>
+<p>61) <a href="https://demo.hashthemes.com/easy-elementor-addons/video-player-demo/" target="_blank">Video Player</a> - Embed videos from YouTube, Vimeo or your Media Library with a custom player, cover image, title and captions.</p>
 
-<p>62) <a href="https://demo.hashthemes.com/easy-elementor-addons/weather/" target="_blank">Weather Block</a> - Adds a weather report of a city with humidity, Pressure and Wind Speed.</p>
+<p>62) <a href="https://demo.hashthemes.com/easy-elementor-addons/weather-demo/" target="_blank">Weather</a> - Show the current weather of a city with the details you choose, such as humidity, pressure and wind speed.</p>
 
-<p>63) WhatsApp Chat - Add a floating or inline WhatsApp button that opens a chat box with a greeting and one or more agents, or goes straight to WhatsApp.</p>
+<p>63) <a href="https://demo.hashthemes.com/easy-elementor-addons/whatsapp-chat-demo/" target="_blank">WhatsApp Chat</a> - Add a floating or inline WhatsApp button that opens a chat box with a greeting and one or more agents, or goes straight to WhatsApp.</p>
 
 <p>More widgets coming soon.</p>
 
@@ -189,7 +195,29 @@ The easy way to install the plugin is via WordPress.org plugin directory.
 </ol>
 
 == Changelog ==
-= 2.5.0 - Unreleased =
+= 2.5.1 - 8 Nov, 2026 =
+* New option - Dual Button shadow border radius, so the shadow follows rounded buttons
+* Social Icons - X and Threads now show their own icons, and Font Awesome icons load even when no other widget on the page uses them - Fixed
+* Popup Video - self-hosted videos opened as a broken image and ignored the autoplay, mute, loop and width settings; the trigger now opens with Enter and Space - Fixed
+* Image Gallery and other lightbox widgets could jump the page to the top - Fixed
+* Text Scroll Reveal - highlighted words split at the punctuation after them and lost their color - Fixed
+* Comparison Table - a custom cell padding moved the badge over the plan title - Fixed
+* Pricing List - the image width setting broke the image-on-top layout - Fixed
+* Hotspot - links inside tooltips were styled as the hotspot marker - Fixed
+* Flip Box - a title, description or button text of "0" was hidden, and the icon color leaked to other icons on the page - Fixed
+* Slider - captions and overlay went behind the image during the Ken Burns effect - Fixed
+* Drop Bar - PHP warning when the animation is set to None - Fixed
+* Promo Box - PHP warning in the editor - Fixed
+* Advanced Button - icons sat below the text, and the Inclined Slide Down effect showed a corner on tall buttons - Fixed
+* Advanced Icon Box and Pricing Table - Fill Height now works inside vertical containers - Fixed
+* Link Effect - Justified alignment now stretches the link - Fixed
+* Feature List - long text squeezed the icon or image - Fixed
+* Vertical Tab - tab icons sat low - Fixed
+* Popup Modal - opens above floating buttons and fly menus - Fixed
+* Social Share - X button uses black instead of the old Twitter blue; LinkedIn, VK and WhatsApp labels corrected - Updated
+* Weather - unknown conditions show a cloud instead of "N/A", smoke icon added, "Temperature" typo corrected - Updated
+
+= 2.5.0 - 4 Nov, 2026 =
 * New widget - Marquee: endless scrolling text, icons and images left, right, up or down; icon, text or image separators (with spin); filled, outline, alternating or gradient text; custom items or latest posts (featured image, date); tilted bands and a crossing second row; grayscale/opacity image effects for logo marquees; image size; per-item colors and highlights; pause or slow down on hover; speed up or follow the page scroll; drag to scroll; responsive speed; fade edges; respects reduced motion
 * New widget - Data Table: build in the editor or paste CSV; column/row spans, icons, links; sortable columns, search, pagination; scroll or stack as cards on small screens
 * New widget - Table of Contents: built from the page headings; nested numbering, bullets or icons; smooth scroll with offset, current section highlight, sticky and collapsible box
@@ -205,6 +233,25 @@ The easy way to install the plugin is via WordPress.org plugin directory.
 * New widget - Justified Grid: even photo rows that keep their shape, captions, hover effects and lightbox
 * New widget - PDF Viewer: embedded PDF with title bar, open and download buttons, and a button on phones
 * Widgets added in a new version now start enabled on sites that saved the widget settings before
+* Settings page - widgets grouped by purpose with per-group Enable/Disable All, redesigned widget cards
+* New options - Accordion (title tag, FAQ schema, link to an item by ID), Advanced Button (icon size, icon hover effect, new Shutter In effect), Advanced Heading (split gradient, split before or after), Advanced Icon Box (badge, title link, link whole box), Advanced Map (map type, marker title), Animated Heading (cursor, animated text style), Appearing Image (every time in view, curtain direction), Circular Progress Bar (start position, count up, suffix, title tag), Countdown (evergreen timer, hide timer on expiry), Counter (thousands separator, title tag), Data Table (initial sort), Dual Button (equal width), Dual Heading (stack on devices), Feature List (connector line), Icon List (icon box size and background), Image Stack (max visible), Logo Carousel and Logo Grid (logo height, grayscale, opacity), Lottie (label, loop, play in view, click), Marquee (pause button), Pie Chart (animate in view, percent tooltip, value prefix and suffix), Popup Modal (open automatically after a delay, on scroll or on exit, hide trigger), Popup Video and Video Player (privacy mode), Pricing List (old price, badge), Pricing Table (old price, excluded features, footer note), Progress Bar (per-bar color, duration), Promo Box (schedule), Scroll Image (scroll duration), Slider (title tag, Ken Burns), Social Icons (10 more networks), Social Share (copy link, native share), Star Rating (SEO rich results), Sticky Video (sticky on mobile), Team Member and Team Carousel (name tag), Testimonial and Testimonial Carousel (empty stars, name tag, equal height), Toggle (switch animation, open by URL hash), Twitter Feed (hide parent post, hide media, width, alignment, privacy mode), Horizontal and Vertical Tab (active tab, link to a tab by ID), Vertical Timeline (scroll progress line, reveal on scroll), Video Player (video title, captions), Weather (location label, choose parameters), WhatsApp Chat (page title and URL in the message)
+* Accessibility - keyboard support and screen reader labels across carousels, tabs, switcher, toggle, hotspots, image accordion, image comparison, drop bar, flip box, sticky video and popups; hover effects also show on keyboard focus and touch; animations respect reduced motion
+* Animated Heading no longer uses the Morphext library (text is inserted safely) - Security
+* Countdown keeps time from the clock instead of a ticking counter, no longer conflicts with themes that load jQuery Countdown - Fixed
+* Counter showed nothing for 0, Pie Chart dropped 0 values - Fixed
+* Data Table sorted dates and currency values as text - Fixed
+* Drop Bar panels ran off small screens and UIkit restyled theme headings, quotes and code - Fixed
+* Hotspot tooltips ran off small screens - Fixed
+* Image Gallery lightbox included images hidden by the filter - Fixed
+* Justified Grid used the original image shape for cropped image sizes - Fixed
+* One Page Navigation moved two sections on one mouse wheel turn - Fixed
+* Progress Bar and Circular Progress Bar duration setting was ignored - Fixed
+* Social Share and Twitter Feed shared the first post on archive pages instead of the page itself - Fixed
+* Weather - one API request per city shared by all widgets, last good data shown if the service fails, imperial wind, visibility and rain units, local update time - Fixed
+* Video Player could load without playing after the play button was clicked - Fixed
+* Placeholder '#' links no longer open the same page in a new tab (Pricing List, Vertical Timeline) - Fixed
+* Images now load responsive sizes with alt text fallbacks in more widgets - Updated
+* Elementor CSS is regenerated once after updating so changed widget styles apply - Updated
 
 = 2.4.0 - 2 Oct, 2026 =
 * Compatibility test with WordPress v 7.1 and Elementor v 4.3

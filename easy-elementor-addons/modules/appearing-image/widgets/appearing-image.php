@@ -124,6 +124,7 @@ class AppearingImage extends Widget_Base {
                 'default' => 'view',
                 'options' => [
                     'view' => esc_html__('Once, When in View', 'easy-elementor-addons'),
+                    'repeat' => esc_html__('Every Time in View', 'easy-elementor-addons'),
                     'scroll' => esc_html__('With the Scroll', 'easy-elementor-addons'),
                 ],
                 'render_type' => 'template'
@@ -140,7 +141,7 @@ class AppearingImage extends Widget_Base {
                     '{{WRAPPER}} .eead-apim' => '--eead-apim-duration: {{SIZE}}ms',
                 ],
                 'condition' => [
-                    'trigger' => 'view'
+                    'trigger' => ['view', 'repeat']
                 ]
             ]
         );
@@ -155,7 +156,7 @@ class AppearingImage extends Widget_Base {
                     '{{WRAPPER}} .eead-apim' => '--eead-apim-delay: {{SIZE}}ms',
                 ],
                 'condition' => [
-                    'trigger' => 'view'
+                    'trigger' => ['view', 'repeat']
                 ]
             ]
         );
@@ -194,6 +195,24 @@ class AppearingImage extends Widget_Base {
                 'selectors' => [
                     '{{WRAPPER}} .eead-apim' => '--eead-apim-curtain: {{VALUE}}',
                 ],
+                'condition' => [
+                    'effect' => 'curtain'
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'curtain_direction', [
+                'label' => esc_html__('Curtain Direction', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'ltr',
+                'options' => [
+                    'ltr' => esc_html__('Left to Right', 'easy-elementor-addons'),
+                    'rtl' => esc_html__('Right to Left', 'easy-elementor-addons'),
+                    'ttb' => esc_html__('Top to Bottom', 'easy-elementor-addons'),
+                    'btt' => esc_html__('Bottom to Top', 'easy-elementor-addons'),
+                ],
+                'prefix_class' => 'eead-apim-curtain-',
                 'condition' => [
                     'effect' => 'curtain'
                 ]
@@ -312,7 +331,7 @@ class AppearingImage extends Widget_Base {
         if (!empty($settings['image']['id'])) {
             $image = Group_Control_Image_Size::get_attachment_image_html($settings, 'image', 'image');
         } elseif (!empty($settings['image']['url'])) {
-            $image = '<img src="' . esc_url($settings['image']['url']) . '" alt="">';
+            $image = '<img src="' . esc_url($settings['image']['url']) . '" alt="' . esc_attr((string) $settings['caption']) . '">';
         } else {
             return;
         }
@@ -320,7 +339,7 @@ class AppearingImage extends Widget_Base {
         $this->add_render_attribute('wrap', [
             'class' => 'eead-apim',
             'data-settings' => wp_json_encode([
-                'trigger' => 'scroll' === $settings['trigger'] ? 'scroll' : 'view',
+                'trigger' => in_array($settings['trigger'], ['scroll', 'repeat'], true) ? $settings['trigger'] : 'view',
                 'start' => isset($settings['start']['size']) ? (float) $settings['start']['size'] : 95,
                 'end' => isset($settings['end']['size']) ? (float) $settings['end']['size'] : 45,
             ]),
@@ -336,11 +355,11 @@ class AppearingImage extends Widget_Base {
                 <?php if ($has_link) { ?>
                     <a <?php $this->print_render_attribute_string('link'); ?>>
                 <?php } ?>
-                <span class="eead-apim-frame"><?php echo wp_kses_post($image); ?></span>
+                <span class="eead-apim-frame"><?php echo eead_kses_image($image); ?></span>
                 <?php if ($has_link) { ?>
                     </a>
                 <?php } ?>
-                <?php if ('' !== $settings['caption']) { ?>
+                <?php if ('' !== trim((string) $settings['caption'])) { ?>
                     <figcaption class="eead-apim-caption"><?php echo esc_html($settings['caption']); ?></figcaption>
                 <?php } ?>
             </figure>

@@ -93,6 +93,15 @@ class Weather extends Widget_Base {
                 'label_block' => true,
                 'default' => esc_html__('Sydney', 'easy-elementor-addons'),
                 'placeholder' => esc_html__('City', 'easy-elementor-addons'),
+            ]
+        );
+
+        $this->add_control(
+            'location_label', [
+                'label' => esc_html__('Location Label', 'easy-elementor-addons'),
+                'description' => esc_html__('Optional. Shown instead of the city and country the weather service returns, e.g. "Our Sydney office".', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'label_block' => true,
                 'separator' => 'after'
             ]
         );
@@ -124,7 +133,7 @@ class Weather extends Widget_Base {
         /* Round */
         $this->add_control(
             'round_temp', [
-                'label' => esc_html__('Round Temprature Value', 'easy-elementor-addons'),
+                'label' => esc_html__('Round Temperature Value', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
                 'default' => 'yes'
             ]
@@ -143,6 +152,28 @@ class Weather extends Widget_Base {
                 'label' => esc_html__('Hide Weather Variables/Parameters', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
                 'default' => ''
+            ]
+        );
+
+        $this->add_control(
+            'weather_params', [
+                'label' => esc_html__('Parameters to Show', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT2,
+                'multiple' => true,
+                'label_block' => true,
+                'options' => [
+                    'wind' => esc_html__('Wind', 'easy-elementor-addons'),
+                    'humidity' => esc_html__('Humidity', 'easy-elementor-addons'),
+                    'pressure' => esc_html__('Pressure', 'easy-elementor-addons'),
+                    'cloudcover' => esc_html__('Clouds', 'easy-elementor-addons'),
+                    'visibility' => esc_html__('Visibility', 'easy-elementor-addons'),
+                    'precip' => esc_html__('Precipitation', 'easy-elementor-addons'),
+                    'uv_index' => esc_html__('UV Index', 'easy-elementor-addons'),
+                ],
+                'default' => ['wind', 'humidity', 'pressure', 'cloudcover', 'visibility', 'precip', 'uv_index'],
+                'condition' => [
+                    'hide_weather_params!' => 'yes',
+                ]
             ]
         );
 
@@ -714,6 +745,11 @@ class Weather extends Widget_Base {
         $this->end_controls_section();
     }
 
+    /** Keep Elementor's element cache from outliving the weather cache. */
+    protected function is_dynamic_content(): bool {
+        return true;
+    }
+
     protected function render() {
         $settings = $this->get_settings_for_display();
         $eead_general_settings = get_option('eead_general_settings', true);
@@ -741,10 +777,16 @@ class Weather extends Widget_Base {
         $weather_code = $data['current']['weather_code'];
         $is_day = $data['current']['is_day'] == 'yes' ? 'day' : 'night';
 
+        // The API is queried in metric; imperial temperature also gets imperial distances.
+        $imperial = 'imperial' === $settings['temperature_units'];
+        $wind = $imperial ? round($data['current']['wind_speed'] * 0.621371) . ' mph' : $data['current']['wind_speed'] . ' km/h';
+        $visibility = $imperial ? round($data['current']['visibility'] * 0.621371, 1) . ' mi' : $data['current']['visibility'] . ' km';
+        $precip = $imperial ? round($data['current']['precip'] / 25.4, 2) . ' in' : $data['current']['precip'] . ' mm';
+
         $temp_param = [
             'wind' => [
                 'label' => esc_html__('Wind', 'easy-elementor-addons'),
-                'value' => $data['current']['wind_speed'] . 'Km/hr ' . $data['current']['wind_dir'],
+                'value' => trim($wind . ' ' . $data['current']['wind_dir']),
                 'icon' => 'wi-windy'
             ],
             'humidity' => [
@@ -764,12 +806,12 @@ class Weather extends Widget_Base {
             ],
             'visibility' => [
                 'label' => esc_html__('Visibility', 'easy-elementor-addons'),
-                'value' => $data['current']['visibility'] . ' km',
+                'value' => $visibility,
                 'icon' => 'wi-day-haze'
             ],
             'precip' => [
                 'label' => esc_html__('Precipitation', 'easy-elementor-addons'),
-                'value' => $data['current']['precip'] . ' mm',
+                'value' => $precip,
                 'icon' => 'wi-rain-mix'
             ],
             'uv_index' => [
@@ -784,14 +826,18 @@ class Weather extends Widget_Base {
                 <div class="eead-weather-header">
                     <div class="eead-weather-info">
                         <div class="eead-weather-location">
-                            <i class="icofont-location-pin"></i>
-                            <span class="eead-weather-city"><?php echo esc_html($data['location']['name']); ?>,</span>
-                            <span class="eead-weather-country"><?php echo esc_html($data['location']['country']); ?></span>
+                            <i class="icofont-location-pin" aria-hidden="true"></i>
+                            <?php if ('' !== trim((string) $settings['location_label'])) { ?>
+                                <span class="eead-weather-city"><?php echo esc_html($settings['location_label']); ?></span>
+                            <?php } else { ?>
+                                <span class="eead-weather-city"><?php echo esc_html($data['location']['name']); ?>,</span>
+                                <span class="eead-weather-country"><?php echo esc_html($data['location']['country']); ?></span>
+                            <?php } ?>
                         </div>
 
                         <?php
                         if ($settings['layout'] == 'style1') {
-                            $this->render_icon($weather_code, $is_day);
+                            $this->render_icon($weather_code, $is_day, $weather_description);
                         }
 
                         if ($settings['layout'] != 'style3') {
@@ -799,20 +845,20 @@ class Weather extends Widget_Base {
                         } ?>
 
                         <div class="eead-weather-time">
-                            <?php echo esc_html($this->get_time($localtime, 'l, d  M')); ?>
+                            <?php echo esc_html($this->get_time($localtime, 'l, j M')); ?>
                         </div>
                     </div>
 
                     <?php
                     if ($settings['layout'] == 'style3') {
-                        $this->render_icon($weather_code, $is_day);
+                        $this->render_icon($weather_code, $is_day, $weather_description);
                     } ?>
 
 
                     <div class="eead-weather-detail">
                         <?php
                         if ($settings['layout'] == 'style2') {
-                            $this->render_icon($weather_code, $is_day);
+                            $this->render_icon($weather_code, $is_day, $weather_description);
                         }
 
                         if ($settings['layout'] == 'style3') {
@@ -836,10 +882,13 @@ class Weather extends Widget_Base {
                 <?php if ($settings['hide_weather_params'] != 'yes') { ?>
                     <div class="eead-weather-parameters">
                         <?php
-                        $show_params = array('wind', 'humidity', 'pressure', 'cloudcover', 'visibility', 'precip', 'uv_index');
+                        $show_params = is_array($settings['weather_params']) ? $settings['weather_params'] : array('wind', 'humidity', 'pressure', 'cloudcover', 'visibility', 'precip', 'uv_index');
                         foreach ($show_params as $param) {
+                            if (!isset($temp_param[$param])) {
+                                continue;
+                            }
                             echo '<div class="eead-weather-' . esc_attr($param) . '">';
-                            echo '<span class="eead-weather-label"><i class="wi ' . esc_attr($temp_param[$param]['icon']) . '"></i><span>' . esc_html($temp_param[$param]['label']) . '</span></span>';
+                            echo '<span class="eead-weather-label"><i class="wi ' . esc_attr($temp_param[$param]['icon']) . '" aria-hidden="true"></i><span>' . esc_html($temp_param[$param]['label']) . '</span></span>';
                             echo '<span class="eead-weather-value">' . esc_html($temp_param[$param]['value']) . '</span>';
                             echo '</div>';
                         }
@@ -848,7 +897,7 @@ class Weather extends Widget_Base {
                 <?php } ?>
 
                 <?php if ($settings['hide_last_updated_time'] != 'yes') { ?>
-                    <div class="eead-weather-last-update"><?php echo esc_html__('Last Updated: ', 'easy-elementor-addons') . esc_html($observation_time); ?></div>
+                    <div class="eead-weather-last-update"><?php echo esc_html__('Last Updated: ', 'easy-elementor-addons') . esc_html($this->get_observation_time($observation_time, $data['location'])); ?></div>
                 <?php } ?>
             </div>
         </div>
@@ -861,7 +910,21 @@ class Weather extends Widget_Base {
         echo '</div>';
     }
 
-    protected function render_icon($weather_code, $is_day) {
+    /** The API gives the observation time in UTC; show it in the location's own time zone. */
+    protected function get_observation_time($observation_time, $location) {
+        $tz_id = isset($location['timezone_id']) ? $location['timezone_id'] : '';
+        try {
+            $time = new \DateTime($observation_time, new \DateTimeZone('UTC'));
+            if ($tz_id) {
+                $time->setTimezone(new \DateTimeZone($tz_id));
+            }
+            return $time->format(get_option('time_format', 'g:i a')) . ($tz_id ? '' : ' UTC');
+        } catch (\Exception $e) {
+            return $observation_time;
+        }
+    }
+
+    protected function render_icon($weather_code, $is_day, $description = '') {
         $icon_mapping = array(
             395 => 'wi-' . $is_day . '-storm-showers',
             392 => 'wi-' . $is_day . '-storm-showers',
@@ -906,14 +969,18 @@ class Weather extends Widget_Base {
             182 => 'wi-' . $is_day . '-sleet',
             179 => 'wi-' . $is_day . '-snow',
             176 => 'wi-' . $is_day . '-sprinkle',
+            149 => 'wi-smoke',
             143 => 'wi-' . $is_day . '-sprinkle',
             122 => 'wi-' . $is_day . '-fog',
             119 => 'wi-' . $is_day . '-cloudy',
             116 => 'wi-' . $is_day . '-cloudy',
-            113 => 'wi-day-sunny'
+            113 => $is_day === 'day' ? 'wi-day-sunny' : 'wi-night-clear'
         );
+        // When the condition text is hidden the icon carries its meaning.
+        $a11y = ('yes' === $this->get_settings_for_display('hide_weather_description') && '' !== $description) ? ' role="img" aria-label="' . esc_attr(trim($description)) . '"' : ' aria-hidden="true"';
         echo '<div class="eead-weather-icon">';
-        echo '<i class="wi ' . esc_attr($icon_mapping[$weather_code] ?? 'wi-na') . '"></i>';
+        // A code the map does not know yet gets a plain cloud rather than the text "N/A".
+        echo '<i class="wi ' . esc_attr($icon_mapping[$weather_code] ?? 'wi-cloud') . '"' . $a11y . '></i>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
         echo '</div>';
     }
 
@@ -943,7 +1010,6 @@ class Weather extends Widget_Base {
 
     protected function get_weather_data($weatherstackApiKey) {
         $settings = $this->get_settings_for_display();
-        $widgetID = $this->get_id();
 
         $city = $settings['city_location'];
         $country = $settings['country_location'];
@@ -955,8 +1021,25 @@ class Weather extends Widget_Base {
         }
 
         $location = $city . ',' . $country;
-        $transientKey = 'eead_weather_' . md5($location . $widgetID);
+        // Shared by every widget showing this place, to spare the API quota.
+        $transientKey = 'eead_weather_' . md5(strtolower(trim($location)));
+        $errorKey = 'eead_weather_err_' . md5(strtolower(trim($location)));
+        // Last good data, shown while the service is briefly failing (rate limits, outages).
+        $lastKey = 'eead_weather_last_' . md5(strtolower(trim($location)));
         $weatherTransientData = get_transient($transientKey);
+
+        // A recent failure is not retried on every page view.
+        $recent_error = get_transient($errorKey);
+        if (empty($weatherTransientData) && false !== $recent_error) {
+            $last = get_transient($lastKey);
+            if (!empty($last)) {
+                return $last;
+            }
+            if (current_user_can('edit_posts')) {
+                echo esc_html($recent_error);
+            }
+            return;
+        }
 
         if (!isset($weatherTransientData) || empty($weatherTransientData)) {
             /* Weather Stack Api Args */
@@ -972,13 +1055,18 @@ class Weather extends Widget_Base {
                 $request_args, 'http://api.weatherstack.com/current'
             );
 
-            $response = wp_remote_get($request_url, array('timeout' => 30));
+            $response = wp_remote_get($request_url, array('timeout' => 10));
             $can_see_errors = current_user_can('edit_posts');
 
             /* Check if something went wrong while fetching from api */
             if (is_wp_error($response) || 200 !== (int) wp_remote_retrieve_response_code($response)) {
+                $detail = is_wp_error($response) ? $response->get_error_message() : 'HTTP ' . (int) wp_remote_retrieve_response_code($response);
+                set_transient($errorKey, esc_html__('Oops! Something went wrong while fetching the data', 'easy-elementor-addons') . ' (' . $detail . ')', 5 * MINUTE_IN_SECONDS);
+                if (get_transient($lastKey)) {
+                    return get_transient($lastKey);
+                }
                 if ($can_see_errors) {
-                    echo esc_html__('Oops! Something went wrong while fetching the data', 'easy-elementor-addons');
+                    echo esc_html(get_transient($errorKey));
                 }
                 return;
             }
@@ -986,6 +1074,10 @@ class Weather extends Widget_Base {
             $remote_data = json_decode(wp_remote_retrieve_body($response), true);
 
             if (!$remote_data || !is_array($remote_data)) {
+                set_transient($errorKey, esc_html__('Oops! Something went wrong while fetching the data', 'easy-elementor-addons'), 5 * MINUTE_IN_SECONDS);
+                if (get_transient($lastKey)) {
+                    return get_transient($lastKey);
+                }
                 if ($can_see_errors) {
                     echo esc_html__('Oops! Something went wrong while fetching the data', 'easy-elementor-addons');
                 }
@@ -993,6 +1085,10 @@ class Weather extends Widget_Base {
             }
 
             if (isset($remote_data['error'])) {
+                set_transient($errorKey, isset($remote_data['error']['info']) ? $remote_data['error']['info'] : esc_html__('Weather data of this location not found.', 'easy-elementor-addons'), 5 * MINUTE_IN_SECONDS);
+                if (get_transient($lastKey)) {
+                    return get_transient($lastKey);
+                }
                 if ($can_see_errors) {
                     if (isset($remote_data['error']['info'])) {
                         echo esc_html($remote_data['error']['info']);
@@ -1003,6 +1099,7 @@ class Weather extends Widget_Base {
                 return;
             }
             set_transient($transientKey, $remote_data, max(60, absint($settings['cache_expiration'])));
+            set_transient($lastKey, $remote_data, DAY_IN_SECONDS);
 
             return $remote_data;
         } else {

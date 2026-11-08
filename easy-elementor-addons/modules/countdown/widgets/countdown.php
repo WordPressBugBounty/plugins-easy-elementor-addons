@@ -48,7 +48,9 @@ class Countdown extends Widget_Base {
     }
 
     public function get_script_depends() {
-        return ['countdown'];
+        // The ticker lives in frontend.js; the generic 'countdown' handle is
+        // also used by other plugins and themes for different libraries.
+        return [];
     }
 
     public function get_style_depends() {
@@ -64,10 +66,62 @@ class Countdown extends Widget_Base {
         );
 
         $this->add_control(
+            'countdown_timer_type', [
+                'label' => esc_html__('Timer Type', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'due_date',
+                'options' => [
+                    'due_date' => esc_html__('Due Date', 'easy-elementor-addons'),
+                    'evergreen' => esc_html__('Evergreen (per visitor)', 'easy-elementor-addons'),
+                ],
+            ]
+        );
+
+        $this->add_control(
             'countdown_due_time', [
                 'label' => esc_html__('Countdown Date & Time', 'easy-elementor-addons'),
                 'type' => Controls_Manager::DATE_TIME,
-                'default' => gmdate("Y-m-d", strtotime("+ 2 day"))
+                'default' => gmdate("Y-m-d", strtotime("+ 2 day")),
+                'description' => esc_html__('In the site timezone (Settings > General).', 'easy-elementor-addons'),
+                'condition' => [
+                    'countdown_timer_type!' => 'evergreen',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'countdown_evergreen_hours', [
+                'label' => esc_html__('Hours', 'easy-elementor-addons'),
+                'type' => Controls_Manager::NUMBER,
+                'min' => 0,
+                'default' => 24,
+                'description' => esc_html__('Each visitor gets their own countdown, starting on their first visit (remembered in their browser).', 'easy-elementor-addons'),
+                'condition' => [
+                    'countdown_timer_type' => 'evergreen',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'countdown_evergreen_minutes', [
+                'label' => esc_html__('Minutes', 'easy-elementor-addons'),
+                'type' => Controls_Manager::NUMBER,
+                'min' => 0,
+                'max' => 59,
+                'default' => 0,
+                'condition' => [
+                    'countdown_timer_type' => 'evergreen',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'countdown_evergreen_restart', [
+                'label' => esc_html__('Restart When Finished', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'condition' => [
+                    'countdown_timer_type' => 'evergreen',
+                ]
             ]
         );
 
@@ -81,6 +135,7 @@ class Countdown extends Widget_Base {
                     'none' => esc_html__('None', 'easy-elementor-addons'),
                     'text' => esc_html__('Message', 'easy-elementor-addons'),
                     'url' => esc_html__('Redirection Link', 'easy-elementor-addons'),
+                    'hide' => esc_html__('Hide Timer', 'easy-elementor-addons'),
                 ],
                 'default' => 'none'
             ]
@@ -859,7 +914,8 @@ class Countdown extends Widget_Base {
 
         $settings = $this->get_settings_for_display();
         $due_date = '';
-        if (!empty($settings['countdown_due_time'])) {
+        $evergreen = 'evergreen' === $settings['countdown_timer_type'];
+        if (!$evergreen && !empty($settings['countdown_due_time'])) {
             try {
                 $ts = (new \DateTime($settings['countdown_due_time'], wp_timezone()))->getTimestamp();
                 $due_date = gmdate('Y-m-d\TH:i:s\Z', $ts);
@@ -874,6 +930,14 @@ class Countdown extends Widget_Base {
             'data-expire-type' => $settings['countdown_expire_type'],
         ]);
 
+        if ($evergreen) {
+            $this->add_render_attribute('eead-countdown', [
+                'data-evergreen' => max(0, (int) $settings['countdown_evergreen_hours']) * 3600 + max(0, (int) $settings['countdown_evergreen_minutes']) * 60,
+                'data-restart' => 'yes' === $settings['countdown_evergreen_restart'] ? 'yes' : 'no',
+                'data-id' => $this->get_id(),
+            ]);
+        }
+
         if ($settings['countdown_separator']) {
             $separator = '<span class="eead-countdown-separator">:</span>';
         }
@@ -884,7 +948,7 @@ class Countdown extends Widget_Base {
         ?>
 
         <div <?php $this->print_render_attribute_string('eead-countdown'); ?>>
-            <div class="eead-countdown-items" data-date="<?php echo esc_attr($due_date); ?>">
+            <div class="eead-countdown-items" role="timer" data-date="<?php echo esc_attr($due_date); ?>">
                 <?php
                 if (!empty($settings['countdown_days'])) {
                     ?>

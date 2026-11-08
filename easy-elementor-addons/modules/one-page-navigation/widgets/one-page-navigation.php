@@ -753,7 +753,7 @@ class OnePageNavigation extends Widget_Base {
             $this->add_render_attribute('tooltip', 'class', 'eead-tooltip-arrow');
         }
         ?>
-        <div class='eead-one-page-nav-container'>
+        <nav class="eead-one-page-nav-container" aria-label="<?php esc_attr_e('Page sections', 'easy-elementor-addons'); ?>">
             <ul <?php $this->print_render_attribute_string('onepage-nav'); ?>>
                 <?php
                 foreach ($settings['nav_dots'] as $dot) {
@@ -762,13 +762,14 @@ class OnePageNavigation extends Widget_Base {
                         <?php
                         if ($settings['nav_tooltip'] == 'yes') {
                             ?>
-                            <span <?php $this->print_render_attribute_string('tooltip'); ?>>
+                            <span <?php $this->print_render_attribute_string('tooltip'); ?> aria-hidden="true">
                                 <?php echo esc_html($dot['section_title']); ?>
                             </span>
                             <?php
                         }
                         ?>
-                        <a href="#" data-row-id="<?php echo esc_attr($dot['section_id']); ?>" aria-label="<?php echo esc_attr($dot['section_title']); ?>">
+                        <?php $section_id = ltrim((string) $dot['section_id'], '#'); ?>
+                        <a href="<?php echo esc_attr('#' . $section_id); ?>" data-row-id="<?php echo esc_attr($dot['section_id']); ?>" aria-label="<?php echo esc_attr($dot['section_title']); ?>">
                             <span class="eead-nav-dot">
                                 <?php
                                 Icons_Manager::render_icon($dot['select_dot_icon'], ['aria-hidden' => 'true']);
@@ -780,7 +781,7 @@ class OnePageNavigation extends Widget_Base {
                 }
                 ?>
             </ul>
-        </div>
+        </nav>
 
         <?php if (Plugin::instance()->editor->is_edit_mode()) { ?>
             <div class="eead-editor-placeholder">

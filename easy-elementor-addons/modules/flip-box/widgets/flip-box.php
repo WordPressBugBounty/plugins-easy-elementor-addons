@@ -482,7 +482,7 @@ class FlipBox extends Widget_Base {
                 'selectors' => [
                     '{{WRAPPER}} .eead-flip-box .elementor-view-stacked .elementor-icon' => 'background-color: {{VALUE}}',
                     '{{WRAPPER}} .eead-flip-box .elementor-view-framed .elementor-icon, {{WRAPPER}} .eead-flip-box .elementor-view-default .elementor-icon' => 'color: {{VALUE}}; border-color: {{VALUE}}',
-                    '{{WRAPPER}} .eead-flip-box .elementor-view-framed .elementor-icon svg, .elementor-view-default .elementor-icon svg' => 'fill: {{VALUE}};',
+                    '{{WRAPPER}} .eead-flip-box .elementor-view-framed .elementor-icon svg, {{WRAPPER}} .eead-flip-box .elementor-view-default .elementor-icon svg' => 'fill: {{VALUE}};',
                 ],
                 'condition' => [
                     'graphic_element' => 'icon',
@@ -1206,6 +1206,11 @@ class FlipBox extends Widget_Base {
         ]);
 
         $this->add_render_attribute('box_link', 'class', 'eead-fb-link');
+        // The whole-box link has no text of its own; name it after the box.
+        $box_label = wp_strip_all_tags((string) ($settings['back_title_text'] ?: ($settings['front_title_text'] ?: $settings['button_text'])));
+        if ('' !== trim($box_label)) {
+            $this->add_render_attribute('box_link', 'aria-label', trim($box_label));
+        }
 
         if (!empty($settings['link']['url'])) {
             $this->add_link_attributes('button', $settings['link']);
@@ -1223,7 +1228,12 @@ class FlipBox extends Widget_Base {
 
         $this->add_render_attribute('box_front_title_tags', 'class', 'eead-fb-layer-title');
         ?>
-        <div class="eead-flip-box">
+        <?php
+        // Focusable so Tab or a tap flips it (the CSS flips on :focus-within too).
+        // A whole-box link already takes focus, so it isn't needed twice then.
+        $box_linked = $settings['link_click'] === 'box' && !empty($settings['link']['url']);
+        ?>
+        <div class="eead-flip-box"<?php echo $box_linked ? '' : ' tabindex="0"'; ?>>
             <div class="eead-fb-layer eead-fb-front">
                 <div class="eead-fb-layer-overlay">
                     <div class="eead-fb-layer-inner">
@@ -1241,13 +1251,13 @@ class FlipBox extends Widget_Base {
                             </div>
                         <?php } ?>
 
-                        <?php if (!empty($settings['front_title_text'])) { ?>
+                        <?php if ('' !== (string) $settings['front_title_text']) { ?>
                             <<?php echo esc_attr(eead_check_allowed_html_tags($settings['front_title_tags'])); ?>             <?php $this->print_render_attribute_string('box_front_title_tags'); ?>>
                                 <?php echo wp_kses($settings['front_title_text'], eead_allow_tags('title')); ?>
                             </<?php echo esc_attr(eead_check_allowed_html_tags($settings['front_title_tags'])); ?>>
                         <?php } ?>
 
-                        <?php if (!empty($settings['front_description_text'])) { ?>
+                        <?php if ('' !== (string) $settings['front_description_text']) { ?>
                             <div class="eead-fb-layer-desc">
                                 <?php echo wp_kses($settings['front_description_text'], eead_allow_tags('text')); ?>
                             </div>
@@ -1259,19 +1269,19 @@ class FlipBox extends Widget_Base {
             <div class="eead-fb-layer eead-fb-back">
                 <div class="eead-fb-layer-overlay">
                     <div class="eead-fb-layer-inner">
-                        <?php if (!empty($settings['back_title_text'])) { ?>
+                        <?php if ('' !== (string) $settings['back_title_text']) { ?>
                             <<?php echo esc_attr(eead_check_allowed_html_tags($settings['back_title_tags'])); ?>             <?php $this->print_render_attribute_string('box_front_title_tags'); ?>>
                                 <?php echo wp_kses($settings['back_title_text'], eead_allow_tags('title')); ?>
                             </<?php echo esc_attr(eead_check_allowed_html_tags($settings['back_title_tags'])); ?>>
                         <?php } ?>
 
-                        <?php if (!empty($settings['back_description_text'])) { ?>
+                        <?php if ('' !== (string) $settings['back_description_text']) { ?>
                             <div class="eead-fb-layer-desc">
                                 <?php echo wp_kses($settings['back_description_text'], eead_allow_tags('text')); ?>
                             </div>
                         <?php } ?>
 
-                        <?php if (!empty($settings['button_text'])) { ?>
+                        <?php if ('' !== (string) $settings['button_text']) { ?>
                             <a <?php $this->print_render_attribute_string('button'); ?>>
                                 <?php echo wp_kses($settings['button_text'], eead_allow_tags('title')); ?>
                             </a>

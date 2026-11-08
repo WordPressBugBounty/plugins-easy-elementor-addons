@@ -24,6 +24,7 @@ Accordion
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1em;
     cursor: pointer;
     padding: var(--eead-accordion-header-padding, 1em);
     background-color: var(--eead-accordion-header-background, var(--eead-light-bg-color));
@@ -34,14 +35,22 @@ Accordion
     background-color: var(--eead-accordion-header-background-active, var(--eead-accordion-header-background, var(--eead-light-bg-color)));
 }
 
-.eead-accordion-container .eead-accordion-title h3 {
+.eead-accordion-container .eead-accordion-title h3,
+.eead-accordion-container .eead-accordion-title-text {
+    flex: 1 1 auto;
+    min-width: 0;
     font-size: 1em;
     margin: 0;
     color: var(--eead-accordion-title-color, #333)
 }
 
-.eead-accordion-container .eead-each-accordion.eead-open .eead-accordion-title h3 {
+.eead-accordion-container .eead-each-accordion.eead-open .eead-accordion-title h3,
+.eead-accordion-container .eead-each-accordion.eead-open .eead-accordion-title-text {
     color: var(--eead-accordion-title-color-active, var(--eead-accordion-title-color, #333));
+}
+
+.eead-accordion-container .eead-accordion-icon {
+    flex: 0 0 auto;
 }
 
 .eead-accordion-container .eead-each-accordion .eead-accordion-open-icon,
@@ -60,7 +69,7 @@ Accordion
     overflow-y: auto;
     color: var(--eead-accordion-content-color, inherit);
     padding: var(--eead-accordion-content-padding, 1em);
-    background: var(--eead-accordion-content-bg-color, trasparent);
+    background: var(--eead-accordion-content-bg-color, transparent);
     border-radius: var(--eead-accordion-content-border-radius, 0);
 }
 
@@ -70,7 +79,6 @@ Accordion
 
 .eead-accordion-icon-left .eead-accordion-container .eead-accordion-title {
     justify-content: initial;
-    gap: 1em;
 }
 
 .eead-accordion-icon-left .eead-accordion-container .eead-accordion-icon {
@@ -141,8 +149,12 @@ Advanced Button
 
 .eead-ab-button .eead-ab-button-icon i,
 .eead-ab-button .eead-ab-button-icon svg {
-    font-size: inherit;
+    font-size: var(--eead-ab-button-icon-size, inherit);
     width: 1em;
+    height: 1em;
+    /* Block with line-height 1, so the icon centers on the text instead of sitting on the text's line box. */
+    display: block;
+    line-height: 1;
     color: var(--eead-ab-button-text-color, inherit);
     fill: var(--eead-ab-button-text-color, inherit);
     transition: all .3s ease-out;
@@ -197,18 +209,6 @@ Advanced Button
 /* Alignment */
 .eead-ab-button-wrapper {
     display: flex;
-}
-
-.eead-ab-button-align-center .eead-ab-button-wrapper {
-    justify-content: center;
-}
-
-.eead-ab-button-align-right .eead-ab-button-wrapper {
-    justify-content: flex-end;
-}
-
-.eead-ab-button-align-stretch .eead-ab-button-wrapper {
-    flex-direction: column;
 }
 
 /* Icon Alignment */
@@ -282,31 +282,27 @@ Advanced Button
 }
 
 .eead-ab-button-effect-d .eead-ab-button:hover:after {
-    width: 90%;
-    opacity: 1
-}
-
-.eead-ab-button-effect-d .eead-ab-button:active:after {
     width: 101%;
     opacity: 1
 }
 
-.eead-ab-button-effect-e .eead-ab-button:after {
-    width: 100%;
-    height: 0;
-    top: 50%;
-    left: 50%;
-    opacity: 0;
-    transform: translateX(-50%) translateY(-50%) rotate(45deg)
-}
-
-.eead-ab-button-effect-e .eead-ab-button:hover:after {
-    height: 260%;
+.eead-ab-button-effect-d .eead-ab-button:active:after {
     opacity: 1
 }
 
+.eead-ab-button-effect-e .eead-ab-button:after {
+    width: 150%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    top: 50%;
+    left: 50%;
+    opacity: 0;
+    transform: translateX(-50%) translateY(-50%) rotate(45deg) scaleY(0)
+}
+
+.eead-ab-button-effect-e .eead-ab-button:hover:after,
 .eead-ab-button-effect-e .eead-ab-button:active:after {
-    height: 400%;
+    transform: translateX(-50%) translateY(-50%) rotate(45deg) scaleY(1);
     opacity: 1
 }
 
@@ -319,13 +315,9 @@ Advanced Button
     transform: translateX(-50%) translateY(-50%)
 }
 
-.eead-ab-button-effect-f .eead-ab-button:hover:after {
-    height: 80%;
-    opacity: 1
-}
-
+.eead-ab-button-effect-f .eead-ab-button:hover:after,
 .eead-ab-button-effect-f .eead-ab-button:active:after {
-    height: 130%;
+    height: 102%;
     opacity: 1
 }
 
@@ -357,6 +349,8 @@ Advanced Button
     z-index: -1;
     transform: rotate3d(0, 0, 1, -45deg) translate3d(0, -3em, 0);
     transform-origin: 0 100%;
+    /* Hidden at rest: on a button taller than one line the rotated fill pokes into a corner. */
+    opacity: 0;
     transition: transform .3s, opacity .3s, background-color .3s
 }
 
@@ -417,6 +411,72 @@ Advanced Button
     transform: translate3d(0, 100%, 0)
 }
 
+.eead-ab-button-effect-j .eead-ab-button::before,
+.eead-ab-button-effect-j .eead-ab-button::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    width: 100%;
+    height: 51%;
+    left: 0;
+    transition: transform .3s;
+    transition-timing-function: cubic-bezier(.2, 1, .3, 1);
+}
+
+.eead-ab-button-effect-j .eead-ab-button::before {
+    top: 0;
+    transform: translate3d(0, -100%, 0);
+}
+
+.eead-ab-button-effect-j .eead-ab-button::after {
+    bottom: 0;
+    transform: translate3d(0, 100%, 0);
+}
+
+.eead-ab-button-effect-j .eead-ab-button:hover::before,
+.eead-ab-button-effect-j .eead-ab-button:hover::after {
+    transform: translate3d(0, 0, 0);
+}
+
+/* Icon hover */
+.eead-ab-button .eead-ab-button-icon {
+    transition: transform .3s ease-out;
+}
+
+.eead-ab-icon-hover-nudge .eead-ab-button:hover .eead-ab-button-icon {
+    transform: translateX(4px);
+}
+
+.eead-ab-icon-hover-nudge.eead-ab-icon-align-left .eead-ab-button:hover .eead-ab-button-icon {
+    transform: translateX(-4px);
+}
+
+.eead-ab-icon-hover-nudge.eead-ab-icon-align-top .eead-ab-button:hover .eead-ab-button-icon {
+    transform: translateY(-4px);
+}
+
+.eead-ab-icon-hover-nudge.eead-ab-icon-align-bottom .eead-ab-button:hover .eead-ab-button-icon {
+    transform: translateY(4px);
+}
+
+.eead-ab-icon-hover-grow .eead-ab-button:hover .eead-ab-button-icon {
+    transform: scale(1.2);
+}
+
+.eead-ab-icon-hover-spin .eead-ab-button-icon {
+    transition-duration: .5s;
+}
+
+.eead-ab-icon-hover-spin .eead-ab-button:hover .eead-ab-button-icon {
+    transform: rotate(360deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .eead-ab-button:hover .eead-ab-button-icon {
+        transform: none;
+    }
+}
+
 @keyframes eead-move-up-initial {
     to {
         transform: translate3d(0, -105%, 0);
@@ -468,18 +528,7 @@ Advanced Heading
 
 .eead-advanced-heading .eead-ah-sub-heading.eead-ah-line-bottom span {
     flex-direction: column;
-}
-
-.eead-ah-align-left .eead-advanced-heading .eead-ah-sub-heading.eead-ah-line-bottom span {
-    align-items: flex-start;
-}
-
-.eead-ah-align-center .eead-advanced-heading .eead-ah-sub-heading.eead-ah-line-bottom span {
-    align-items: center;
-}
-
-.eead-ah-align-right .eead-advanced-heading .eead-ah-sub-heading.eead-ah-line-bottom span {
-    align-items: flex-end;
+    align-items: var(--eead-ah-justify, center);
 }
 
 .eead-advanced-heading .eead-ah-sub-heading span::before,
@@ -506,18 +555,7 @@ Advanced Heading
 
 .eead-advanced-heading .eead-ah-main-heading.eead-ah-line-bottom span.eead-ah-main-heading-wrap {
     flex-direction: column;
-}
-
-.eead-ah-align-left .eead-advanced-heading .eead-ah-main-heading.eead-ah-line-bottom span.eead-ah-main-heading-wrap {
-    align-items: flex-start;
-}
-
-.eead-ah-align-center .eead-advanced-heading .eead-ah-main-heading.eead-ah-line-bottom span.eead-ah-main-heading-wrap {
-    align-items: center;
-}
-
-.eead-ah-align-right .eead-advanced-heading .eead-ah-main-heading.eead-ah-line-bottom span.eead-ah-main-heading-wrap {
-    align-items: flex-end;
+    align-items: var(--eead-ah-justify, center);
 }
 
 .eead-advanced-heading .eead-ah-main-heading span.eead-ah-main-heading-wrap::before,
@@ -542,6 +580,22 @@ Advanced Heading
     flex-wrap: wrap;
 }
 
+/* In flex layouts the gap spaces the split text; inline, the space is a margin. */
+.eead-advanced-heading .eead-ah-main-heading.eead-ah-line- .eead-ah-split-text:last-child {
+    margin-inline-start: var(--eead-ah-split-space, 0);
+}
+
+.eead-advanced-heading .eead-ah-main-heading.eead-ah-line- .eead-ah-split-text:first-child {
+    margin-inline-end: var(--eead-ah-split-space, 0);
+}
+
+.eead-ah-split-fill-yes .eead-advanced-heading .eead-ah-split-text {
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
 /* Without a line there is nothing to lay out beside the text, so the heading
    and its split text flow as one run of words and wrap between any of them. */
 .eead-advanced-heading .eead-ah-main-heading.eead-ah-line- span.eead-ah-main-heading-wrap,
@@ -561,20 +615,11 @@ Advanced Heading
     transition: all .3s ease-out;
     position: absolute;
     display: flex;
+    justify-content: var(--eead-ah-justify, center);
+    /* A big backdrop word wider than a phone would otherwise scroll the whole page sideways. */
+    overflow-x: clip;
     transform: translateX(var(--eead-ah-adv-heading-offset-x, 0)) translateY(var(--eead-ah-adv-heading-offset-y, 0)) rotate(var(--eead-ah-adv-heading-rotate, 0));
-    transform-origin: var(--eead-ah-adv-heading-rotate-origin, center-center);
-}
-
-.eead-ah-align-left .eead-advanced-heading .eead-ah-adv-heading {
-    justify-content: flex-start;
-}
-
-.eead-ah-align-center .eead-advanced-heading .eead-ah-adv-heading {
-    justify-content: center;
-}
-
-.eead-ah-align-right .eead-advanced-heading .eead-ah-adv-heading {
-    justify-content: flex-end;
+    transform-origin: var(--eead-ah-adv-heading-rotate-origin, center center);
 }
 
 @media screen and (min-width:768px) and (max-width:1024px) {
@@ -698,6 +743,26 @@ Advanced Icon Box
     margin: 0;
 }
 
+.eead-advanced-icon-box .eead-aib-title-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Link Whole Box: the title link covers the widget (the Elementor widget is the
+   positioned ancestor, so padding and borders set on it are covered too);
+   Read More stays clickable above it. */
+.eead-advanced-icon-box.eead-aib-linked .eead-aib-title-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.eead-advanced-icon-box.eead-aib-linked .eead-aib-button {
+    position: relative;
+    z-index: 2;
+}
+
 .eead-advanced-icon-box .eead-aib-button {
     display: inline-flex;
     padding: 10px 20px;
@@ -771,6 +836,13 @@ Advanced Google Map
     opacity: 0;
 }
 
+.eead-gmap-embed {
+    display: block;
+    width: 100%;
+    height: 300px;
+    border: 0;
+}
+
 
 /*--------------------------------------------------------------
 Animated Heading 
@@ -785,6 +857,14 @@ Animated Heading
 
 .eead-ah-heading .animated {
     display: inline-block;
+}
+
+.eead-animated-slow .animated {
+    animation-duration: 2s;
+}
+
+.eead-animated-fast .animated {
+    animation-duration: .5s;
 }
 
 
@@ -845,15 +925,39 @@ Business Hours
 Circular Progressbar
 --------------------------------------------------------------*/
 .eead-circular-progressbar {
+    --eead-cb-circle-size: 80px;
+    --eead-cb-circle-stroke: 10px;
+    --eead-cb-duration: 1000ms;
     display: flex;
     justify-content: center;
 }
 
+/* Geometry from the (responsive) variables; the SVG attributes are the fallback. */
+.eead-circular-progressbar-box svg {
+    width: calc(var(--eead-cb-circle-size) * 2 + var(--eead-cb-circle-stroke));
+    height: calc(var(--eead-cb-circle-size) * 2 + var(--eead-cb-circle-stroke));
+}
+
 .eead-circular-progressbar-box svg circle {
+    cx: calc(var(--eead-cb-circle-size) + var(--eead-cb-circle-stroke) / 2);
+    cy: calc(var(--eead-cb-circle-size) + var(--eead-cb-circle-stroke) / 2);
+    r: var(--eead-cb-circle-size);
+    stroke-width: var(--eead-cb-circle-stroke);
     fill: none;
     stroke: #000;
     stroke-linecap: round;
-    transition: stroke-dashoffset 1s linear;
+    transition: stroke-dashoffset var(--eead-cb-duration) ease-out;
+}
+
+/* A round cap would still draw a dot at 0%. */
+.eead-circular-progressbar.eead-cb-empty svg circle:nth-child(2) {
+    visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .eead-circular-progressbar-box svg circle {
+        transition: none;
+    }
 }
 
 .eead-circular-progressbar-box svg circle:nth-child(1) {
@@ -1110,6 +1214,11 @@ Counter
 /*--------------------------------------------------------------
 Drop Bar
 --------------------------------------------------------------*/
+/* Never wider than the screen; frontend.js nudges it back inside if needed. */
+.eead-dropbar .eead-drop {
+    max-width: calc(100vw - 16px);
+}
+
 .eead-dropbar .eead-dropbar-button {
     background: #111;
     display: inline-flex;
@@ -1184,7 +1293,19 @@ Dual Button
 .eead-dual-buttons .eead-dual-button svg {
     height: 1em;
     width: 1em;
-    fill: #FFF;
+    fill: currentColor;
+}
+
+/* Equal Width: a grid of 1fr tracks sizes both to the longer label. */
+.eead-dual-equal-yes .eead-dual-button-container {
+    display: grid;
+    grid-auto-flow: var(--eead-dual-grid-flow, column);
+    grid-auto-columns: 1fr;
+}
+
+.eead-dual-equal-yes .eead-dual-button {
+    height: 100%;
+    justify-content: center;
 }
 
 .eead-dual-button-separator {
@@ -1483,8 +1604,28 @@ Dual Heading Style
 .eead-dual-heading {
     display: flex;
     flex-wrap: wrap;
+    column-gap: 0.25em;
     margin: 0;
     line-height: 1.3;
+}
+
+/* A link wraps both parts; it takes over the layout so alignment and spacing still apply. */
+.eead-dual-heading .eead-heading-link {
+    display: flex;
+    flex-wrap: inherit;
+    align-items: inherit;
+    justify-content: inherit;
+    column-gap: inherit;
+    row-gap: inherit;
+    width: 100%;
+    color: inherit;
+    text-decoration: none;
+}
+
+.eead-dual-heading .eead-dh-break {
+    display: none;
+    flex-basis: 100%;
+    height: 0;
 }
 
 .eead-dual-heading .eead-first-text,
@@ -1535,6 +1676,7 @@ Feature List
 
 .eead-feature-list .eead-fl-icon-box {
     display: flex;
+    flex-shrink: 0; /* long item text must not squeeze the icon or image */
     padding: 10px;
     align-items: center;
     justify-content: center;
@@ -1548,6 +1690,30 @@ Feature List
 .eead-feature-list .eead-fl-subtitle {
     font-size: 1.2em;
     line-height: 1;
+}
+
+/* Connector line: the icon sits in a column whose leftover height, plus the
+   gap to the next item, is drawn as the line. */
+.eead-fl-connector-yes .eead-fl-icon-wrap {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: center;
+    align-self: stretch;
+}
+
+.eead-fl-connector-yes .eead-fl-icon-wrap::after {
+    content: "";
+    display: var(--eead-fl-line-display, block);
+    flex: 1 1 auto;
+    width: 0;
+    min-height: 8px;
+    margin-bottom: calc(-1 * var(--eead-fl-gap, 0px));
+    border-left: var(--eead-fl-line-width, 2px) var(--eead-fl-line-style, solid) var(--eead-fl-line-color, #D9DCE3);
+}
+
+.eead-fl-connector-yes .eead-fl-item:last-child .eead-fl-icon-wrap::after {
+    display: none;
 }
 
 /* Framed */
@@ -2021,59 +2187,37 @@ Flip Box
     position: relative;
     perspective: 1000px;
     transform-style: preserve-3d
-}
-
-/* Icon */
+}/* Icon */
 .eead-flip-box .elementor-icon {
     color: #fff
-}
-
-.eead-flip-box .elementor-icon svg {
+}.eead-flip-box .elementor-icon svg {
     fill: #fff
-}
-
-.eead-flip-box .elementor-view-framed .elementor-icon {
+}.eead-flip-box .elementor-view-framed .elementor-icon {
     color: #fff;
     border-color: #fff
-}
-
-.eead-flip-box .elementor-view-stacked .elementor-icon {
+}.eead-flip-box .elementor-view-stacked .elementor-icon {
     color: #fff;
     background-color: rgba(0, 0, 0, 0.5)
-}
-
-.eead-flip-box .elementor-icon-wrapper {
+}.eead-flip-box .elementor-icon-wrapper {
     margin-bottom: 20px
-}
-
-/* Image */
+}/* Image */
 .eead-flip-box .eead-fb-image {
     margin: 0 0 20px 0;
     display: inline-block;
     width: 100%
-}
-
-.eead-flip-box .eead-fb-image img {
+}.eead-flip-box .eead-fb-image img {
     display: inline-block
-}
-
-.eead-flip-box .eead-fb-front {
+}.eead-flip-box .eead-fb-front {
     background-color: var(--eead-pri-color);
-}
-
-.eead-flip-box .eead-fb-back {
+}.eead-flip-box .eead-fb-back {
     background-color: var(--eead-sec-color);
     display: block
-}
-
-.eead-flip-box .eead-fb-layer {
+}.eead-flip-box .eead-fb-layer {
     position: absolute;
     width: 100%;
     height: 100%;
     transition: all .6s ease-in-out
-}
-
-.eead-flip-box .eead-fb-layer-overlay {
+}.eead-flip-box .eead-fb-layer-overlay {
     display: flex;
     width: 100%;
     height: 100%;
@@ -2082,222 +2226,158 @@ Flip Box
     align-items: stretch;
     text-align: center;
     padding: 35px
-}
-
-/* Phones: scroll long content inside the face instead of overflowing it (applied to the inner wrapper so the rotating face keeps its 3D/backface behaviour) */
-@media (max-width: 767px) {
-    .eead-flip-box .eead-fb-layer-inner {
+}/* Phones: scroll long content inside the face instead of overflowing it (applied to the inner wrapper so the rotating face keeps its 3D/backface behaviour) */
+@media (max-width: 767px) {.eead-flip-box .eead-fb-layer-inner {
         max-height: 100%;
         overflow-y: auto
     }
-}
-
-.eead-flip-box .eead-fb-layer-title {
+}.eead-flip-box .eead-fb-layer-title {
     font-size: 22px;
     color: #fff;
     margin: 0;
-}
-
-.eead-flip-box .eead-fb-layer-title:not(:last-child) {
+}.eead-flip-box .eead-fb-layer-title:not(:last-child) {
     margin: 0 0 20px 0;
     padding: 0
-}
-
-.eead-flip-box .eead-fb-layer-desc {
+}.eead-flip-box .eead-fb-layer-desc {
     color: #e5e5e5
-}
-
-.eead-flip-box .eead-fb-layer-desc:not(:last-child) {
+}.eead-flip-box .eead-fb-layer-desc:not(:last-child) {
     margin: 0 0 20px 0;
     padding: 0
-}
-
-.eead-flip-box .eead-fb-link {
+}.eead-flip-box .eead-fb-link {
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
     top: 0;
-}
-
-/* Button */
+}/* Button */
 .eead-flip-box .eead-fb-button {
     display: inline-flex;
     padding: 10px 20px;
     background: var(--eead-pri-color);
     color: #FFF;
     align-items: center;
-}
-
-/* Flip */
+}/* Flip */
 .eead-fb-effect-flip .eead-flip-box {
     perspective: 1000px;
     transform-style: preserve-3d
-}
-
-.eead-fb-effect-flip .eead-flip-box:hover .eead-fb-back {
+}.eead-fb-effect-flip .eead-flip-box:hover .eead-fb-back,
+.eead-fb-effect-flip .eead-flip-box:focus-within .eead-fb-back {
     transform: none
-}
-
-.eead-fb-effect-flip .eead-fb-layer {
+}.eead-fb-effect-flip .eead-fb-layer {
     transform-style: preserve-3d;
     backface-visibility: hidden
-}
-
-.eead-fb-effect-flip .eead-fb-front {
+}.eead-fb-effect-flip .eead-fb-front {
     transform: none;
     z-index: 1
-}
-
-.eead-fb-effect-flip.eead-fb-direction-right .eead-fb-back {
+}.eead-fb-effect-flip.eead-fb-direction-right .eead-fb-back {
     transform: rotateX(0) rotateY(-180deg)
-}
-
-.eead-fb-effect-flip.eead-fb-direction-right .eead-flip-box:hover .eead-fb-front {
+}.eead-fb-effect-flip.eead-fb-direction-right .eead-flip-box:hover .eead-fb-front,
+.eead-fb-effect-flip.eead-fb-direction-right .eead-flip-box:focus-within .eead-fb-front {
     transform: rotateX(0) rotateY(180deg)
-}
-
-.eead-fb-effect-flip.eead-fb-direction-left .eead-fb-back {
+}.eead-fb-effect-flip.eead-fb-direction-left .eead-fb-back {
     transform: rotateX(0) rotateY(180deg)
-}
-
-.eead-fb-effect-flip.eead-fb-direction-left .eead-flip-box:hover .eead-fb-front {
+}.eead-fb-effect-flip.eead-fb-direction-left .eead-flip-box:hover .eead-fb-front,
+.eead-fb-effect-flip.eead-fb-direction-left .eead-flip-box:focus-within .eead-fb-front {
     transform: rotateX(0) rotateY(-180deg)
-}
-
-.eead-fb-effect-flip.eead-fb-direction-up .eead-fb-back {
+}.eead-fb-effect-flip.eead-fb-direction-up .eead-fb-back {
     transform: rotateX(-180deg) rotateY(0)
-}
-
-.eead-fb-effect-flip.eead-fb-direction-up .eead-flip-box:hover .eead-fb-front {
+}.eead-fb-effect-flip.eead-fb-direction-up .eead-flip-box:hover .eead-fb-front,
+.eead-fb-effect-flip.eead-fb-direction-up .eead-flip-box:focus-within .eead-fb-front {
     transform: rotateX(180deg) rotateY(0)
-}
-
-.eead-fb-effect-flip.eead-fb-direction-down .eead-fb-back {
+}.eead-fb-effect-flip.eead-fb-direction-down .eead-fb-back {
     transform: rotateX(180deg) rotateY(0)
-}
-
-.eead-fb-effect-flip.eead-fb-direction-down .eead-flip-box:hover .eead-fb-front {
+}.eead-fb-effect-flip.eead-fb-direction-down .eead-flip-box:hover .eead-fb-front,
+.eead-fb-effect-flip.eead-fb-direction-down .eead-flip-box:focus-within .eead-fb-front {
     transform: rotateX(-180deg) rotateY(0)
-}
-
-/* Push */
+}/* Push */
 .eead-fb-effect-push .eead-fb-front {
     transform: none
-}
-
-.eead-fb-effect-push .eead-flip-box {
+}.eead-fb-effect-push .eead-flip-box {
     overflow: hidden
-}
-
-.eead-fb-effect-push .eead-flip-box:hover .eead-fb-back {
+}.eead-fb-effect-push .eead-flip-box:hover .eead-fb-back,
+.eead-fb-effect-push .eead-flip-box:focus-within .eead-fb-back {
     transform: none
-}
-
-.eead-fb-effect-push.eead-fb-direction-right .eead-flip-box:hover .eead-fb-front {
+}.eead-fb-effect-push.eead-fb-direction-right .eead-flip-box:hover .eead-fb-front,
+.eead-fb-effect-push.eead-fb-direction-right .eead-flip-box:focus-within .eead-fb-front {
     transform: translateX(100%) translateY(0)
-}
-
-.eead-fb-effect-push.eead-fb-direction-right .eead-fb-back {
+}.eead-fb-effect-push.eead-fb-direction-right .eead-fb-back {
     transform: translateX(-100%) translateY(0)
-}
-
-.eead-fb-effect-push.eead-fb-direction-left .eead-flip-box:hover .eead-fb-front {
+}.eead-fb-effect-push.eead-fb-direction-left .eead-flip-box:hover .eead-fb-front,
+.eead-fb-effect-push.eead-fb-direction-left .eead-flip-box:focus-within .eead-fb-front {
     transform: translateX(-100%) translateY(0)
-}
-
-.eead-fb-effect-push.eead-fb-direction-left .eead-fb-back {
+}.eead-fb-effect-push.eead-fb-direction-left .eead-fb-back {
     transform: translateX(100%) translateY(0)
-}
-
-.eead-fb-effect-push.eead-fb-direction-up .eead-flip-box:hover .eead-fb-front {
+}.eead-fb-effect-push.eead-fb-direction-up .eead-flip-box:hover .eead-fb-front,
+.eead-fb-effect-push.eead-fb-direction-up .eead-flip-box:focus-within .eead-fb-front {
     transform: translateX(0) translateY(-100%)
-}
-
-.eead-fb-effect-push.eead-fb-direction-up .eead-fb-back {
+}.eead-fb-effect-push.eead-fb-direction-up .eead-fb-back {
     transform: translateX(0) translateY(100%)
-}
-
-.eead-fb-effect-push.eead-fb-direction-down .eead-flip-box:hover .eead-fb-front {
+}.eead-fb-effect-push.eead-fb-direction-down .eead-flip-box:hover .eead-fb-front,
+.eead-fb-effect-push.eead-fb-direction-down .eead-flip-box:focus-within .eead-fb-front {
     transform: translateX(0) translateY(100%)
-}
-
-.eead-fb-effect-push.eead-fb-direction-down .eead-fb-back {
+}.eead-fb-effect-push.eead-fb-direction-down .eead-fb-back {
     transform: translateX(0) translateY(-100%)
-}
-
-/* Slide */
+}/* Slide */
 .eead-fb-effect-slide .eead-flip-box {
     overflow: hidden
-}
-
-.eead-fb-effect-slide .eead-flip-box .eead-fb-back {
+}.eead-fb-effect-slide .eead-flip-box .eead-fb-back {
     z-index: 3;
-}
-
-.eead-fb-effect-slide .eead-flip-box:hover .eead-fb-back {
+}.eead-fb-effect-slide .eead-flip-box:hover .eead-fb-back,
+.eead-fb-effect-slide .eead-flip-box:focus-within .eead-fb-back {
     transform: none;
-}
-
-.eead-fb-effect-slide.eead-fb-direction-right .eead-fb-back {
+}.eead-fb-effect-slide.eead-fb-direction-right .eead-fb-back {
     transform: translateX(-100%) translateY(0)
-}
-
-.eead-fb-effect-slide.eead-fb-direction-left .eead-fb-back {
+}.eead-fb-effect-slide.eead-fb-direction-left .eead-fb-back {
     transform: translateX(100%) translateY(0)
-}
-
-.eead-fb-effect-slide.eead-fb-direction-up .eead-fb-back {
+}.eead-fb-effect-slide.eead-fb-direction-up .eead-fb-back {
     transform: translateX(0) translateY(100%)
-}
-
-.eead-fb-effect-slide.eead-fb-direction-down .eead-fb-back {
+}.eead-fb-effect-slide.eead-fb-direction-down .eead-fb-back {
     transform: translateX(0) translateY(-100%)
-}
-
-.eead-fb-effect-slide .eead-flip-box:hover .eead-fb-front {
+}.eead-fb-effect-slide .eead-flip-box:hover .eead-fb-front,
+.eead-fb-effect-slide .eead-flip-box:focus-within .eead-fb-front {
     opacity: 0.8;
-}
-
-/* Zoom Out */
+}/* Zoom Out */
 .eead-fb-effect-zoom-out .eead-flip-box .eead-fb-front {
     transition: transform .7s, opacity .5s, visibility .7s;
     opacity: 1;
     transform: scale(1);
     z-index: 3;
-}
-
-.eead-fb-effect-zoom-out .eead-flip-box:hover .eead-fb-front {
+}.eead-fb-effect-zoom-out .eead-flip-box:hover .eead-fb-front,
+.eead-fb-effect-zoom-out .eead-flip-box:focus-within .eead-fb-front {
     opacity: 0;
     transform: scale(.7);
     transition: transform .7s, opacity .7s, visibility .7s;
     visibility: hidden;
-}
-
-/* Zoom In */
+}/* Zoom In */
 .eead-fb-effect-zoom-in .eead-flip-box .eead-fb-back {
     transition: transform .7s, opacity .5s;
     opacity: 0;
     transform: scale(.7);
     z-index: 3;
-}
-
-.eead-fb-effect-zoom-in .eead-flip-box:hover .eead-fb-back {
+}.eead-fb-effect-zoom-in .eead-flip-box:hover .eead-fb-back,
+.eead-fb-effect-zoom-in .eead-flip-box:focus-within .eead-fb-back {
     transition: transform .7s, opacity .5s;
     opacity: 1;
     transform: scale(1)
-}
-
-/* Fade */
+}/* Fade */
 .eead-fb-effect-fade .eead-flip-box .eead-fb-back {
     opacity: 0;
     z-index: 3;
-}
-
-.eead-fb-effect-fade .eead-flip-box:hover .eead-fb-back {
+}.eead-fb-effect-fade .eead-flip-box:hover .eead-fb-back,
+.eead-fb-effect-fade .eead-flip-box:focus-within .eead-fb-back {
     opacity: 1
 }
 
+
+/* Keyboard and touch: the box is focusable, so Tab or a tap flips it. */
+.eead-flip-box:focus {
+    outline: none;
+}
+
+.eead-flip-box:focus-visible {
+    outline: 2px solid var(--eead-pri-color, #6D28D9);
+    outline-offset: 3px;
+}
 
 /*--------------------------------------------------------------
 Hotspot
@@ -2312,6 +2392,8 @@ Hotspot
 }
 
 .eead-hotspot .eead-hotspot-content {
+    /* --eead-hs-shift: set by frontend.js to keep the tooltip on screen. */
+    translate: var(--eead-hs-shift, 0px) 0;
     visibility: hidden;
     opacity: 0;
     transition: visibility .6s ease-in-out, opacity .7s ease-in-out;
@@ -2325,6 +2407,7 @@ Hotspot
 
 .eead-hotspot .eead-hotspot-content:after {
     content: "";
+    translate: calc(-1 * var(--eead-hs-shift, 0px)) 0;
     height: 20px;
     width: 20px;
     background: #FFF;
@@ -2444,11 +2527,13 @@ Hotspot
 }
 
 .eead-hotspot.eead-open-onhover .eead-hotspot-item:hover,
+.eead-hotspot.eead-open-onhover .eead-hotspot-item:focus-within,
 .eead-hotspot.eead-open-onclick .eead-hotspot-item.eead-active {
     z-index: 99;
 }
 
 .eead-hotspot.eead-open-onhover .eead-hotspot-item:hover .eead-hotspot-content,
+.eead-hotspot.eead-open-onhover .eead-hotspot-item:focus-within .eead-hotspot-content,
 .eead-hotspot.eead-open-onclick .eead-hotspot-item.eead-active .eead-hotspot-content {
     visibility: visible;
     opacity: 1;
@@ -2461,7 +2546,7 @@ Hotspot
     transform: translate(-50%, -50%);
 }
 
-.eead-hotspot .eead-hotspot-item a {
+.eead-hotspot .eead-hotspot-item > a {
     background: #333;
     border-radius: 50%;
     height: var(--eead-hotspot-box-size, 30px);
@@ -2473,25 +2558,25 @@ Hotspot
     font-size: 14px;
 }
 
-.eead-hotspot .eead-hotspot-item a img {
+.eead-hotspot .eead-hotspot-item > a img {
     border-radius: 50%;
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.eead-hotspot .eead-hotspot-item a i {
+.eead-hotspot .eead-hotspot-item > a i {
     font-size: 15px;
     color: #fff;
 }
 
-.eead-hotspot .eead-hotspot-item a svg {
+.eead-hotspot .eead-hotspot-item > a svg {
     height: 1em;
     width: 1em;
     fill: #FFF;
 }
 
-.eead-hotspot .eead-hotspot-item a .eead-pulse {
+.eead-hotspot .eead-hotspot-item > a .eead-pulse {
     width: 100%;
     height: 100%;
     border: 5px solid #333;
@@ -2596,6 +2681,8 @@ Vertical Tabs
     font-size: 1em;
     height: 1em;
     width: 1em;
+    /* Without this the glyph takes the tab's line height and sits low. */
+    line-height: 1;
     color: inherit;
 }
 
@@ -2648,6 +2735,16 @@ Image Comparison
 .eead-image-comparison .icv__icv--horizontal img {
     height: 100%;
     max-width: inherit
+}
+
+.eead-image-compare .icv__control:focus {
+    outline: none;
+}
+
+.eead-image-compare .icv__control:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.35);
 }
 
 .eead-image-comparison .eead-image-compare-overlay:before {
@@ -2921,6 +3018,11 @@ Image Accordion
     cursor: pointer;
 }
 
+.eead-image-accordion .eead-image-accordion-item:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: -6px;
+}
+
 .eead-image-accordion .eead-image-accordion-item:before {
     content: "";
     position: absolute;
@@ -2960,12 +3062,15 @@ Image Accordion
 }
 
 .eead-image-accordion-on-hover .eead-image-accordion-item:hover,
+.eead-image-accordion-on-hover .eead-image-accordion-item:focus-within,
 .eead-image-accordion .eead-image-accordion-item.eead-tab-active {
     flex: 3 1 0% !important;
 }
 
 .eead-image-accordion-on-hover .eead-image-accordion-item:hover .eead-image-accordion-title,
 .eead-image-accordion-on-hover .eead-image-accordion-item:hover .eead-image-accordion-text,
+.eead-image-accordion-on-hover .eead-image-accordion-item:focus-within .eead-image-accordion-title,
+.eead-image-accordion-on-hover .eead-image-accordion-item:focus-within .eead-image-accordion-text,
 .eead-image-accordion .eead-image-accordion-item.eead-tab-active .eead-image-accordion-title,
 .eead-image-accordion .eead-image-accordion-item.eead-tab-active .eead-image-accordion-text {
     transform: translate3d(0, 0, 0);
@@ -3011,8 +3116,9 @@ Icon List
     transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
 }
 
-.eead-icon-list-container .eead-il-text {
-    transition: color 0.15s ease;
+.eead-icon-list-container .eead-il-text,
+.eead-icon-list-container .eead-il-icon {
+    transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .eead-icon-list-container .eead-il-icon img,
@@ -3068,6 +3174,11 @@ Icon List
 /*--------------------------------------------------------------
 Image Gallery
 --------------------------------------------------------------*/
+.eead-ig-filter-list .eead-ig-filter:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
 .eead-image-gallery-container {
     opacity: 0;
 }
@@ -3287,12 +3398,15 @@ Link Effects
 --------------------------------------------------------------*/
 .elementor-widget-eead-link-effect .eead-link {
     display: inline-block;
+    width: var(--eead-link-width, auto);
+    box-sizing: border-box;
     position: relative;
     color: var(--eead-link-effect-color, #111);
     white-space: nowrap;
 }
 
-.elementor-widget-eead-link-effect .eead-link:hover {
+.elementor-widget-eead-link-effect .eead-link:hover,
+.elementor-widget-eead-link-effect .eead-link:focus-visible {
     color: var(--eead-link-effect-color-hover, var(--eead-link-effect-color, #111));
 }
 
@@ -3320,7 +3434,8 @@ Link Effects
     width: 100%;
 }
 
-.eead-link-effect-1:hover:after {
+.eead-link-effect-1:hover:after,
+.eead-link-effect-1:focus-visible:after {
     height: var(--eead-link-border-thickness, 4px);
     opacity: 1;
     transform: translateY(0);
@@ -3345,7 +3460,8 @@ Link Effects
     width: 100%;
 }
 
-.eead-link-effect-2:hover:after {
+.eead-link-effect-2:hover:after,
+.eead-link-effect-2:focus-visible:after {
     height: var(--eead-link-border-thickness, 4px);
     opacity: 1;
     transform: translateY(0);
@@ -3495,13 +3611,15 @@ body.e--ua-safari .eead-link-effect-4:focus span:before {
     transition: height 0.3s;
 }
 
-.eead-link-effect-6:hover::before {
+.eead-link-effect-6:hover::before,
+.eead-link-effect-6:focus-visible::before {
     top: calc(100% - var(--eead-link-border-thickness, 4px));
     opacity: 1;
     background: var(--eead-link-effect-border-color-hover, var(--eead-link-effect-border-color, #000));
 }
 
-.eead-link-effect-6:hover::after {
+.eead-link-effect-6:hover::after,
+.eead-link-effect-6:focus-visible::after {
     height: 100%;
     background: var(--eead-link-effect-border-color-hover, var(--eead-link-effect-border-color, #000));
 }
@@ -3719,11 +3837,13 @@ body.e--ua-safari .eead-link-effect-4:focus span:before {
     color: var(--eead-link-effect-color-hover, var(--eead-link-effect-color, #111));
 }
 
-.eead-link-effect-11:hover {
+.eead-link-effect-11:hover,
+.eead-link-effect-11:focus-visible {
     border-color: var(--eead-link-effect-border-color-hover, var(--eead-link-effect-border-color, #000));
 }
 
-.eead-link-effect-11:hover span {
+.eead-link-effect-11:hover span,
+.eead-link-effect-11:focus-visible span {
     opacity: 0;
     visibility: hidden;
 }
@@ -3866,7 +3986,8 @@ body.e--ua-safari .eead-link-effect-4:focus span:before {
 }
 
 .elementor-widget-eead-link-effect .eead-link-effect-16,
-.elementor-widget-eead-link-effect .eead-link-effect-16:hover {
+.elementor-widget-eead-link-effect .eead-link-effect-16:hover,
+.elementor-widget-eead-link-effect .eead-link-effect-16:focus-visible {
     color: var(--eead-link-effect-color, #111);
 }
 
@@ -4126,6 +4247,19 @@ body.e--ua-safari .eead-link-effect-19:focus span:before {
 }
 
 
+/* Effects stay still for visitors who turned motion off. */
+@media (prefers-reduced-motion: reduce) {
+    .elementor-widget-eead-link-effect .eead-link,
+    .elementor-widget-eead-link-effect .eead-link *,
+    .elementor-widget-eead-link-effect .eead-link::before,
+    .elementor-widget-eead-link-effect .eead-link::after,
+    .elementor-widget-eead-link-effect .eead-link *::before,
+    .elementor-widget-eead-link-effect .eead-link *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
+
 /*--------------------------------------------------------------
 Pie Chart
 --------------------------------------------------------------*/
@@ -4341,8 +4475,16 @@ Horizontal Time Line
     transition: opacity 0.3s ease;
 }
 
-.eead-htl-arrow-hide:hover .owl-nav {
+.eead-htl-arrow-hide:hover .owl-nav,
+.eead-htl-arrow-hide:focus-within .owl-nav {
     opacity: 1;
+}
+
+/* No hover on touch screens: keep the arrows visible there. */
+@media (hover: none) {
+    .eead-htl-arrow-hide .owl-nav {
+        opacity: 1;
+    }
 }
 
 /*--------------------------------------------------------------
@@ -4378,12 +4520,13 @@ Social Share Buttons
     background: rgb(59, 89, 153, 0.90);
 }
 
+/* X, so its own black rather than the old Twitter blue. */
 .eead-social-share-container a.eead-twitter {
-    background: rgb(85, 172, 238);
+    background: rgb(0, 0, 0);
 }
 
 .eead-social-share-container a.eead-twitter:hover {
-    background: rgb(85, 172, 238, 0.90);
+    background: rgb(0, 0, 0, 0.80);
 }
 
 .eead-social-share-container a.eead-pinterest {
@@ -4496,6 +4639,19 @@ Social Share Buttons
 
 .eead-social-share-container a.eead-line:hover {
     background: rgb(0, 195, 0, 0.90);
+}
+
+.eead-social-share-container a.eead-share-copy,
+.eead-social-share-container a.eead-share-native {
+    background: rgb(92, 96, 112);
+}
+
+.eead-social-share-container a.eead-share-copied {
+    background: rgb(22, 163, 74);
+}
+
+.eead-social-share-container a[hidden] {
+    display: none;
 }
 
 .eead-social-share-container a.eead-email {
@@ -4614,7 +4770,8 @@ ul.eead-one-page-nav li a {
     position: absolute;
 }
 
-.eead-one-page-nav-item:hover .eead-nav-dot-tooltip {
+.eead-one-page-nav-item:hover .eead-nav-dot-tooltip,
+.eead-one-page-nav-item:focus-within .eead-nav-dot-tooltip {
     visibility: visible;
     opacity: 1;
 }
@@ -4723,7 +4880,8 @@ Scroll Image
     background-position: center top;
 }
 
-.eead-scroll-image-box.eead-scroll-image-top-bottom:hover .eead-scroll-image {
+.eead-scroll-image-box.eead-scroll-image-top-bottom:hover .eead-scroll-image,
+.eead-scroll-image-box.eead-scroll-image-top-bottom:focus-within .eead-scroll-image {
     background-position: center bottom;
 }
 
@@ -4731,7 +4889,8 @@ Scroll Image
     background-position: center bottom;
 }
 
-.eead-scroll-image-box.eead-scroll-image-bottom-top:hover .eead-scroll-image {
+.eead-scroll-image-box.eead-scroll-image-bottom-top:hover .eead-scroll-image,
+.eead-scroll-image-box.eead-scroll-image-bottom-top:focus-within .eead-scroll-image {
     background-position: center top;
 }
 
@@ -4739,7 +4898,8 @@ Scroll Image
     background-position: center right;
 }
 
-.eead-scroll-image-box.eead-scroll-image-right-left:hover .eead-scroll-image {
+.eead-scroll-image-box.eead-scroll-image-right-left:hover .eead-scroll-image,
+.eead-scroll-image-box.eead-scroll-image-right-left:focus-within .eead-scroll-image {
     background-position: center left;
 }
 
@@ -4747,7 +4907,8 @@ Scroll Image
     background-position: center left;
 }
 
-.eead-scroll-image-box.eead-scroll-image-left-right:hover .eead-scroll-image {
+.eead-scroll-image-box.eead-scroll-image-left-right:hover .eead-scroll-image,
+.eead-scroll-image-box.eead-scroll-image-left-right:focus-within .eead-scroll-image {
     background-position: center right;
 }
 
@@ -4874,6 +5035,11 @@ Scroll Image
     padding-bottom: 51%;
 }
 
+.eead-scroll-image-container .eead-scroll-image-box:focus-visible {
+    outline: 2px solid var(--eead-pri-color, #6D28D9);
+    outline-offset: 3px;
+}
+
 .eead-scroll-image-container .eead-scroll-image {
     display: block;
     position: relative;
@@ -4918,7 +5084,8 @@ Scroll Image
     transition: opacity 0.3s ease-in-out;
 }
 
-.eead-scroll-image-container .eead-scroll-image-hide-link .eead-scroll-image-box:hover .eead-scroll-image-link {
+.eead-scroll-image-container .eead-scroll-image-hide-link .eead-scroll-image-box:hover .eead-scroll-image-link,
+.eead-scroll-image-container .eead-scroll-image-hide-link .eead-scroll-image-box:focus-within .eead-scroll-image-link {
     opacity: 1;
 }
 
@@ -4997,7 +5164,8 @@ Logo Carousel
     transition: opacity 0.3s ease;
 }
 
-.eead-logo-carousel.eead-lg-hover-arrow-on:hover .owl-nav {
+.eead-logo-carousel.eead-lg-hover-arrow-on:hover .owl-nav,
+.eead-logo-carousel.eead-lg-hover-arrow-on:focus-within .owl-nav {
     opacity: 1;
 }
 
@@ -5009,12 +5177,45 @@ Logo Carousel
     right: -20px;
 }
 
-.eead-logo-carousel.eead-lg-hover-arrow-on:hover .owl-nav button.owl-prev {
+.eead-logo-carousel.eead-lg-hover-arrow-on:hover .owl-nav button.owl-prev,
+.eead-logo-carousel.eead-lg-hover-arrow-on:focus-within .owl-nav button.owl-prev {
     left: 0;
 }
 
-.eead-logo-carousel.eead-lg-hover-arrow-on:hover .owl-nav button.owl-next {
+.eead-logo-carousel.eead-lg-hover-arrow-on:hover .owl-nav button.owl-next,
+.eead-logo-carousel.eead-lg-hover-arrow-on:focus-within .owl-nav button.owl-next {
     right: 0;
+}
+
+/* No hover on touch screens: keep the arrows in view. */
+@media (hover: none) {
+    .eead-logo-carousel.eead-lg-hover-arrow-on .owl-nav {
+        opacity: 1;
+    }
+
+    .eead-logo-carousel.eead-lg-hover-arrow-on .owl-nav button.owl-prev {
+        left: 0;
+    }
+
+    .eead-logo-carousel.eead-lg-hover-arrow-on .owl-nav button.owl-next {
+        right: 0;
+    }
+}
+
+/* Grayscale logos */
+.eead-logo-carousel .eead-logo-slide img {
+    transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+.eead-lc-grayscale-normal .eead-logo-carousel .eead-logo-slide img,
+.eead-lc-grayscale-hover .eead-logo-carousel .eead-logo-slide:hover img,
+.eead-lc-grayscale-hover .eead-logo-carousel .eead-logo-slide:focus-within img {
+    filter: grayscale(100%);
+}
+
+.eead-lc-grayscale-normal .eead-logo-carousel .eead-logo-slide:hover img,
+.eead-lc-grayscale-normal .eead-logo-carousel .eead-logo-slide:focus-within img {
+    filter: none;
 }
 
 .eead-logo-carousel .owl-item {
@@ -5064,12 +5265,14 @@ Logo Grid
     filter: grayscale(100%);
 }
 
-.eead-logo-grid.grayscale-normal .eead-grid-item:hover img {
+.eead-logo-grid.grayscale-normal .eead-grid-item:hover img,
+.eead-logo-grid.grayscale-normal .eead-grid-item:focus-within img {
     -webkit-filter: none;
     filter: none;
 }
 
-.eead-logo-grid.grayscale-hover .eead-grid-item:hover img {
+.eead-logo-grid.grayscale-hover .eead-grid-item:hover img,
+.eead-logo-grid.grayscale-hover .eead-grid-item:focus-within img {
     -webkit-filter: grayscale(100%);
     filter: grayscale(100%);
 }
@@ -5146,6 +5349,11 @@ Logo Grid
 /*--------------------------------------------------------------
 Popup Modal
 --------------------------------------------------------------*/
+/* The dialog takes focus on open (so Escape always works); no ring on the box itself. */
+.eead-popup-modal [role="dialog"]:focus {
+    outline: none;
+}
+
 .eead-popup-modal-trigger {
     display: flex;
 }
@@ -5202,7 +5410,8 @@ Popup Modal
 
 /* Modal */
 .eead-popup-modal .modal__overlay {
-    z-index: 99999;
+    /* Above floating buttons and fly menus (some use 999999). */
+    z-index: 1000000;
 }
 
 .eead-popup-modal-fullscreen .modal__container {
@@ -5423,6 +5632,48 @@ Toggle
     margin: 0;
     padding: 0;
     cursor: pointer;
+}
+
+.eead-toggle-container .eead-toggle-switch-checkbox:focus-visible {
+    outline: 2px solid var(--eead-toggle-switch-handle-active-color, var(--eead-pri-color, #2271b1));
+    outline-offset: 4px;
+}
+
+.eead-toggle-label {
+    cursor: pointer;
+}
+
+.eead-toggle-anim-fade .eead-toggle-section {
+    animation: eeadToggleFade .4s ease both;
+}
+
+.eead-toggle-anim-slide .eead-toggle-section {
+    animation: eeadToggleSlide .4s ease both;
+}
+
+.eead-toggle-anim-zoom .eead-toggle-section {
+    animation: eeadToggleZoom .4s ease both;
+}
+
+@keyframes eeadToggleFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes eeadToggleSlide {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes eeadToggleZoom {
+    from { opacity: 0; transform: scale(.95); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .eead-toggle-container .eead-toggle-section {
+        animation: none;
+    }
 }
 
 .eead-toggle-square-switch .eead-toggle-switch-checkbox:before,
@@ -6225,8 +6476,8 @@ Pricing List
 
 .eead-pricing-list .eead-pl-item-image {
     position: relative;
-    flex-basis: 30%;
-    min-width: 30%;
+    flex-basis: var(--eead-pl-img-width, 30%);
+    min-width: var(--eead-pl-img-width, 30%);
     overflow: hidden;
 }
 
@@ -6271,6 +6522,35 @@ Pricing List
     align-items: center;
     justify-content: center;
     order: 3;
+}
+
+/* Sale price: original crossed out beside the price. */
+.eead-pricing-list .eead-pl-prices {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    order: 3;
+}
+
+.eead-pricing-list .eead-pl-old-price {
+    opacity: 0.6;
+    font-size: 0.95em;
+    white-space: nowrap;
+}
+
+.eead-pricing-list .eead-pl-badge {
+    display: inline-block;
+    margin-left: 0.4em;
+    padding: 0.2em 0.6em;
+    border-radius: 999px;
+    background: var(--eead-pri-color, #6D28D9);
+    color: #fff;
+    font-size: 0.6em;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    vertical-align: middle;
 }
 
 .eead-pricing-list .eead-pl-item-image .eead-pl-item-price {
@@ -6340,6 +6620,16 @@ Pricing Table
 
 .eead-pricing-table {
     overflow: hidden;
+}
+
+/* Inside a vertical container the widget grows to the column's height, so the box
+   has a height to fill. Row containers already stretch it; browsers without style
+   queries keep the old behavior. */
+@container style(--flex-direction: column) {
+    .elementor-element.eead-aib-fill-height-yes,
+    .elementor-element.eead-pt-fill-height-yes {
+        flex-grow: 1;
+    }
 }
 
 /* Fill Height: the table takes its column's full height, the features list
@@ -6413,6 +6703,29 @@ Pricing Table
     position: relative;
     justify-content: center;
     text-align: left;
+}
+
+/* Not-included feature */
+.eead-pricing-table ul.eead-pricing-listing li.eead-pt-excluded {
+    opacity: 0.5;
+}
+
+.eead-pricing-table ul.eead-pricing-listing li.eead-pt-excluded .eead-pt-feature-text {
+    text-decoration: line-through;
+}
+
+.eead-pricing-table .eead-price-old {
+    margin-right: 0.35em;
+    font-size: 1.6em;
+    opacity: 0.6;
+    vertical-align: middle;
+}
+
+.eead-pricing-table .eead-pricing-note {
+    margin: 12px 0 0;
+    font-size: 0.85em;
+    opacity: 0.7;
+    text-align: center;
 }
 
 .eead-pricing-table ul.eead-pricing-listing li svg {
@@ -6579,6 +6892,7 @@ Pricing Table
 }
 
 .eead-pricing-table.style5 .eead-pricing-title,
+.eead-pricing-table.style5 .eead-pricing-sub-title,
 .eead-pricing-table.style5 .eead-pricing-price {
     position: relative;
 }
@@ -7026,6 +7340,34 @@ Vertical Time Line
     position: relative;
 }
 
+/* Scroll progress: a second colour fills the line from the top. */
+.eead-vertical-timeline.eead-vt-progress-on .eead-vt-inner:before {
+    background-image: linear-gradient(var(--eead-vt-progress-color, var(--eead-pri-color)), var(--eead-vt-progress-color, var(--eead-pri-color))) !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% var(--eead-vt-progress, 0%) !important;
+}
+
+.eead-vertical-timeline.eead-vt-progress-on .eead-vt-each-wrap:not(.eead-vt-passed) .eead-vt-point {
+    filter: grayscale(1);
+    opacity: .6;
+}
+
+.eead-vertical-timeline.eead-vt-progress-on .eead-vt-each-wrap .eead-vt-point {
+    transition: filter .3s ease, opacity .3s ease, background-color .3s ease;
+}
+
+/* Reveal on scroll (the class is only added by JS, so no-JS visitors see everything). */
+.eead-vertical-timeline.eead-vt-reveal-ready .eead-vt-each-wrap .eead-vt-card {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity .6s ease, transform .6s ease;
+}
+
+.eead-vertical-timeline.eead-vt-reveal-ready .eead-vt-each-wrap.eead-vt-in .eead-vt-card {
+    opacity: 1;
+    transform: none;
+}
+
 .eead-vt-point {
     position: absolute;
     top: 50%;
@@ -7355,6 +7697,8 @@ Slider
     right: 0;
     bottom: 0;
     opacity: 0.9;
+    /* Above the image even while Ken Burns transforms it. */
+    z-index: 1;
 }
 
 .eead-slide-cap-title,
@@ -7393,10 +7737,12 @@ Slider
     top: 0;
     bottom: 0;
     transform: translateX(-50%);
+    z-index: 2;
 }
 
 .eead-slide .eead-slide-caption {
     position: absolute;
+    z-index: 2;
     max-width: 100%;
     transform: translate(var(--eead-slider-caption-h, 0px), var(--eead-slider-caption-v, 0px));
     text-align: var(--eead-slider-caption-text-align, center);
@@ -7535,7 +7881,8 @@ Slider
     transition: opacity 0.3s ease;
 }
 
-.eead-slider-show-nav-hover-on:hover .slick-nav {
+.eead-slider-show-nav-hover-on:hover .slick-nav,
+.eead-slider-show-nav-hover-on:focus-within .slick-nav {
     opacity: 1;
 }
 
@@ -7547,12 +7894,59 @@ Slider
     right: -20px;
 }
 
-.eead-slider-show-nav-hover-on:hover .slick-nav .slick-prev {
+.eead-slider-show-nav-hover-on:hover .slick-nav .slick-prev,
+.eead-slider-show-nav-hover-on:focus-within .slick-nav .slick-prev {
     left: 0;
 }
 
-.eead-slider-show-nav-hover-on:hover .slick-nav .slick-next {
+.eead-slider-show-nav-hover-on:hover .slick-nav .slick-next,
+.eead-slider-show-nav-hover-on:focus-within .slick-nav .slick-next {
     right: 0;
+}
+
+/* Touch screens have no hover: keep the arrows in view. */
+@media (hover: none) {
+    .eead-slider-show-nav-hover-on .slick-nav {
+        opacity: 1;
+    }
+
+    .eead-slider-show-nav-hover-on .slick-nav .slick-prev {
+        left: 0;
+    }
+
+    .eead-slider-show-nav-hover-on .slick-nav .slick-next {
+        right: 0;
+    }
+}
+
+.eead-slider-container .slick-arrow:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+/* Ken Burns: a slow zoom on the slide in view. */
+.eead-slider-kenburns-yes .eead-slide {
+    overflow: hidden;
+}
+
+.eead-slider-kenburns-yes .eead-slide.slick-current img {
+    animation: eead-kenburns 12s ease-out both;
+}
+
+@keyframes eead-kenburns {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.12);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .eead-slider-kenburns-yes .eead-slide.slick-current img {
+        animation: none;
+    }
 }
 
 
@@ -7636,7 +8030,8 @@ Team
     transition: all 0.3s ease;
 }
 
-.eead-team-member.eead-content-on-image-hover:hover .eead-team-member-content-wrapper {
+.eead-team-member.eead-content-on-image-hover:hover .eead-team-member-content-wrapper,
+.eead-team-member.eead-content-on-image-hover:focus-within .eead-team-member-content-wrapper {
     opacity: 1;
     transform: scale(1);
 }
@@ -7657,7 +8052,8 @@ Team
     justify-content: center;
 }
 
-.eead-team-member.eead-social-pos-bottom-center:hover .eead-team-member-social-links {
+.eead-team-member.eead-social-pos-bottom-center:hover .eead-team-member-social-links,
+.eead-team-member.eead-social-pos-bottom-center:focus-within .eead-team-member-social-links {
     bottom: 10px;
 }
 
@@ -7684,8 +8080,11 @@ Team
 }
 
 .eead-team-member.eead-social-pos-top-left-vertical:hover .eead-team-member-social-links,
+.eead-team-member.eead-social-pos-top-left-vertical:focus-within .eead-team-member-social-links,
 .eead-team-member.eead-social-pos-middle-left-vertical:hover .eead-team-member-social-links,
-.eead-team-member.eead-social-pos-bottom-left-vertical:hover .eead-team-member-social-links {
+.eead-team-member.eead-social-pos-middle-left-vertical:focus-within .eead-team-member-social-links,
+.eead-team-member.eead-social-pos-bottom-left-vertical:hover .eead-team-member-social-links,
+.eead-team-member.eead-social-pos-bottom-left-vertical:focus-within .eead-team-member-social-links {
     left: 10px;
 }
 
@@ -7712,8 +8111,11 @@ Team
 }
 
 .eead-team-member.eead-social-pos-top-right-vertical:hover .eead-team-member-social-links,
+.eead-team-member.eead-social-pos-top-right-vertical:focus-within .eead-team-member-social-links,
 .eead-team-member.eead-social-pos-middle-right-vertical:hover .eead-team-member-social-links,
-.eead-team-member.eead-social-pos-bottom-right-vertical:hover .eead-team-member-social-links {
+.eead-team-member.eead-social-pos-middle-right-vertical:focus-within .eead-team-member-social-links,
+.eead-team-member.eead-social-pos-bottom-right-vertical:hover .eead-team-member-social-links,
+.eead-team-member.eead-social-pos-bottom-right-vertical:focus-within .eead-team-member-social-links {
     right: 10px;
 }
 
@@ -7817,7 +8219,8 @@ Team Carousel
     transition: opacity 0.3s ease;
 }
 
-.eead-team-carousel.eead-tc-hover-arrow-on:hover .owl-nav {
+.eead-team-carousel.eead-tc-hover-arrow-on:hover .owl-nav,
+.eead-team-carousel.eead-tc-hover-arrow-on:focus-within .owl-nav {
     opacity: 1;
 }
 
@@ -7829,11 +8232,13 @@ Team Carousel
     right: -20px;
 }
 
-.eead-team-carousel.eead-tc-hover-arrow-on:hover .owl-nav button.owl-prev {
+.eead-team-carousel.eead-tc-hover-arrow-on:hover .owl-nav button.owl-prev,
+.eead-team-carousel.eead-tc-hover-arrow-on:focus-within .owl-nav button.owl-prev {
     left: 0;
 }
 
-.eead-team-carousel.eead-tc-hover-arrow-on:hover .owl-nav button.owl-next {
+.eead-team-carousel.eead-tc-hover-arrow-on:hover .owl-nav button.owl-next,
+.eead-team-carousel.eead-tc-hover-arrow-on:focus-within .owl-nav button.owl-next {
     right: 0;
 }
 
@@ -7874,6 +8279,10 @@ Testimonial
     width: 100%;
     object-fit: cover;
     object-position: center;
+}
+
+.eead-testimonial-container .eead-testimonial-rating .eead-testimonial-star-empty {
+    opacity: 0.25;
 }
 
 .eead-testimonial-container .eead-testimonial-rating {
@@ -8011,7 +8420,8 @@ Testimonial Carousel
     transition: opacity 0.3s ease;
 }
 
-.eead-testimonial-carousel.eead-tc-hover-arrow-on:hover .owl-nav {
+.eead-testimonial-carousel.eead-tc-hover-arrow-on:hover .owl-nav,
+.eead-testimonial-carousel.eead-tc-hover-arrow-on:focus-within .owl-nav {
     opacity: 1;
 }
 
@@ -8023,11 +8433,13 @@ Testimonial Carousel
     right: -20px;
 }
 
-.eead-testimonial-carousel.eead-tc-hover-arrow-on:hover .owl-nav button.owl-prev {
+.eead-testimonial-carousel.eead-tc-hover-arrow-on:hover .owl-nav button.owl-prev,
+.eead-testimonial-carousel.eead-tc-hover-arrow-on:focus-within .owl-nav button.owl-prev {
     left: 0;
 }
 
-.eead-testimonial-carousel.eead-tc-hover-arrow-on:hover .owl-nav button.owl-next {
+.eead-testimonial-carousel.eead-tc-hover-arrow-on:hover .owl-nav button.owl-next,
+.eead-testimonial-carousel.eead-tc-hover-arrow-on:focus-within .owl-nav button.owl-next {
     right: 0;
 }
 
@@ -8038,6 +8450,18 @@ Testimonial Carousel
 .eead-testimonial-carousel.owl-carousel .owl-stage {
     display: flex;
     align-items: center;
+}
+
+.eead-testimonial-carousel.eead-tc-equal-height.owl-carousel .owl-stage {
+    align-items: stretch;
+}
+
+.eead-testimonial-carousel.eead-tc-equal-height .owl-item {
+    display: flex;
+}
+
+.eead-testimonial-carousel.eead-tc-equal-height .owl-item > .eead-testimonial-container {
+    flex: 1 1 auto;
 }
 
 
@@ -8052,6 +8476,16 @@ Sticky Container
 body.admin-bar .e-con.eead-sticky-container-yes {
     position: sticky;
     top: calc(32px + var(--eead-sticky-top-spacing, 0));
+}
+
+
+/*--------------------------------------------------------------
+Lottie
+--------------------------------------------------------------*/
+/* Block, so the animation doesn't sit on a text baseline with a gap below it. */
+.eead-lottie svg,
+.eead-lottie canvas {
+    display: block;
 }
 
 /*--------------------------------------------------------------
@@ -8296,6 +8730,75 @@ Marquee
 /* Rows: tilt and the optional second row */
 .eead-tm-rows {
     overflow-x: clip;
+}
+
+/* Pause button */
+.elementor-widget-eead-marquee .elementor-widget-container,
+.elementor-widget-eead-marquee:not(:has(> .elementor-widget-container)) {
+    position: relative;
+}
+
+.eead-tm-toggle {
+    position: absolute;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: rgba(17, 24, 39, 0.75);
+    color: #fff;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.eead-tm-toggle:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+.eead-tm-toggle-top-left .eead-tm-toggle,
+.eead-tm-toggle-top-right .eead-tm-toggle {
+    top: 6px;
+}
+
+.eead-tm-toggle-bottom-left .eead-tm-toggle,
+.eead-tm-toggle-bottom-right .eead-tm-toggle {
+    bottom: 6px;
+}
+
+.eead-tm-toggle-top-left .eead-tm-toggle,
+.eead-tm-toggle-bottom-left .eead-tm-toggle {
+    left: 6px;
+}
+
+.eead-tm-toggle-top-right .eead-tm-toggle,
+.eead-tm-toggle-bottom-right .eead-tm-toggle {
+    right: 6px;
+}
+
+/* Two bars (pause); a triangle (play) while paused. */
+.eead-tm-toggle-icon {
+    display: block;
+    width: 10px;
+    height: 12px;
+    border-left: 3px solid currentColor;
+    border-right: 3px solid currentColor;
+}
+
+.eead-tm-paused .eead-tm-toggle-icon {
+    width: 0;
+    height: 0;
+    margin-left: 3px;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 10px solid currentColor;
+    border-right: 0;
 }
 
 .eead-tm-rows > .eead-marquee {
@@ -9462,6 +9965,15 @@ Text Scroll Reveal
     color: inherit;
 }
 
+/* Highlights sit inside their word's unit, so they work out their own color. */
+.eead-str-effect-color .eead-str-unit :is(em, strong, mark) {
+    color: color-mix(in srgb, var(--eead-str-color, currentColor) calc(var(--eead-str-p) * 100%), var(--eead-str-dim));
+}
+
+.eead-str:not(.eead-str-effect-color) .eead-str-unit :is(em, strong, mark) {
+    color: var(--eead-str-color, inherit);
+}
+
 .eead-str-word {
     display: inline-block;
     white-space: nowrap;
@@ -10297,14 +10809,17 @@ Comparison Table
     display: block;
 }
 
-/* The badge sits in space reserved at the top of every plan, so all the titles line up. */
-.eead-ct-table:has(.eead-ct-badge) thead .eead-ct-plan {
-    padding-top: 54px;
+/* The badge sits in space reserved at the top of every plan, so all the titles line up.
+   A spacer rather than padding, so a custom Cell Padding can't remove it. */
+.eead-ct-table:has(.eead-ct-badge) thead .eead-ct-plan::before {
+    content: "";
+    display: block;
+    height: 30px;
 }
 
 .eead-ct-badge {
     position: absolute;
-    top: 20px;
+    top: calc(var(--eead-ct-pad-top, 26px) - 6px);
     left: 50%;
     display: inline-block !important;
     padding: 4px 10px;
@@ -10427,9 +10942,13 @@ Comparison Table
     color: #fff;
 }
 
-/* Info tooltip */
-.eead-ct-info {
+/* Info tooltip: anchored to the feature cell, not the icon, so a tip near the
+   table's left edge isn't cut off by the scroll box. */
+.eead-ct-table .eead-ct-feature {
     position: relative;
+}
+
+.eead-ct-info {
     display: inline-flex;
     margin-left: 6px;
     vertical-align: middle;
@@ -10452,11 +10971,11 @@ Comparison Table
 
 .eead-ct-tip {
     position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
+    bottom: calc(100% - 6px);
+    left: 12px;
     z-index: 5;
     width: max-content;
-    max-width: 220px;
+    max-width: min(220px, 80vw);
     padding: 8px 10px;
     border-radius: 6px;
     background: #111827;
@@ -10467,12 +10986,12 @@ Comparison Table
     text-transform: none;
     opacity: 0;
     pointer-events: none;
-    transform: translateX(-50%);
     transition: opacity 0.2s;
 }
 
+/* :focus as well, so a tap on touch screens opens it. */
 .eead-ct-info:hover .eead-ct-tip,
-.eead-ct-info:focus-visible .eead-ct-tip {
+.eead-ct-info:focus .eead-ct-tip {
     opacity: 1;
 }
 
@@ -10719,6 +11238,18 @@ Appearing Image
     inset: 0;
     background: var(--eead-apim-curtain);
     transform: translateX(calc((var(--eead-apim-p) * 2 - 1) * 101%));
+}
+
+.eead-apim-effect-curtain.eead-apim-curtain-rtl .eead-apim-frame::after {
+    transform: translateX(calc((1 - var(--eead-apim-p) * 2) * 101%));
+}
+
+.eead-apim-effect-curtain.eead-apim-curtain-ttb .eead-apim-frame::after {
+    transform: translateY(calc((var(--eead-apim-p) * 2 - 1) * 101%));
+}
+
+.eead-apim-effect-curtain.eead-apim-curtain-btt .eead-apim-frame::after {
+    transform: translateY(calc((1 - var(--eead-apim-p) * 2) * 101%));
 }
 
 .eead-apim-effect-curtain .eead-apim-frame img {
@@ -11028,7 +11559,8 @@ Justified Grid
     transform: none;
 }
 
-.eead-jgal-hover-zoom .eead-jgal-item:hover img {
+.eead-jgal-hover-zoom .eead-jgal-item:hover img,
+.eead-jgal-hover-zoom .eead-jgal-item:focus-visible img {
     transform: scale(1.06);
 }
 
@@ -11036,7 +11568,8 @@ Justified Grid
     filter: grayscale(100%);
 }
 
-.eead-jgal-hover-grayscale .eead-jgal-item:hover img {
+.eead-jgal-hover-grayscale .eead-jgal-item:hover img,
+.eead-jgal-hover-grayscale .eead-jgal-item:focus-visible img {
     filter: none;
 }
 
@@ -11200,5 +11733,13 @@ PDF Viewer
     .eead-promo-media img,
     .eead-jgal-item img {
         transition: none !important;
+    }
+}
+
+/* Touch screens have no hover: keep carousel arrows in view. */
+@media (hover: none) {
+    .eead-team-carousel.eead-tc-hover-arrow-on .owl-nav,
+    .eead-testimonial-carousel.eead-tc-hover-arrow-on .owl-nav {
+        opacity: 1;
     }
 }

@@ -409,6 +409,22 @@ class VerticalTimeline extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'scroll_progress', [
+                'label' => esc_html__('Scroll Progress Line', 'easy-elementor-addons'),
+                'description' => esc_html__('The line fills in and the points light up as the visitor scrolls past them.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'separator' => 'before',
+            ]
+        );
+
+        $this->add_control(
+            'reveal_items', [
+                'label' => esc_html__('Reveal Items on Scroll', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+            ]
+        );
+
         $this->end_controls_section();
 
         /* Style Tab */
@@ -547,6 +563,32 @@ class VerticalTimeline extends Widget_Base {
                 'selectors' => [
                     '{{WRAPPER}} .eead-vertical-timeline .eead-vt-inner:before' => 'width: {{SIZE}}{{UNIT}};',
                     '{{WRAPPER}} .eead-vt-point:before, {{WRAPPER}} .eead-vt-point:after' => 'height: {{SIZE}}{{UNIT}};'
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'progress_color', [
+                'label' => esc_html__('Progress Line Color', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-vertical-timeline' => '--eead-vt-progress-color: {{VALUE}}',
+                ],
+                'condition' => [
+                    'scroll_progress' => 'yes',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'point_passed_bg_color', [
+                'label' => esc_html__('Passed Point Background', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-vt-each-wrap.eead-vt-passed .eead-vt-point' => 'background: {{VALUE}}',
+                ],
+                'condition' => [
+                    'scroll_progress' => 'yes',
                 ]
             ]
         );
@@ -1044,9 +1086,18 @@ class VerticalTimeline extends Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         ?>
-        <div class="eead-vertical-timeline">
+        <?php
+        $classes = ['eead-vertical-timeline'];
+        if ('yes' === $settings['scroll_progress']) {
+            $classes[] = 'eead-vt-progress-on';
+        }
+        if ('yes' === $settings['reveal_items']) {
+            $classes[] = 'eead-vt-reveal-on';
+        }
+        ?>
+        <div class="<?php echo esc_attr(implode(' ', $classes)); ?>">
             <div class="<?php echo 'eead-card-' . esc_attr($settings['layout_style']); ?>">
-                <div class="eead-vt-inner">
+                <div class="eead-vt-inner" role="list">
                     <?php
                     foreach ($settings['item_list'] as $key => $item) { ?>
                         <?php
@@ -1054,14 +1105,16 @@ class VerticalTimeline extends Widget_Base {
                             continue;
                         }
                         ?>
-                        <div class="eead-vt-each-wrap">
+                        <div class="eead-vt-each-wrap" role="listitem">
                             <div class="eead-vt-point">
                                 <?php
                                 Icons_Manager::render_icon($item['icon'], ['aria-hidden' => 'true']);
                                 ?>
-                                <div class="eead-vt-meta">
-                                    <span><?php echo esc_html($item['meta']); ?></span>
-                                </div>
+                                <?php if ('' !== trim((string) $item['meta'])) { ?>
+                                    <div class="eead-vt-meta">
+                                        <span><?php echo esc_html($item['meta']); ?></span>
+                                    </div>
+                                <?php } ?>
                             </div>
 
                             <div class="eead-vt-card">
@@ -1069,7 +1122,12 @@ class VerticalTimeline extends Widget_Base {
                                     <?php if (!empty($item['image']['url'])) { ?>
                                         <div class="eead-vt-image">
                                             <?php
-                                            Group_Control_Image_Size::print_attachment_image_html($item, 'item_image', 'image');
+                                            // The item title stands in for missing alt text.
+                                            $image = Group_Control_Image_Size::get_attachment_image_html($item, 'item_image', 'image');
+                                            if ('' !== trim((string) $item['title'])) {
+                                                $image = str_replace('alt=""', 'alt="' . esc_attr($item['title']) . '"', $image);
+                                            }
+                                            echo eead_kses_image($image); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                                             ?>
                                         </div>
                                     <?php } ?>
@@ -1090,11 +1148,22 @@ class VerticalTimeline extends Widget_Base {
 
                                     <?php
                                     if (!empty($item['button_url']['url'])) {
-                                        $this->add_link_attributes('button_url' . $key, $item['button_url']);
+                                        $link = $item['button_url'];
+                                        // A placeholder '#' should not open the same page in a new tab.
+                                        if ('#' === trim($link['url'])) {
+                                            $link['is_external'] = '';
+                                            $link['nofollow'] = '';
+                                        }
+                                        $this->add_link_attributes('button_url' . $key, $link);
+                                        $button_text = '' !== trim((string) $item['button_text']) ? $item['button_text'] : esc_html__('Read More', 'easy-elementor-addons');
+                                        if ('' !== trim((string) $item['title'])) {
+                                            /* translators: 1: button text, 2: timeline item title */
+                                            $this->add_render_attribute('button_url' . $key, 'aria-label', sprintf(esc_html__('%1$s: %2$s', 'easy-elementor-addons'), $button_text, $item['title']));
+                                        }
                                         ?>
                                         <div class="eead-vt-more-button">
                                             <a <?php $this->print_render_attribute_string('button_url' . $key); ?>>
-                                                <?php echo esc_html($item['button_text']); ?>
+                                                <?php echo esc_html($button_text); ?>
                                             </a>
                                         </div>
                                         <?php

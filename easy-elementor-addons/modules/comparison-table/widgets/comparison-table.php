@@ -296,6 +296,24 @@ class ComparisonTable extends Widget_Base {
             ]
         );
 
+        $this->add_responsive_control(
+            'feature_width', [
+                'label' => esc_html__('Feature Column Width', 'easy-elementor-addons'),
+                'description' => esc_html__('Leave empty for equal columns. On phones a narrower feature column leaves more room for the plans.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px', '%'],
+                'range' => [
+                    'px' => ['min' => 80, 'max' => 500],
+                    '%' => ['min' => 10, 'max' => 60],
+                ],
+                'mobile_default' => ['size' => 140, 'unit' => 'px'],
+                'selectors' => [
+                    // table-layout: fixed sizes each column from its first-row cell.
+                    '{{WRAPPER}} .eead-ct-table thead .eead-ct-corner' => 'width: {{SIZE}}{{UNIT}}',
+                ]
+            ]
+        );
+
         $this->end_controls_section();
 
         /* Style: Table */
@@ -358,6 +376,8 @@ class ComparisonTable extends Widget_Base {
                 'size_units' => ['px', 'em'],
                 'selectors' => [
                     '{{WRAPPER}} .eead-ct-table td, {{WRAPPER}} .eead-ct-table th' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                    // The badge is placed from the top padding.
+                    '{{WRAPPER}} .eead-ct-table th' => '--eead-ct-pad-top: {{TOP}}{{UNIT}};',
                 ],
                 'separator' => 'before'
             ]
@@ -833,7 +853,7 @@ class ComparisonTable extends Widget_Base {
                                 <th scope="row" class="eead-ct-feature">
                                     <?php echo esc_html($row['feature']); ?>
                                     <?php if ('' !== trim((string) $row['info'])) { ?>
-                                        <span class="eead-ct-info" tabindex="0" aria-label="<?php echo esc_attr($row['info']); ?>"><span class="eead-ct-info-icon" aria-hidden="true">i</span><span class="eead-ct-tip" aria-hidden="true"><?php echo esc_html($row['info']); ?></span></span>
+                                        <span class="eead-ct-info" tabindex="0" role="img" aria-label="<?php echo esc_attr($row['info']); ?>"><span class="eead-ct-info-icon" aria-hidden="true">i</span><span class="eead-ct-tip" aria-hidden="true"><?php echo esc_html($row['info']); ?></span></span>
                                     <?php } ?>
                                 </th>
                                 <?php
@@ -842,9 +862,9 @@ class ComparisonTable extends Widget_Base {
                                     $kind = $this->value_kind($value);
                                     echo '<td class="eead-ct-value' . esc_attr($featured[$i]) . '">';
                                     if ('yes' === $kind) {
-                                        echo '<span class="eead-ct-mark eead-ct-yes">' . $yes . '<span class="screen-reader-text">' . esc_html__('Included', 'easy-elementor-addons') . '</span></span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                                        echo '<span class="eead-ct-mark eead-ct-yes">' . $yes . '<span class="elementor-screen-only">' . esc_html__('Included', 'easy-elementor-addons') . '</span></span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                                     } elseif ('no' === $kind) {
-                                        echo '<span class="eead-ct-mark eead-ct-no">' . $no . '<span class="screen-reader-text">' . esc_html__('Not included', 'easy-elementor-addons') . '</span></span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                                        echo '<span class="eead-ct-mark eead-ct-no">' . $no . '<span class="elementor-screen-only">' . esc_html__('Not included', 'easy-elementor-addons') . '</span></span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                                     } else {
                                         echo esc_html($value);
                                     }

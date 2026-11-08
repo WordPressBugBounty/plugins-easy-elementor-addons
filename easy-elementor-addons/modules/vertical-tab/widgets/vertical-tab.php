@@ -133,6 +133,16 @@ class VerticalTab extends Widget_Base {
             ]
         );
 
+        $repeater->add_control(
+            'tab_id', [
+                'label' => esc_html__('Tab ID', 'easy-elementor-addons'),
+                'description' => esc_html__('Optional. Links to #your-id open this tab and scroll to it. Letters, numbers, dashes and underscores only.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'ai' => ['active' => false],
+                'separator' => 'before'
+            ]
+        );
+
         $this->add_control(
             'tabs', [
                 'label' => esc_html__('Add Tabs', 'easy-elementor-addons'),
@@ -162,6 +172,16 @@ class VerticalTab extends Widget_Base {
                     ]
                 ],
                 'title_field' => '{{ title }}'
+            ]
+        );
+
+        $this->add_control(
+            'active_tab', [
+                'label' => esc_html__('Active Tab on Load', 'easy-elementor-addons'),
+                'description' => esc_html__('Position of the tab open on load, counting enabled tabs from 1.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::NUMBER,
+                'min' => 1,
+                'default' => 1,
             ]
         );
 
@@ -919,16 +939,37 @@ class VerticalTab extends Widget_Base {
         <?php
     }
 
+    /** Position (from 1) of the enabled tab open on load; falls back to the first. */
+    private function get_active_index($settings) {
+        $count = 0;
+        foreach ((array) $settings['tabs'] as $tab) {
+            if ($tab['enable'] == 'yes') {
+                $count++;
+            }
+        }
+        $active = isset($settings['active_tab']) ? (int) $settings['active_tab'] : 1;
+        return ($active >= 1 && $active <= $count) ? $active : 1;
+    }
+
+    /** Ids tying each tab to its panel; a Tab ID becomes the panel's id (the link target). */
+    private function get_tab_ids($tab, $i) {
+        $base = 'eead-vt-' . $this->get_id() . '-' . $i;
+        $custom = !empty($tab['tab_id']) ? sanitize_html_class($tab['tab_id']) : '';
+        return [$base . '-tab', $custom !== '' ? $custom : $base . '-panel', $custom];
+    }
+
     private function get_tabs() {
         $settings = $this->
             get_settings_for_display();
         if (!empty($settings['tabs'])) {
             $i = 0;
+            $active = $this->get_active_index($settings);
             foreach ($settings['tabs'] as $tab) {
                 if ($tab['enable'] == 'yes') {
                     $i++;
+                    list($tab_id, $panel_id) = $this->get_tab_ids($tab, $i);
                     ?>
-                    <div class="eead-vt-tab <?php echo ($i == 1 ? 'eead-vt-active-tab' : ''); ?>" data-tabid="<?php echo esc_attr($i); ?>" role="tab" tabindex="0" aria-selected="<?php echo ($i == 1 ? 'true' : 'false'); ?>">
+                    <div class="eead-vt-tab <?php echo ($i == $active ? 'eead-vt-active-tab' : ''); ?>" id="<?php echo esc_attr($tab_id); ?>" data-tabid="<?php echo esc_attr($i); ?>" role="tab" tabindex="<?php echo ($i == $active ? '0' : '-1'); ?>" aria-selected="<?php echo ($i == $active ? 'true' : 'false'); ?>" aria-controls="<?php echo esc_attr($panel_id); ?>">
                         <?php Icons_Manager::render_icon($tab['icon'], ['aria-hidden' => 'true']); ?>
                         <span><?php echo esc_html($tab['title']); ?></span>
                     </div>
@@ -943,11 +984,13 @@ class VerticalTab extends Widget_Base {
 
         if (!empty($settings['tabs'])) {
             $i = 0;
+            $active = $this->get_active_index($settings);
             foreach ($settings['tabs'] as $tab) {
                 if ($tab['enable'] == 'yes') {
                     $i++;
+                    list($tab_id, $panel_id, $hash) = $this->get_tab_ids($tab, $i);
                     ?>
-                    <div class="animated <?php echo esc_attr($settings['tab_content_animation']); ?> eead-vt-content eead-vt-content-<?php echo esc_attr($i) . ' ' . ($i == 1 ? 'eead-vt-active-content' : ''); ?>">
+                    <div class="animated <?php echo esc_attr($settings['tab_content_animation']); ?> eead-vt-content eead-vt-content-<?php echo esc_attr($i) . ' ' . ($i == $active ? 'eead-vt-active-content' : ''); ?>" id="<?php echo esc_attr($panel_id); ?>" role="tabpanel" tabindex="0" aria-labelledby="<?php echo esc_attr($tab_id); ?>"<?php echo $hash ? ' data-hash="' . esc_attr($hash) . '"' : ''; ?>>
                         <?php
                         if (isset($tab['content_type']) && $tab['content_type'] === 'page' && !empty($tab['page'])) {
                             $page_id = $tab['page'];
@@ -957,10 +1000,12 @@ class VerticalTab extends Widget_Base {
                                 if (\Elementor\Plugin::instance()->db->is_built_with_elementor($page_id)) {
                                     echo \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($page_id); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Elementor-rendered content.
                                 } else {
-                                    if (\Elementor\Plugin::instance()->editor->is_edit_mode()) {
-                                        echo do_shortcode($post->post_content); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Published post content.
-                                    } else {
-                                        echo apply_filters('the_content', $post->post_content); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core content filter output.
+                                    if ($post && !is_wp_error($post)) {
+                                        if (\Elementor\Plugin::instance()->editor->is_edit_mode()) {
+                                            echo do_shortcode($post->post_content); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Published post content.
+                                        } else {
+                                            echo apply_filters('the_content', $post->post_content); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core content filter output.
+                                        }
                                     }
                                 }
                             }

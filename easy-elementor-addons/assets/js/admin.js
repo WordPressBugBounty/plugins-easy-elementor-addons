@@ -93,6 +93,11 @@
         }
     });
 
+    /* Enable / Disable All within one category, again only for the cards on screen. */
+    $('body').on('click', '.eead-widget-group-btn', function () {
+        $(this).closest('.eead-widget-group').find('.eead-widget-wrap:visible .eead-widget-checkbox').prop('checked', 1 === $(this).data('checked'));
+    });
+
     /* Tabs display on tab click for Plugin Menu Settings Page */
     $('body').on('click', '.eead-tab', function () {
         var selected_menu = $(this).data('tab');

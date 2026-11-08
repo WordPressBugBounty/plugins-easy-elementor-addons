@@ -7,6 +7,7 @@ use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
 use Elementor\Group_Control_Text_Shadow;
 use Elementor\Group_Control_Typography;
+use Elementor\Group_Control_Background;
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
@@ -77,10 +78,16 @@ class AdvancedHeading extends Widget_Base {
                 ],
                 'toggle' => false,
                 'default' => 'center',
-                'selectors' => [
-                    '{{WRAPPER}} .eead-advanced-heading' => 'text-align: {{VALUE}};',
+                // The flex alignment of the lines and the background text follows the
+                // text alignment through a variable, so it changes per device too.
+                'selectors_dictionary' => [
+                    'left' => 'text-align: left; --eead-ah-justify: flex-start;',
+                    'center' => 'text-align: center; --eead-ah-justify: center;',
+                    'right' => 'text-align: right; --eead-ah-justify: flex-end;',
                 ],
-                'prefix_class' => 'eead-ah-align-'
+                'selectors' => [
+                    '{{WRAPPER}} .eead-advanced-heading' => '{{VALUE}}',
+                ]
             ]
         );
 
@@ -118,6 +125,28 @@ class AdvancedHeading extends Widget_Base {
                 'label_block' => true,
                 'placeholder' => esc_html__('Enter your split text', 'easy-elementor-addons'),
                 'default' => esc_html__('Split Text', 'easy-elementor-addons'),
+                'condition' => [
+                    'split_main_heading' => 'yes'
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'split_position', [
+                'label' => esc_html__('Split Text Position', 'easy-elementor-addons'),
+                'type' => Controls_Manager::CHOOSE,
+                'options' => [
+                    'before' => [
+                        'title' => esc_html__('Before Main Heading', 'easy-elementor-addons'),
+                        'icon' => 'eicon-h-align-left',
+                    ],
+                    'after' => [
+                        'title' => esc_html__('After Main Heading', 'easy-elementor-addons'),
+                        'icon' => 'eicon-h-align-right',
+                    ],
+                ],
+                'default' => 'after',
+                'toggle' => false,
                 'condition' => [
                     'split_main_heading' => 'yes'
                 ]
@@ -543,6 +572,38 @@ class AdvancedHeading extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'split_text_fill', [
+                'label' => esc_html__('Gradient / Image Fill', 'easy-elementor-addons'),
+                'description' => esc_html__('Fills the split text with a gradient or image instead of a flat colour.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'return_value' => 'yes',
+                'prefix_class' => 'eead-ah-split-fill-',
+                'condition' => [
+                    'split_main_heading' => 'yes',
+                    'split_text!' => ''
+                ]
+            ]
+        );
+
+        $this->add_group_control(
+            Group_Control_Background::get_type(), [
+                'name' => 'split_text_background',
+                'types' => ['gradient', 'classic'],
+                'fields_options' => [
+                    'background' => [
+                        'default' => 'gradient',
+                    ],
+                ],
+                'selector' => '{{WRAPPER}} .eead-advanced-heading .eead-ah-main-heading-text .eead-ah-split-text',
+                'condition' => [
+                    'split_main_heading' => 'yes',
+                    'split_text!' => '',
+                    'split_text_fill' => 'yes',
+                ]
+            ]
+        );
+
         $this->add_responsive_control(
             'split_text_space', [
                 'label' => esc_html__('Split Space', 'easy-elementor-addons'),
@@ -551,7 +612,7 @@ class AdvancedHeading extends Widget_Base {
                     'size' => 10,
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .eead-advanced-heading .eead-ah-main-heading-text' => 'gap: {{SIZE}}{{UNIT}};',
+                    '{{WRAPPER}} .eead-advanced-heading .eead-ah-main-heading-text' => 'gap: {{SIZE}}{{UNIT}}; --eead-ah-split-space: {{SIZE}}{{UNIT}};',
                 ],
                 'condition' => [
                     'split_main_heading' => 'yes'
@@ -758,12 +819,13 @@ class AdvancedHeading extends Widget_Base {
         if ($settings['main_heading']) {
             $main_heading .= '<span class="eead-ah-main-heading-wrap">';
             $main_heading .= '<span class="eead-ah-main-heading-text">';
-            $main_heading .= esc_html($settings['main_heading']);
-            if ($settings['split_main_heading'] == 'yes' && !empty($settings['split_text'])) {
-                $main_heading .= '<span class="eead-ah-split-text"> ';
-                $main_heading .= esc_html($settings['split_text']);
-                $main_heading .= '</span>';
+            $text = '<span class="eead-ah-main-text">' . $this->format_text($settings['main_heading']) . '</span>';
+            if ($settings['split_main_heading'] == 'yes' && trim($settings['split_text']) !== '') {
+                $split = '<span class="eead-ah-split-text">' . $this->format_text($settings['split_text']) . '</span>';
+                // The space between the two stays outside the spans so the line can wrap there.
+                $text = ('before' === $settings['split_position']) ? $split . ' ' . $text : $text . ' ' . $split;
             }
+            $main_heading .= $text;
             $main_heading .= '</span>';
             $main_heading .= '</span>';
 
@@ -790,15 +852,28 @@ class AdvancedHeading extends Widget_Base {
         if ($settings['advanced_heading'] && $settings['advanced_heading_visibility'] == 'yes') {
             $this->add_render_attribute('advanced_heading', 'class', 'eead-ah-adv-heading');
 
+            // Decorative only: screen readers would otherwise read it before the real heading.
+            $this->add_render_attribute('advanced_heading', 'aria-hidden', 'true');
+
             foreach (array_filter((array) $settings['advanced_heading_hide']) as $device) {
-                $this->add_render_attribute('advanced_heading', 'class', 'eead-hide-' . $device);
+                // Elementor's own class follows the site's custom breakpoints.
+                $this->add_render_attribute('advanced_heading', 'class', ['eead-hide-' . $device, 'elementor-hidden-' . $device]);
             }
 
             $advanced_heading .= '<div ' . $this->get_render_attribute_string('advanced_heading') . '>';
-            $advanced_heading .= esc_html($settings['advanced_heading']);
+            $advanced_heading .= $this->format_text($settings['advanced_heading']);
             $advanced_heading .= '</div>';
         }
         echo wp_kses_post($advanced_heading);
+    }
+
+    /**
+     * Escaped text with its line breaks kept. Line separators pasted from other
+     * apps count as breaks; stray breaks at either end are dropped.
+     */
+    protected function format_text($text) {
+        $text = trim(str_replace(["\u{2028}", "\u{2029}", "\r\n", "\r"], "\n", (string) $text));
+        return nl2br(esc_html($text), false);
     }
 
 }

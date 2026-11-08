@@ -373,6 +373,55 @@ class LogoCarousel extends Widget_Base {
             ]
         );
 
+        $this->add_responsive_control(
+            'logo_height', [
+                'label' => esc_html__('Logo Height', 'easy-elementor-addons'),
+                'description' => esc_html__('Gives logos of different shapes one height; each logo is fitted inside, never cropped.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => ['px' => ['min' => 20, 'max' => 300]],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-logo-carousel .eead-logo-slide img' => 'height: {{SIZE}}{{UNIT}}; width: 100%; object-fit: contain;',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'logo_grayscale', [
+                'label' => esc_html__('Grayscale', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => '',
+                'options' => [
+                    '' => esc_html__('None', 'easy-elementor-addons'),
+                    'normal' => esc_html__('Grayscale, Color on Hover', 'easy-elementor-addons'),
+                    'hover' => esc_html__('Color, Grayscale on Hover', 'easy-elementor-addons'),
+                ],
+                'prefix_class' => 'eead-lc-grayscale-',
+            ]
+        );
+
+        $this->add_control(
+            'logo_opacity', [
+                'label' => esc_html__('Opacity', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'range' => ['px' => ['min' => 0.1, 'max' => 1, 'step' => 0.05]],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-logo-carousel .eead-logo-slide img' => 'opacity: {{SIZE}};',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'logo_opacity_hover', [
+                'label' => esc_html__('Opacity on Hover', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'range' => ['px' => ['min' => 0.1, 'max' => 1, 'step' => 0.05]],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-logo-carousel .eead-logo-slide:hover img, {{WRAPPER}} .eead-logo-carousel .eead-logo-slide:focus-within img' => 'opacity: {{SIZE}};',
+                ]
+            ]
+        );
+
         $this->add_control(
             'logo_bg_color', [
                 'label' => esc_html__('Background Color', 'easy-elementor-addons'),
@@ -1025,11 +1074,20 @@ class LogoCarousel extends Widget_Base {
             <?php
             if ($settings['slides']) {
                 foreach ($settings['slides'] as $item) {
-                    $image_url = Group_Control_Image_Size::get_attachment_image_src($item['image']['id'], 'thumb', $settings);
+                    $image_url = !empty($item['image']['id']) ? Group_Control_Image_Size::get_attachment_image_src($item['image']['id'], 'thumb', $settings) : '';
+                    if (!$image_url && !empty($item['image']['url'])) {
+                        // An image given by URL only (no Media Library id).
+                        $image_url = $item['image']['url'];
+                    }
                     if (!$image_url) {
                         $image_url = Utils::get_placeholder_image_src();
                     }
-                    $image_html = '<img src="' . esc_url($image_url) . '" alt="' . esc_attr(Control_Media::get_image_alt($item['image'])) . '" />';
+                    // The title stands in for missing alt text, so a linked logo is never an unnamed link.
+                    $alt = trim((string) Control_Media::get_image_alt($item['image']));
+                    if ('' === $alt) {
+                        $alt = trim((string) $item['title']);
+                    }
+                    $image_html = '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($alt) . '" />';
 
                     $link = isset($item['logo_url']) && is_array($item['logo_url']) ? $item['logo_url'] : [];
                     if (empty($link['url']) && !empty($item['logo_link'])) {
@@ -1052,7 +1110,7 @@ class LogoCarousel extends Widget_Base {
                     } else {
                         echo wp_kses_post($image_html);
                     }
-                    if ($settings['show_title']) {
+                    if ($settings['show_title'] && '' !== trim((string) $item['title'])) {
                         echo '<' . esc_attr(eead_check_allowed_html_tags($settings['title_html_tag'])) . ' class="eead-logo-title">' . esc_html($item['title']) . '</' . esc_attr(eead_check_allowed_html_tags($settings['title_html_tag'])) . '>';
                     }
                     echo '</div>';

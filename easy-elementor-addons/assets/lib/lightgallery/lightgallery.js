@@ -3,6 +3,9 @@
  * http://sachinchoolur.github.io/lightgallery.js/
  * Copyright (c) 2016 Sachin N; 
  * @license GPLv3 
+ * EEA: YouTube embeds keep the youtube-nocookie.com domain when the link uses it;
+ * video iframes get allow="autoplay" so a popup opened by a click can play with sound;
+ * destroy() only restores the scroll position if the gallery was opened.
  */(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Lightgallery = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
     (function (global, factory) {
         if (typeof define === "function" && define.amd) {
@@ -1514,8 +1517,11 @@
                 _lgUtils2.default.trigger(_this.el, 'onBeforeClose');
             }
     
-            document.body.scrollTop = _this.prevScrollTop;
-            document.documentElement.scrollTop = _this.prevScrollTop;
+            // Only after the gallery was open: rebuilding a closed one sent the page to the top.
+            if (typeof _this.prevScrollTop === 'number') {
+                document.body.scrollTop = _this.prevScrollTop;
+                document.documentElement.scrollTop = _this.prevScrollTop;
+            }
     
             /**
              * if d is false or undefined destroy will only close the gallery
@@ -2526,7 +2532,7 @@
                 a = a + '&' + utils.param(this.core.s.youtubePlayerParams);
             }
 
-            video = '<iframe class="lg-video-object lg-youtube ' + addClass + '" ' + videoTitle + ' width="560" height="315" src="//www.youtube.com/embed/' + isVideo.youtube[1] + a + '" frameborder="0" allowfullscreen></iframe>';
+            video = '<iframe class="lg-video-object lg-youtube ' + addClass + '" ' + videoTitle + ' width="560" height="315" src="//' + (/youtube-nocookie\.com/.test(src) ? 'www.youtube-nocookie.com' : 'www.youtube.com') + '/embed/' + isVideo.youtube[1] + a + '" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
         } else if (isVideo.vimeo) {
 
             a = '?autoplay=' + autoplay + '&api=1';
@@ -2534,7 +2540,7 @@
                 a = a + '&' + utils.param(this.core.s.vimeoPlayerParams);
             }
 
-            video = '<iframe class="lg-video-object lg-vimeo ' + addClass + '" ' + videoTitle + ' width="560" height="315"  src="//player.vimeo.com/video/' + isVideo.vimeo[1] + a + '" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
+            video = '<iframe class="lg-video-object lg-vimeo ' + addClass + '" ' + videoTitle + ' width="560" height="315"  src="//player.vimeo.com/video/' + isVideo.vimeo[1] + a + '" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
         } else if (isVideo.dailymotion) {
 
             a = '?wmode=opaque&autoplay=' + autoplay + '&api=postMessage';
@@ -2542,7 +2548,7 @@
                 a = a + '&' + utils.param(this.core.s.dailymotionPlayerParams);
             }
 
-            video = '<iframe class="lg-video-object lg-dailymotion ' + addClass + '" ' + videoTitle + ' width="560" height="315" src="//www.dailymotion.com/embed/video/' + isVideo.dailymotion[1] + a + '" frameborder="0" allowfullscreen></iframe>';
+            video = '<iframe class="lg-video-object lg-dailymotion ' + addClass + '" ' + videoTitle + ' width="560" height="315" src="//www.dailymotion.com/embed/video/' + isVideo.dailymotion[1] + a + '" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
         } else if (isVideo.html5) {
             var fL = html.substring(0, 1);
             if (fL === '.' || fL === '#') {
@@ -2557,7 +2563,7 @@
                 a = a + '&' + utils.param(this.core.s.vkPlayerParams);
             }
 
-            video = '<iframe class="lg-video-object lg-vk ' + addClass + '" ' + videoTitle + '  width="560" height="315" src="http://vk.com/video_ext.php?' + isVideo.vk[1] + a + '" frameborder="0" allowfullscreen></iframe>';
+            video = '<iframe class="lg-video-object lg-vk ' + addClass + '" ' + videoTitle + '  width="560" height="315" src="http://vk.com/video_ext.php?' + isVideo.vk[1] + a + '" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
         }
 
         return video;

@@ -126,7 +126,65 @@ class TwitterFeed extends Widget_Base {
                     'dark' => esc_html__('Dark', 'easy-elementor-addons'),
                 ],
                 'condition' => [
+                    'embed_type' => ['post', 'video'],
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'hide_thread', [
+                'label' => esc_html__('Hide Parent Post', 'easy-elementor-addons'),
+                'description' => esc_html__('For replies, show only the reply, not the post it answers.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'condition' => [
                     'embed_type' => 'post',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'hide_media', [
+                'label' => esc_html__('Hide Photos, Videos and Link Cards', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'condition' => [
+                    'embed_type' => 'post',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'post_width', [
+                'label' => esc_html__('Max Width', 'easy-elementor-addons') . ' (px)',
+                'description' => esc_html__('Between 250 and 550. Leave empty for the default.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::NUMBER,
+                'min' => 250,
+                'max' => 550,
+                'condition' => [
+                    'embed_type' => 'post',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'post_align', [
+                'label' => esc_html__('Alignment', 'easy-elementor-addons'),
+                'type' => Controls_Manager::CHOOSE,
+                'options' => [
+                    'left' => [
+                        'title' => esc_html__('Left', 'easy-elementor-addons'),
+                        'icon' => 'eicon-text-align-left',
+                    ],
+                    'center' => [
+                        'title' => esc_html__('Center', 'easy-elementor-addons'),
+                        'icon' => 'eicon-text-align-center',
+                    ],
+                    'right' => [
+                        'title' => esc_html__('Right', 'easy-elementor-addons'),
+                        'icon' => 'eicon-text-align-right',
+                    ],
+                ],
+                'condition' => [
+                    'embed_type' => ['post', 'video'],
                 ]
             ]
         );
@@ -189,6 +247,15 @@ class TwitterFeed extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'dnt', [
+                'label' => esc_html__('Privacy Mode', 'easy-elementor-addons'),
+                'description' => esc_html__('Asks X not to use this page visit to personalise ads or suggestions (Do Not Track).', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'separator' => 'before',
+            ]
+        );
+
         $this->end_controls_section();
     }
 
@@ -245,74 +312,136 @@ class TwitterFeed extends Widget_Base {
         }
     }
 
+    /** Attributes shared by every embed type; empty values are left out. */
+    protected function common_attributes($key, $settings) {
+        if (!empty($settings['language'])) {
+            $this->add_render_attribute($key, 'data-lang', $settings['language']);
+        }
+        if ('yes' === $settings['dnt']) {
+            $this->add_render_attribute($key, 'data-dnt', 'true');
+        }
+    }
+
+    /** Shown in the editor when the widget has nothing to embed. */
+    protected function editor_notice($message) {
+        if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            echo '<div class="elementor-alert elementor-alert-info">' . esc_html($message) . '</div>';
+        }
+    }
+
+    /**
+     * The embed is a link until widgets.js turns it into a card, so it stays
+     * usable if the script is blocked (ad blockers, cookie consent tools).
+     */
+    protected function print_tweet_blockquote($url, $label) {
+        ?>
+        <blockquote <?php $this->print_render_attribute_string('blockquote'); ?>><a href="<?php echo esc_url($url); ?>"><?php echo esc_html($label); ?></a></blockquote>
+        <?php
+    }
+
     public function get_video_html($settings) {
+        $url = trim((string) $settings['url_video']);
+        if ('' === $url) {
+            $this->editor_notice(esc_html__('Enter the URL of an X post with a video.', 'easy-elementor-addons'));
+            return;
+        }
+
         $this->add_render_attribute('blockquote', [
             'class' => 'twitter-tweet',
-            'data-media-max-width' => $settings['width_max_video'],
-            'data-lang' => $settings['language'],
+            'data-theme' => $settings['theme_post'],
         ]);
+        if (!empty($settings['width_max_video'])) {
+            $this->add_render_attribute('blockquote', 'data-media-max-width', absint($settings['width_max_video']));
+        }
+        if (!empty($settings['post_align'])) {
+            $this->add_render_attribute('blockquote', 'data-align', $settings['post_align']);
+        }
+        $this->common_attributes('blockquote', $settings);
 
-        $this->add_render_attribute('video', [
-            'href' => esc_url($settings['url_video']),
-        ]);
-        ?>
-        <blockquote <?php $this->print_render_attribute_string('blockquote'); ?>><a <?php $this->print_render_attribute_string('video'); ?>></a></blockquote>
-        <?php
+        $this->print_tweet_blockquote($url, esc_html__('Watch the video on X', 'easy-elementor-addons'));
     }
 
     public function get_post_html($settings) {
+        $url = trim((string) $settings['url_post']);
+        if ('' === $url) {
+            $this->editor_notice(esc_html__('Enter the URL of an X post.', 'easy-elementor-addons'));
+            return;
+        }
+
         $this->add_render_attribute('blockquote', [
             'class' => 'twitter-tweet',
-            'data-lang' => $settings['language'],
             'data-theme' => $settings['theme_post'],
         ]);
+        if ('yes' === $settings['hide_thread']) {
+            $this->add_render_attribute('blockquote', 'data-conversation', 'none');
+        }
+        if ('yes' === $settings['hide_media']) {
+            $this->add_render_attribute('blockquote', 'data-cards', 'hidden');
+        }
+        if (!empty($settings['post_width'])) {
+            $this->add_render_attribute('blockquote', 'data-width', max(250, min(550, absint($settings['post_width']))));
+        }
+        if (!empty($settings['post_align'])) {
+            $this->add_render_attribute('blockquote', 'data-align', $settings['post_align']);
+        }
+        $this->common_attributes('blockquote', $settings);
 
-        $this->add_render_attribute('post', [
-            'href' => esc_url($settings['url_post'])
-        ]);
-        ?>
-        <blockquote <?php $this->print_render_attribute_string('blockquote'); ?>><a <?php $this->print_render_attribute_string('post'); ?>></a></blockquote>
-        <?php
+        $this->print_tweet_blockquote($url, esc_html__('View the post on X', 'easy-elementor-addons'));
     }
 
     public function get_hashtag_html($settings) {
+        $hashtag = trim(ltrim(trim((string) $settings['hashtag']), '#'));
+        if ('' === $hashtag) {
+            $this->editor_notice(esc_html__('Enter a hashtag.', 'easy-elementor-addons'));
+            return;
+        }
 
         $this->add_render_attribute('hashtag', [
             'class' => 'twitter-hashtag-button',
-            'href' => 'https://x.com/intent/tweet?button_hashtag=' . rawurlencode(ltrim($settings['hashtag'], '#')),
-            'data-lang' => $settings['language']
+            'href' => 'https://x.com/intent/tweet?button_hashtag=' . rawurlencode($hashtag),
         ]);
+        $this->common_attributes('hashtag', $settings);
 
+        $text = '';
         if ($settings['prefill_text_hashtag'] === 'post_title') {
-            $this->add_render_attribute('hashtag', 'data-text', $this->current_post_title());
+            $text = $this->current_post_title();
+        } elseif ($settings['prefill_text_hashtag'] === 'excerpt') {
+            $text = $this->current_post_excerpt();
+        } elseif ($settings['prefill_text_hashtag'] === 'custom') {
+            $text = $settings['prefill_custom'];
         }
-
-        if ($settings['prefill_text_hashtag'] === 'excerpt') {
-            $this->add_render_attribute('hashtag', 'data-text', $this->current_post_excerpt());
-        }
-
-        if ($settings['prefill_text_hashtag'] === 'custom') {
-            $this->add_render_attribute('hashtag', 'data-text', $settings['prefill_custom']);
+        $text = html_entity_decode(wp_strip_all_tags((string) $text), ENT_QUOTES, 'UTF-8');
+        if ('' !== trim($text)) {
+            $this->add_render_attribute('hashtag', 'data-text', $text);
         }
 
         if ($settings['hashtag_large_button'] === 'yes') {
             $this->add_render_attribute('hashtag', 'data-size', 'large');
         }
-        $this->add_render_attribute('hashtag', 'data-url', $settings['hashtag_url']);
+        if ('' !== trim((string) $settings['hashtag_url'])) {
+            $this->add_render_attribute('hashtag', 'data-url', esc_url_raw(trim($settings['hashtag_url'])));
+        }
         ?>
         <a <?php $this->print_render_attribute_string('hashtag'); ?>><?php
             /* translators: %s: hashtag */
-            echo esc_html(sprintf(__('Tweet %s', 'easy-elementor-addons'), $settings['hashtag']));
+            echo esc_html(sprintf(__('Tweet %s', 'easy-elementor-addons'), '#' . $hashtag));
             ?></a>
         <?php
     }
 
+    /** The page being viewed, not the first post of an archive loop. */
+    protected function current_object_id() {
+        return is_singular() ? get_queried_object_id() : 0;
+    }
+
     public function current_post_title() {
-        return get_the_title();
+        $id = $this->current_object_id();
+        return $id ? get_the_title($id) : wp_get_document_title();
     }
 
     public function current_post_excerpt() {
-        return has_excerpt() ? get_the_excerpt() : '';
+        $id = $this->current_object_id();
+        return $id && has_excerpt($id) ? get_the_excerpt($id) : '';
     }
 
 }

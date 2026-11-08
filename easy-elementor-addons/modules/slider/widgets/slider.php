@@ -224,6 +224,25 @@ class Slider extends Widget_Base {
         );
 
         $this->add_control(
+            'ken_burns', [
+                'label' => esc_html__('Ken Burns Effect', 'easy-elementor-addons'),
+                'description' => esc_html__('A slow zoom on the image of the slide in view.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'prefix_class' => 'eead-slider-kenburns-',
+            ]
+        );
+
+        $this->add_control(
+            'slide_title_tag', [
+                'label' => esc_html__('Title HTML Tag', 'easy-elementor-addons'),
+                'description' => esc_html__('A hero slider at the top of a page is often its main heading (H1).', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => eead_html_tags(),
+                'default' => 'div',
+            ]
+        );
+
+        $this->add_control(
             'autoplay', [
                 'label' => esc_html__('Autoplay', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
@@ -1757,7 +1776,9 @@ class Slider extends Widget_Base {
                 'pause_on_hover' => $settings['pause_on_hover'] == 'yes' ? true : false,
                 'auto_height' => $settings['auto_height'] == 'yes' ? true : false,
                 'prev_icon' => 'icofont-simple-left',
-                'next_icon' => 'icofont-simple-right'
+                'next_icon' => 'icofont-simple-right',
+                'prev_label' => esc_html__('Previous slide', 'easy-elementor-addons'),
+                'next_label' => esc_html__('Next slide', 'easy-elementor-addons'),
             );
 
             if (!empty($settings['prev_icon_arrow']['value'])) {
@@ -1784,8 +1805,11 @@ class Slider extends Widget_Base {
 
             <div <?php $this->print_render_attribute_string('slider'); ?>>
                 <?php
+                $title_tag = eead_check_allowed_html_tags($settings['slide_title_tag'], 'div');
                 if (!empty($sliders)) {
                     foreach ($sliders as $key => $slider) {
+                        // Slides after the first wait until needed.
+                        $loading = 0 === $key ? '' : ' loading="lazy"';
                         $image = $slider['slider_image']['url'];
                         $title = $slider['slider_title'];
                         $caption = $slider['slider_sub_title'];
@@ -1800,9 +1824,9 @@ class Slider extends Widget_Base {
                                 $image_alt = \Elementor\Control_Media::get_image_alt($slider['slider_image']);
 
                                 if ($image_url) {
-                                    echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '">';
+                                    echo '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '"' . $loading . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed string.
                                 } else {
-                                    echo '<img src="' . esc_url($slider['slider_image']['url']) . '" alt="' . esc_attr($image_alt) . '">';
+                                    echo '<img src="' . esc_url($slider['slider_image']['url']) . '" alt="' . esc_attr($image_alt) . '"' . $loading . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed string.
                                 }
                             }
                             ?>
@@ -1811,9 +1835,9 @@ class Slider extends Widget_Base {
                                 <?php } ?>
                                 <div class="eead-slide-caption">
                                     <?php if ($title) { ?>
-                                        <div class="eead-slide-cap-title">
+                                        <<?php echo esc_attr($title_tag); ?> class="eead-slide-cap-title">
                                             <span><?php echo wp_kses_post($title); ?></span>
-                                        </div>
+                                        </<?php echo esc_attr($title_tag); ?>>
                                     <?php } ?>
 
                                     <?php if ($caption) { ?>
@@ -1822,9 +1846,13 @@ class Slider extends Widget_Base {
                                         </div>
                                     <?php } ?>
 
-                                    <?php if ($button_link) { ?>
+                                    <?php
+                                    if ($button_link && '' !== trim((string) $button_text)) {
+                                        // add_link_attributes keeps "open in new tab" and "nofollow".
+                                        $this->add_link_attributes('slide-button-' . $key, $slider['slider_button_link']);
+                                        ?>
                                         <div class="eead-slide-button">
-                                            <a href="<?php echo esc_url($button_link); ?>"><?php echo esc_html($button_text); ?></a>
+                                            <a <?php $this->print_render_attribute_string('slide-button-' . $key); ?>><?php echo esc_html($button_text); ?></a>
                                         </div>
                                     <?php } ?>
                                 </div>

@@ -67,6 +67,15 @@ class PricingTable extends Widget_Base {
         );
 
         $this->add_control(
+            'title_tag', [
+                'label' => esc_html__('Title HTML Tag', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => eead_html_tags(),
+                'default' => 'h2',
+            ]
+        );
+
+        $this->add_control(
             'sub_title', [
                 'label' => esc_html__('Sub Title', 'easy-elementor-addons'),
                 'type' => Controls_Manager::TEXT,
@@ -93,6 +102,15 @@ class PricingTable extends Widget_Base {
         );
 
         $this->add_control(
+            'old_price', [
+                'label' => esc_html__('Original Price', 'easy-elementor-addons'),
+                'description' => esc_html__('Shown crossed out before the price, for a sale or discount.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'label_block' => true,
+            ]
+        );
+
+        $this->add_control(
             'tag', [
                 'label' => esc_html__('Tag', 'easy-elementor-addons'),
                 'type' => Controls_Manager::TEXT,
@@ -113,7 +131,7 @@ class PricingTable extends Widget_Base {
 
         $repeater->add_control(
             'feature_icon', [
-                'label' => esc_html__('Button Icon', 'easy-elementor-addons'),
+                'label' => esc_html__('Icon', 'easy-elementor-addons'),
                 'type' => Controls_Manager::ICONS,
                 'skin' => 'inline',
                 'label_block' => false,
@@ -121,6 +139,14 @@ class PricingTable extends Widget_Base {
                     'value' => 'icofont-check-alt',
                     'library' => 'iconfont'
                 ],
+            ]
+        );
+
+        $repeater->add_control(
+            'excluded', [
+                'label' => esc_html__('Not Included', 'easy-elementor-addons'),
+                'description' => esc_html__('Greyed out and struck through, to show what this plan lacks.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
             ]
         );
 
@@ -178,6 +204,15 @@ class PricingTable extends Widget_Base {
                     'value' => 'icofont-rounded-right',
                     'library' => 'iconfont'
                 ],
+            ]
+        );
+
+        $this->add_control(
+            'footer_note', [
+                'label' => esc_html__('Note Below Button', 'easy-elementor-addons'),
+                'description' => esc_html__('Small print under the button, e.g. "No credit card required".', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'label_block' => true,
             ]
         );
 
@@ -1034,6 +1069,10 @@ class PricingTable extends Widget_Base {
                         </a>
                     </div>
                 <?php } ?>
+
+                <?php if ('' !== trim((string) $settings['footer_note'])) { ?>
+                    <p class="eead-pricing-note"><?php echo esc_html($settings['footer_note']); ?></p>
+                <?php } ?>
             </div>
         </div>
         <?php
@@ -1043,7 +1082,8 @@ class PricingTable extends Widget_Base {
         $settings = $this->get_settings_for_display();
         if ($settings['title']) {
             ?>
-            <h2 class="eead-pricing-title"><?php echo esc_html($settings['title']); ?></h2>
+            <?php $tag = eead_check_allowed_html_tags($settings['title_tag'], 'h2'); ?>
+            <<?php echo esc_attr($tag); ?> class="eead-pricing-title"><?php echo esc_html($settings['title']); ?></<?php echo esc_attr($tag); ?>>
             <?php
         }
 
@@ -1056,8 +1096,14 @@ class PricingTable extends Widget_Base {
 
     protected function get_pricing_price() {
         $settings = $this->get_settings_for_display();
+        if ('' === trim((string) $settings['price']) && '' === trim((string) $settings['price_per'])) {
+            return;
+        }
         ?>
         <div class="eead-pricing-price">
+            <?php if ('' !== trim((string) $settings['old_price'])) { ?>
+                <del class="eead-price-old"><span class="elementor-screen-only"><?php esc_html_e('Original price:', 'easy-elementor-addons'); ?> </span><?php echo esc_html($settings['old_price']); ?></del>
+            <?php } ?>
             <span class="eead-price"><?php echo esc_html($settings['price']); ?></span>
             <span class="eead-price-per"><?php echo esc_html($settings['price_per']); ?></span>
         </div>
@@ -1069,9 +1115,15 @@ class PricingTable extends Widget_Base {
         if ($settings['feature_list']) {
             echo '<ul class="eead-pricing-listing">';
             foreach ($settings['feature_list'] as $item) {
-                echo '<li>';
+                $excluded = !empty($item['excluded']) && 'yes' === $item['excluded'];
+                echo '<li' . ($excluded ? ' class="eead-pt-excluded"' : '') . '>';
                 Icons_Manager::render_icon($item['feature_icon'], ['aria-hidden' => 'true']);
+                echo '<span class="eead-pt-feature-text">';
+                if ($excluded) {
+                    echo '<span class="elementor-screen-only">' . esc_html__('Not included:', 'easy-elementor-addons') . ' </span>';
+                }
                 echo wp_kses_post($item['list']);
+                echo '</span>';
                 echo '</li>';
             }
             echo '</ul>';

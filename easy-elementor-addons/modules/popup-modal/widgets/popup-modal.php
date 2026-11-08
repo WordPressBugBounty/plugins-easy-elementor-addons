@@ -285,6 +285,70 @@ class PopupModal extends Widget_Base {
             ]
         );
 
+		$this->add_control(
+			'auto_open', [
+				'label' => esc_html__('Open Automatically', 'easy-elementor-addons'),
+				'type' => Controls_Manager::SELECT,
+				'default' => '',
+				'separator' => 'before',
+				'options' => [
+					'' => esc_html__('No', 'easy-elementor-addons'),
+					'delay' => esc_html__('After a Delay', 'easy-elementor-addons'),
+					'scroll' => esc_html__('After Scrolling', 'easy-elementor-addons'),
+					'exit' => esc_html__('On Exit Intent', 'easy-elementor-addons'),
+				],
+				'description' => esc_html__('Exit intent opens the popup when the pointer heads for the browser bar (desktop); on touch screens it falls back to a 30 second delay. Not triggered inside the editor.', 'easy-elementor-addons'),
+			]
+		);
+
+		$this->add_control(
+			'auto_open_delay', [
+				'label' => esc_html__('Delay (seconds)', 'easy-elementor-addons'),
+				'type' => Controls_Manager::NUMBER,
+				'min' => 0,
+				'default' => 5,
+				'condition' => [
+					'auto_open' => 'delay'
+				]
+			]
+		);
+
+		$this->add_control(
+			'auto_open_scroll', [
+				'label' => esc_html__('Scrolled Down (%)', 'easy-elementor-addons'),
+				'type' => Controls_Manager::SLIDER,
+				'range' => ['px' => ['min' => 5, 'max' => 100]],
+				'default' => ['size' => 50],
+				'condition' => [
+					'auto_open' => 'scroll'
+				]
+			]
+		);
+
+		$this->add_control(
+			'auto_open_again', [
+				'label' => esc_html__('Show Again After (days)', 'easy-elementor-addons'),
+				'description' => esc_html__('Once a visitor has seen it, it opens by itself again only after this many days. 0 shows it on every visit.', 'easy-elementor-addons'),
+				'type' => Controls_Manager::NUMBER,
+				'min' => 0,
+				'default' => 7,
+				'condition' => [
+					'auto_open!' => ''
+				]
+			]
+		);
+
+		$this->add_control(
+			'hide_trigger', [
+				'label' => esc_html__('Hide Trigger', 'easy-elementor-addons'),
+				'description' => esc_html__('Only open automatically: no button on the page (it still shows in the editor).', 'easy-elementor-addons'),
+				'type' => Controls_Manager::SWITCHER,
+				'condition' => [
+					'auto_open!' => ''
+				]
+			]
+		);
+
 		$this->end_controls_section();
 
 		$this->start_controls_section(
@@ -1433,7 +1497,8 @@ class PopupModal extends Widget_Base {
 		$id = $this->get_id();
 
 		$this->add_render_attribute('popup-modal-button', [
-			'href' => '#',
+			'href' => '#eead-popup-modal-' . $id,
+			'role' => 'button',
 			'class' => [
 				'eead-popup-modal-trigger-btn',
 				esc_attr('eead-popup-modal-trigger-' . $settings['trigger_type']),
@@ -1494,13 +1559,28 @@ class PopupModal extends Widget_Base {
 			'aria-hidden' => "true"
 		]);
 		?>
-		<div class="eead-popup-modal-trigger">
+		<?php
+		$auto = in_array($settings['auto_open'], ['delay', 'scroll', 'exit'], true) ? $settings['auto_open'] : '';
+		$hide_trigger = $auto && 'yes' === $settings['hide_trigger'] && !\Elementor\Plugin::$instance->editor->is_edit_mode();
+		$auto_attrs = $auto ? ' data-auto="' . esc_attr(wp_json_encode([
+			'type' => $auto,
+			'delay' => max(0, (float) $settings['auto_open_delay']),
+			'scroll' => isset($settings['auto_open_scroll']['size']) ? (float) $settings['auto_open_scroll']['size'] : 50,
+			'again' => max(0, (float) $settings['auto_open_again']),
+		])) . '"' : '';
+		?>
+		<div class="eead-popup-modal-trigger"<?php echo $hide_trigger ? ' hidden' : ''; ?><?php echo $auto_attrs; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above. ?>>
 			<?php $this->render_button(); ?>
 		</div>
 
 		<div <?php $this->print_render_attribute_string('popup-modal'); ?>>
 			<div class="modal__overlay" tabindex="-1" data-micromodal-close>
-				<div class="modal__container animated animated-fast <?php echo esc_attr($settings['popup_animation']) ?>" role="dialog" aria-modal="true" aria-labelledby="modal-<?php echo esc_attr($id); ?>-title">
+				<?php
+				// Name the dialog by its title when one is shown, otherwise by the trigger text.
+				$has_title = 'yes' === $settings['popup_title'] && !empty($settings['title']);
+				$dialog_name = $has_title ? 'aria-labelledby="modal-' . esc_attr($id) . '-title"' : 'aria-label="' . esc_attr(!empty($settings['trigger_text']) && 'button' === $settings['trigger_type'] ? $settings['trigger_text'] : __('Popup', 'easy-elementor-addons')) . '"';
+				?>
+				<div class="modal__container animated animated-fast <?php echo esc_attr($settings['popup_animation']) ?>" role="dialog" aria-modal="true" <?php echo $dialog_name; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above. ?>>
 					<?php if ($settings['close_button'] == 'yes') { ?>
 						<div class="eead-popup-modal-close">
 							<button class="modal__close" aria-label="<?php echo esc_attr__('Close Modal', 'easy-elementor-addons'); ?>" data-micromodal-close>
@@ -1521,12 +1601,18 @@ class PopupModal extends Widget_Base {
 						<?php
 						switch ($settings['popup_type']) {
 							case 'image':
-								echo '<img src="' . esc_url($settings['image']['url']) . '" alt="' . esc_attr(\Elementor\Control_Media::get_image_alt($settings['image'])) . '">';
+								if (!empty($settings['image']['url'])) {
+									echo '<img src="' . esc_url($settings['image']['url']) . '" alt="' . esc_attr(\Elementor\Control_Media::get_image_alt($settings['image'])) . '">';
+								}
 								break;
 
 							case 'content':
 								global $wp_embed;
-								$content = wpautop($wp_embed->autoembed($settings['content']));
+								// Filtered like the plugin's other editor fields; embeds are added after.
+								$allowed = wp_kses_allowed_html('post');
+								// Popups often hold a pasted video embed code.
+								$allowed['iframe'] = ['src' => true, 'width' => true, 'height' => true, 'title' => true, 'allow' => true, 'allowfullscreen' => true, 'frameborder' => true, 'loading' => true, 'referrerpolicy' => true, 'style' => true, 'class' => true];
+								$content = wpautop($wp_embed->autoembed(wp_kses($settings['content'], $allowed)));
 								echo do_shortcode($content);
 								break;
 

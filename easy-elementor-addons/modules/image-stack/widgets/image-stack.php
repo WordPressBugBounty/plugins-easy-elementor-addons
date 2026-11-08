@@ -110,6 +110,15 @@ class ImageStack extends Widget_Base {
         );
 
         $this->add_control(
+            'max_visible', [
+                'label' => esc_html__('Show at Most', 'easy-elementor-addons'),
+                'description' => esc_html__('Show only this many images; the rest are counted in the bubble (e.g. +7) unless Extra Bubble has its own text. Leave empty to show all.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::NUMBER,
+                'min' => 1,
+            ]
+        );
+
+        $this->add_control(
             'on_top', [
                 'label' => esc_html__('On Top', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SELECT,
@@ -428,6 +437,15 @@ class ImageStack extends Widget_Base {
         $items = (array) $settings['images'];
         if (empty($items)) {
             return;
+        }
+
+        $max = isset($settings['max_visible']) && is_numeric($settings['max_visible']) ? max(1, (int) $settings['max_visible']) : 0;
+        if ($max && count($items) > $max) {
+            $hidden = count($items) - $max;
+            $items = array_slice($items, 0, $max);
+            if ('' === trim((string) $settings['extra'])) {
+                $settings['extra'] = '+' . $hidden;
+            }
         }
 
         $count = count($items) + ('' !== trim((string) $settings['extra']) ? 1 : 0);

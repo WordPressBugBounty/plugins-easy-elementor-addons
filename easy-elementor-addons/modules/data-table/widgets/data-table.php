@@ -74,7 +74,7 @@ class DataTable extends Widget_Base {
                 'type' => Controls_Manager::TEXTAREA,
                 'rows' => 10,
                 'default' => "Plan,Price,Storage,Support\nStarter,\$9,10 GB,Email\nPro,\$29,100 GB,Priority\nBusiness,\$79,1 TB,24/7 phone",
-                'description' => esc_html__('The first line is the header. Separate values with commas and wrap a value in double quotes if it contains a comma.', 'easy-elementor-addons'),
+                'description' => esc_html__('The first line is the header. Values can be separated by commas, semicolons or tabs (paste straight from a spreadsheet); wrap a value in double quotes if it contains the separator.', 'easy-elementor-addons'),
                 'condition' => [
                     'source' => 'csv'
                 ]
@@ -350,6 +350,34 @@ class DataTable extends Widget_Base {
                 'default' => 'yes',
                 'description' => esc_html__('Not available when body cells span several rows.', 'easy-elementor-addons'),
                 'render_type' => 'template'
+            ]
+        );
+
+        $this->add_control(
+            'sort_initial_col', [
+                'label' => esc_html__('Sort on Load by Column', 'easy-elementor-addons'),
+                'description' => esc_html__('Column number, counting from 1. Leave empty to keep the order as entered.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::NUMBER,
+                'min' => 1,
+                'condition' => [
+                    'sortable' => 'yes'
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'sort_initial_dir', [
+                'label' => esc_html__('Direction', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'asc',
+                'options' => [
+                    'asc' => esc_html__('Ascending', 'easy-elementor-addons'),
+                    'desc' => esc_html__('Descending', 'easy-elementor-addons'),
+                ],
+                'condition' => [
+                    'sortable' => 'yes',
+                    'sort_initial_col!' => '',
+                ]
             ]
         );
 
@@ -996,10 +1024,25 @@ class DataTable extends Widget_Base {
     /** Parse pasted CSV, honouring quoted values that contain commas or line breaks. */
     private function parse_csv($csv) {
         $rows = [];
+        $csv = trim(preg_replace('/^\xEF\xBB\xBF/', '', (string) $csv));
+
+        // Spreadsheets paste as tab-separated and European Excel exports use
+        // semicolons; the separator seen most on the header line (outside
+        // quotes) wins.
+        $first = preg_replace('/"[^"]*"/', '', strtok($csv, "\n"));
+        $delimiter = ',';
+        $best = substr_count($first, ',');
+        foreach (["\t", ';'] as $candidate) {
+            if (substr_count($first, $candidate) > $best) {
+                $best = substr_count($first, $candidate);
+                $delimiter = $candidate;
+            }
+        }
+
         $handle = fopen('php://temp', 'r+');
-        fwrite($handle, trim((string) $csv));
+        fwrite($handle, $csv);
         rewind($handle);
-        while (false !== ($row = fgetcsv($handle, 0, ',', '"', '\\'))) {
+        while (false !== ($row = fgetcsv($handle, 0, $delimiter, '"', '\\'))) {
             if ([null] === $row) {
                 continue;
             }
@@ -1103,6 +1146,8 @@ class DataTable extends Widget_Base {
             'class' => ['eead-data-table-wrap', 'eead-dt-' . $responsive],
             'data-settings' => wp_json_encode([
                 'sortable' => $sortable,
+                'sortCol' => $sortable && is_numeric($settings['sort_initial_col']) ? max(0, (int) $settings['sort_initial_col'] - 1) : -1,
+                'sortDir' => 'desc' === $settings['sort_initial_dir'] ? -1 : 1,
                 'search' => $searchable,
                 'perPage' => $paginate ? max(1, (int) $settings['per_page']) : 0,
                 'empty' => $searchable ? $settings['empty_text'] : '',

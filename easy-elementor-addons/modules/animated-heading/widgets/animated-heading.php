@@ -6,6 +6,7 @@ namespace EasyElementorAddons\Modules\AnimatedHeading\Widgets;
 use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
 use Elementor\Group_Control_Typography;
+use Elementor\Group_Control_Background;
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
@@ -45,7 +46,7 @@ class AnimatedHeading extends Widget_Base {
     }
 
     public function get_script_depends() {
-        return ['morphext', 'typed'];
+        return ['typed'];
     }
 
     protected function register_controls() {
@@ -166,7 +167,6 @@ class AnimatedHeading extends Widget_Base {
                 'default' => 'fadeIn',
                 'label_block' => true,
                 'condition' => [
-                    'heading_animation!' => '',
                     'layout' => 'animated',
                 ],
                 'render_type' => 'template'
@@ -192,14 +192,13 @@ class AnimatedHeading extends Widget_Base {
 
         $this->add_control(
             'heading_animation_delay', [
-                'label' => esc_html__('Animation Delay (ms)', 'easy-elementor-addons'),
+                'label' => esc_html__('Word Delay (ms)', 'easy-elementor-addons'),
                 'type' => Controls_Manager::NUMBER,
                 'default' => 2500,
                 'min' => 100,
                 'max' => 9000,
                 'step' => 100,
                 'condition' => [
-                    'heading_animation!' => '',
                     'layout' => 'animated',
                 ]
             ]
@@ -270,6 +269,25 @@ class AnimatedHeading extends Widget_Base {
         );
 
         $this->add_control(
+            'show_cursor', [
+                'label' => esc_html__('Show Cursor', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'default' => 'yes'
+            ]
+        );
+
+        $this->add_control(
+            'cursor_char', [
+                'label' => esc_html__('Cursor Character', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'default' => '|',
+                'condition' => [
+                    'show_cursor' => 'yes'
+                ]
+            ]
+        );
+
+        $this->add_control(
             'loop_count', [
                 'label' => esc_html__('Loop Count', 'easy-elementor-addons'),
                 'type' => Controls_Manager::NUMBER,
@@ -321,6 +339,53 @@ class AnimatedHeading extends Widget_Base {
             ]
         );
 
+        $this->add_group_control(
+            Group_Control_Typography::get_type(), [
+                'name' => 'animated_text_typography',
+                'label' => esc_html__('Animated Text Typography', 'easy-elementor-addons'),
+                'selector' => '{{WRAPPER}} .eead-ah-heading .eead-animated-heading, {{WRAPPER}} .eead-ah-heading .typed-cursor'
+            ]
+        );
+
+        $this->add_control(
+            'animated_text_bg_heading', [
+                'label' => esc_html__('Animated Text Background', 'easy-elementor-addons'),
+                'type' => Controls_Manager::HEADING,
+                'separator' => 'before'
+            ]
+        );
+
+        $this->add_group_control(
+            Group_Control_Background::get_type(), [
+                'name' => 'animated_text_background',
+                'types' => ['classic', 'gradient'],
+                'exclude' => ['image'],
+                'selector' => '{{WRAPPER}} .eead-ah-heading .eead-animated-heading'
+            ]
+        );
+
+        $this->add_responsive_control(
+            'animated_text_padding', [
+                'label' => esc_html__('Padding', 'easy-elementor-addons'),
+                'type' => Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', 'em'],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-ah-heading .eead-animated-heading' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'animated_text_radius', [
+                'label' => esc_html__('Border Radius', 'easy-elementor-addons'),
+                'type' => Controls_Manager::DIMENSIONS,
+                'size_units' => ['px', '%'],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-ah-heading .eead-animated-heading' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
+                ]
+            ]
+        );
+
         $this->end_controls_section();
     }
 
@@ -328,7 +393,7 @@ class AnimatedHeading extends Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         $id = $this->get_id();
-        $type_heading = explode(",", esc_html($settings['animated_heading']));
+        $words = array_values(array_filter(array_map('trim', explode(',', (string) $settings['animated_heading'])), 'strlen'));
         $html_tag = $settings['html_tag'];
 
         $this->add_render_attribute([
@@ -347,6 +412,7 @@ class AnimatedHeading extends Widget_Base {
                     'data-settings' => [
                         wp_json_encode(array_filter([
                             'layout' => $settings['layout'],
+                            'words' => $words,
                             'animation' => $settings['heading_animation'],
                             'speed' => $settings['heading_animation_delay'],
                         ]))
@@ -359,13 +425,18 @@ class AnimatedHeading extends Widget_Base {
                     'data-settings' => [
                         wp_json_encode(array_filter([
                             'layout' => $settings['layout'],
-                            'strings' => array_merge([''], $type_heading),
+                            // Escaped here because Typed writes the strings as HTML.
+                            'strings' => array_merge([''], array_map('esc_html', $words)),
                             'typeSpeed' => $settings['type_speed'],
                             'startDelay' => $settings['start_delay'],
                             'backSpeed' => $settings['back_speed'],
                             'backDelay' => $settings['back_delay'],
-                            'loop' => $settings['infinite_loop'] == 'yes' ? true : false,
-                            'loopCount' => $settings['infinite_loop'] == 'yes' ? false : $settings['loop_count'],
+                            // Typed only honours loopCount while loop is on, so a finite
+                            // count needs loop enabled too.
+                            'loop' => $settings['infinite_loop'] == 'yes' || (int) $settings['loop_count'] > 0,
+                            'loopCount' => $settings['infinite_loop'] == 'yes' ? false : (int) $settings['loop_count'],
+                            'showCursor' => $settings['show_cursor'] == 'yes' ? 'yes' : 'no',
+                            'cursorChar' => $settings['show_cursor'] == 'yes' && $settings['cursor_char'] !== '' ? esc_html($settings['cursor_char']) : '|',
                         ]))
                     ]
                 ]
@@ -391,15 +462,16 @@ class AnimatedHeading extends Widget_Base {
                     <?php
             }
 
-            if ($settings['animated_heading']) {
+            if ($words) {
+                // The rotating words change under assistive tech and are missing
+                // from the markup until typed, so the full list is given once here.
                 ?>
-                    <span <?php $this->print_render_attribute_string('animated-heading'); ?>>
-                        <?php
+                    <span class="elementor-screen-only"><?php echo esc_html(implode(', ', $words)); ?></span>
+                    <span aria-hidden="true" <?php $this->print_render_attribute_string('animated-heading'); ?>><?php
                         if ($settings['layout'] != 'typed') {
-                            echo esc_html(rtrim($settings['animated_heading'], ','));
+                            echo esc_html($words[0]);
                         }
-                        ?>
-                    </span>
+                    ?></span>
                     <?php
             }
 

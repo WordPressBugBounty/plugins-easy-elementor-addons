@@ -37,7 +37,14 @@ class AdvancedMap extends Widget_Base {
     }
 
     public function get_script_depends() {
-        return ['gmap-api'];
+        // Without a key the widget falls back to a keyless embed, so the API
+        // (which would only paint Google's error box) is not loaded at all.
+        return $this->get_api_key() !== '' ? ['gmap-api'] : [];
+    }
+
+    protected function get_api_key() {
+        $eead_general_settings = get_option('eead_general_settings', []);
+        return isset($eead_general_settings['gmap_access_token']) ? trim((string) $eead_general_settings['gmap_access_token']) : '';
     }
 
     protected function register_controls() {
@@ -52,7 +59,7 @@ class AdvancedMap extends Widget_Base {
             'api-notice', [
                 'type' => Controls_Manager::NOTICE,
                 'heading' => esc_html__('Notice', 'easy-elementor-addons'),
-                'content' => esc_html__('Google Map API key is required. To add Google Map API key ', 'easy-elementor-addons') . '<a target="_blank" href="' . admin_url('admin.php?page=eead-settings') . '">' . esc_html__('Click Here', 'easy-elementor-addons') . '</a>'
+                'content' => esc_html__('A Google Map API key is needed for multiple markers, custom pins, animation and styles. Without one, a simple embed of the first marker is shown. To add the API key ', 'easy-elementor-addons') . '<a target="_blank" href="' . admin_url('admin.php?page=eead-settings') . '">' . esc_html__('Click Here', 'easy-elementor-addons') . '</a>'
             ]
         );
 
@@ -72,7 +79,7 @@ class AdvancedMap extends Widget_Base {
                 'label' => esc_html__('Longitude', 'easy-elementor-addons'),
                 'type' => Controls_Manager::TEXT,
                 'default' => '-74.005973',
-                'placeholder' => esc_html__('Enter latitude here', 'easy-elementor-addons')
+                'placeholder' => esc_html__('Enter longitude here', 'easy-elementor-addons')
             ]
         );
 
@@ -81,6 +88,15 @@ class AdvancedMap extends Widget_Base {
                 'type' => Controls_Manager::NOTICE,
                 'heading' => esc_html__('Notice', 'easy-elementor-addons'),
                 'content' => esc_html__('Get the Latitude and Longitude value by Location Address from ', 'easy-elementor-addons') . '<a target="_blank" href="https://www.latlong.net/">' . esc_html__('Here.', 'easy-elementor-addons') . '</a>'
+            ]
+        );
+
+        $repeater->add_control(
+            'title', [
+                'label' => esc_html__('Marker Title', 'easy-elementor-addons'),
+                'description' => esc_html__('Shown as a tooltip on hover and read out by screen readers.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'label_block' => true,
             ]
         );
 
@@ -157,7 +173,7 @@ class AdvancedMap extends Widget_Base {
                 'type' => Controls_Manager::NUMBER,
                 'default' => 300,
                 'selectors' => [
-                    '{{WRAPPER}} .eead-gmap-markers' => 'height:{{VALUE}}px',
+                    '{{WRAPPER}} .eead-gmap-markers, {{WRAPPER}} .eead-gmap-embed' => 'height:{{VALUE}}px',
                 ]
             ]
         );
@@ -168,14 +184,28 @@ class AdvancedMap extends Widget_Base {
                 'type' => Controls_Manager::SLIDER,
                 'range' => [
                     'px' => [
-                        'min' => 6,
-                        'max' => 20,
+                        'min' => 1,
+                        'max' => 22,
                     ]
                 ],
                 'default' => [
                     'unit' => 'px',
                     'size' => 13,
                 ]
+            ]
+        );
+
+        $this->add_control(
+            'map_type_id', [
+                'label' => esc_html__('Map Type', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'roadmap',
+                'options' => array(
+                    'roadmap' => esc_html__('Roadmap', 'easy-elementor-addons'),
+                    'satellite' => esc_html__('Satellite', 'easy-elementor-addons'),
+                    'hybrid' => esc_html__('Hybrid', 'easy-elementor-addons'),
+                    'terrain' => esc_html__('Terrain', 'easy-elementor-addons'),
+                )
             ]
         );
 
@@ -287,7 +317,25 @@ class AdvancedMap extends Widget_Base {
     /** Render Layout */
     protected function render() {
         $settings = $this->get_settings_for_display();
-        $markers = $settings['markers'];
+        $zoom = !empty($settings['zoom']['size']) ? (int) $settings['zoom']['size'] : 13;
+
+        // A blank or mistyped coordinate would hand Google NaN, which drops the
+        // marker and, with several markers, breaks the fit-to-bounds view.
+        $markers = array_values(array_filter((array) $settings['markers'], function ($marker) {
+            return isset($marker['lat'], $marker['long']) && is_numeric(trim($marker['lat'])) && is_numeric(trim($marker['long'])) && abs((float) $marker['lat']) <= 90 && abs((float) $marker['long']) <= 180;
+        }));
+
+        if (empty($markers)) {
+            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+                echo '<div class="elementor-alert elementor-alert-warning">' . esc_html__('Add a marker with a valid latitude and longitude.', 'easy-elementor-addons') . '</div>';
+            }
+            return;
+        }
+
+        if ($this->get_api_key() === '') {
+            $this->render_embed($markers[0], $zoom, $settings['map_type_id']);
+            return;
+        }
 
         if ($settings['drggable'] === 'no') {
             $this->add_render_attribute('wrapper', [
@@ -296,7 +344,8 @@ class AdvancedMap extends Widget_Base {
         }
 
         $this->add_render_attribute('wrapper', [
-            'data-zoom' => $settings['zoom']['size'],
+            'data-zoom' => $zoom,
+            'data-map-type' => in_array($settings['map_type_id'], ['roadmap', 'satellite', 'hybrid', 'terrain'], true) ? $settings['map_type_id'] : 'roadmap',
             'data-scrollwheel' => $settings['scrollwheel'] == 'enable' ? true : NULL,
             'data-zoomControl' => $settings['zoom_controls'] == 'show' ? true : NULL,
             'data-fullscreenControl' => $settings['fullscreen_control'] == 'show' ? true : NULL,
@@ -315,24 +364,42 @@ class AdvancedMap extends Widget_Base {
         if ($map_id !== '') {
             $this->add_render_attribute('wrapper', 'data-map-id', $map_id);
         }
-
-        if (count($markers) >= 1) {
-            ?>
-            <div class="eead-gmap-container">
-                <div class="eead-gmap-markers" <?php $this->print_render_attribute_string('wrapper'); ?>>
-                    <?php
-                    foreach ($markers as $marker) {
-                        ?>
-                        <div class="eead-gmap-marker" data-lat="<?php echo esc_attr($marker['lat']); ?>" data-lng="<?php echo esc_attr($marker['long']); ?>" data-icon-size="<?php echo esc_attr($marker['icon_size']['size']); ?>" data-icon="<?php echo esc_url($marker['icon']['url']); ?>" data-info-window="<?php echo esc_attr($marker['info_window_onload']); ?>" data-animate="<?php echo esc_attr('animate-' . $settings['animate']) ?>">
-                            <?php echo wp_kses_post($marker['address']); ?>
-                        </div>
-                        <?php
-                    }
+        ?>
+        <div class="eead-gmap-container">
+            <div class="eead-gmap-markers" <?php $this->print_render_attribute_string('wrapper'); ?>>
+                <?php
+                foreach ($markers as $marker) {
+                    $icon_size = !empty($marker['icon_size']['size']) ? (int) $marker['icon_size']['size'] : 50;
                     ?>
-                </div>
+                    <div class="eead-gmap-marker" data-lat="<?php echo esc_attr(trim($marker['lat'])); ?>" data-lng="<?php echo esc_attr(trim($marker['long'])); ?>" data-title="<?php echo esc_attr(isset($marker['title']) ? $marker['title'] : ''); ?>" data-icon-size="<?php echo esc_attr($icon_size); ?>" data-icon="<?php echo esc_url(isset($marker['icon']['url']) ? $marker['icon']['url'] : ''); ?>" data-info-window="<?php echo esc_attr($marker['info_window_onload']); ?>" data-animate="<?php echo esc_attr('animate-' . $settings['animate']) ?>">
+                        <?php echo wp_kses_post($marker['address']); ?>
+                    </div>
+                    <?php
+                }
+                ?>
             </div>
-            <?php
-        }
+        </div>
+        <?php
+    }
+
+    /** Keyless fallback: Google's plain embed of the first marker. */
+    protected function render_embed($marker, $zoom, $map_type) {
+        $types = ['roadmap' => 'm', 'satellite' => 'k', 'hybrid' => 'h', 'terrain' => 'p'];
+        $src = add_query_arg([
+            'q' => trim($marker['lat']) . ',' . trim($marker['long']),
+            'z' => $zoom,
+            't' => isset($types[$map_type]) ? $types[$map_type] : 'm',
+            'output' => 'embed',
+        ], 'https://maps.google.com/maps');
+        $title = !empty($marker['title']) ? $marker['title'] : esc_html__('Map', 'easy-elementor-addons');
+        ?>
+        <div class="eead-gmap-container">
+            <?php if (\Elementor\Plugin::$instance->editor->is_edit_mode()) { ?>
+                <div class="elementor-alert elementor-alert-info"><?php esc_html_e('No Google Map API key is set, so a simple embed of the first marker is shown. Add a key in the plugin settings for multiple markers, custom pins and map styles.', 'easy-elementor-addons'); ?></div>
+            <?php } ?>
+            <iframe class="eead-gmap-embed" src="<?php echo esc_url($src); ?>" title="<?php echo esc_attr($title); ?>" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        </div>
+        <?php
     }
 
 }

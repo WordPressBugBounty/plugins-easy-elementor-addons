@@ -386,7 +386,9 @@ class ImageComparison extends Widget_Base {
             'show_before_after_label' => ($settings['show_before_after_label'] == 'yes' || $settings['show_before_after_label'] == 'hover') ? true : false,
             'show_before_after_label_onhover' => $settings['show_before_after_label'] == 'hover' ? true : false,
             'move_slider_on_hover' => $settings['move_slider_on'] == 'hover' ? true : false,
-            'starting_point' => $settings['starting_point']['size'] ? $settings['starting_point']['size'] : 50,
+            'starting_point' => isset($settings['starting_point']['size']) && is_numeric($settings['starting_point']['size']) ? max(0, min(100, (float) $settings['starting_point']['size'])) : 50,
+            /* translators: slider label for screen readers */
+            'slider_label' => esc_html__('Comparison slider', 'easy-elementor-addons'),
             'add_circle' => $settings['add_circle'] == 'yes' ? true : false,
             'add_circle_blur' => $settings['add_circle_blur'] == 'yes' ? true : false,
             'add_circle_shadow' => $settings['add_circle_shadow'] == 'yes' ? true : false,

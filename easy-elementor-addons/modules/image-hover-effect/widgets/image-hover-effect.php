@@ -625,7 +625,7 @@ class ImageHoverEffect extends Widget_Base {
         $tag = $box_link ? 'a' : 'div';
         ?>
         <<?php echo esc_attr($tag); ?> <?php $this->print_render_attribute_string('box'); ?>>
-            <div class="eead-ihe-image"><?php echo wp_kses_post($image_html); ?></div>
+            <div class="eead-ihe-image"><?php echo eead_kses_image($image_html); ?></div>
             <div class="eead-ihe-overlay" aria-hidden="true"></div>
             <?php if ('border' === $effect) { ?>
                 <span class="eead-ihe-lines" aria-hidden="true"></span>

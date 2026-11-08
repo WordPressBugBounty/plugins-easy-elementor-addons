@@ -165,8 +165,45 @@ class Counter extends Widget_Base {
 
         $this->add_control(
             'counter_comma', [
-                'label' => esc_html__('Show Comma Notation', 'easy-elementor-addons'),
+                'label' => esc_html__('Thousand Separator', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER
+            ]
+        );
+
+        $this->add_control(
+            'separator_char', [
+                'label' => esc_html__('Separator', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => ',',
+                'options' => [
+                    ',' => esc_html__('Comma (1,500.5)', 'easy-elementor-addons'),
+                    '.' => esc_html__('Dot (1.500,5)', 'easy-elementor-addons'),
+                    ' ' => esc_html__('Space (1 500.5)', 'easy-elementor-addons'),
+                ],
+                'condition' => [
+                    'counter_comma' => 'yes'
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'duration', [
+                'label' => esc_html__('Animation Duration (ms)', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'range' => ['px' => ['min' => 300, 'max' => 8000, 'step' => 100]],
+                'default' => ['size' => 2000],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-odometer.odometer.odometer-auto-theme .odometer-ribbon-inner, {{WRAPPER}} .eead-odometer.odometer.odometer-theme-default .odometer-ribbon-inner' => 'transition-duration: {{SIZE}}ms',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'title_tag', [
+                'label' => esc_html__('Title HTML Tag', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => eead_html_tags(),
+                'default' => 'h4',
             ]
         );
 
@@ -489,10 +526,13 @@ class Counter extends Widget_Base {
         ?>
         <div class="<?php echo esc_attr(implode(' ', $counter_class)); ?>">
             <?php
-            $counter_title = $settings['title'];
+            $counter_title = trim((string) $settings['title']);
             $counter_count = $settings['count'];
+            $separator = in_array($settings['separator_char'], [',', '.', ' '], true) ? $settings['separator_char'] : ',';
+            $duration = !empty($settings['duration']['size']) ? (int) $settings['duration']['size'] : 2000;
 
-            if ($counter_count) {
+            // is_numeric, so a count of 0 still renders.
+            if (is_numeric($counter_count)) {
                 ?>
                 <div class="eead-counter">
                     <?php if (!empty($settings['icon']['value'])) { ?>
@@ -514,9 +554,14 @@ class Counter extends Widget_Base {
                             </span>
                         <?php } ?>
 
-                        <span class="eead-odometer" data-count="<?php echo esc_attr($counter_count); ?>" data-start="<?php echo esc_attr($settings['starting_value']); ?>" data-comma="<?php echo esc_attr($counter_comma); ?>">
-                            <?php echo esc_html($settings['starting_value']); ?>
-                        </span>
+                        <?php
+                        // Screen readers and search engines get the final number,
+                        // not the starting value the animation begins from.
+                        $decimals = strlen((string) substr(strrchr((string) $counter_count, '.'), 1));
+                        $final = 'yes' === $counter_comma ? number_format((float) $counter_count, $decimals, '.' === $separator ? ',' : '.', $separator) : $counter_count;
+                        ?>
+                        <span class="elementor-screen-only"><?php echo esc_html($final); ?></span>
+                        <span class="eead-odometer" aria-hidden="true" data-count="<?php echo esc_attr($counter_count); ?>" data-start="<?php echo esc_attr(is_numeric($settings['starting_value']) ? $settings['starting_value'] : 0); ?>" data-comma="<?php echo esc_attr($counter_comma); ?>" data-separator="<?php echo esc_attr($separator); ?>" data-duration="<?php echo esc_attr($duration); ?>"><?php echo esc_html(is_numeric($settings['starting_value']) ? $settings['starting_value'] : 0); ?></span>
 
                         <?php if (trim($settings['post_text'])) { ?>
                             <span class="eead-counter-post-text">
@@ -525,9 +570,9 @@ class Counter extends Widget_Base {
                         <?php } ?>
                     </div>
 
-                    <h4 class="eead-counter-title">
-                        <?php echo esc_html($counter_title); ?>
-                    </h4>
+                    <?php if ($counter_title !== '') { ?>
+                        <<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_tag'], 'h4')); ?> class="eead-counter-title"><?php echo esc_html($counter_title); ?></<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_tag'], 'h4')); ?>>
+                    <?php } ?>
                     <?php
                     if ($counter_style == 'style4') {
                         echo '</div>';

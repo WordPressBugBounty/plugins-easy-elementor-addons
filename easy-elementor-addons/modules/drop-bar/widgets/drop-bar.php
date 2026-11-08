@@ -548,7 +548,8 @@ class DropBar extends Widget_Base {
             "delay-show" => $settings["drop_show_delay"]["size"],
             "offset" => $settings["drop_offset"]["size"],
             "animation" => $settings["drop_animation"] ? "uk-animation-" . $settings["drop_animation"] : false,
-            "duration" => ($settings["drop_duration"]["size"] && $settings["drop_animation"]) ? $settings["drop_duration"]["size"] : "0"
+            // Duration is hidden, so empty, when the animation is None.
+            "duration" => ($settings["drop_animation"] && !empty($settings["drop_duration"]["size"])) ? $settings["drop_duration"]["size"] : "0"
         ]);
 
         $this->add_render_attribute(

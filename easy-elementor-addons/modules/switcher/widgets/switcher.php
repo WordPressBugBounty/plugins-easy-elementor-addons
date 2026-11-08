@@ -629,7 +629,7 @@ class Switcher extends Widget_Base {
         ?>
         <div class="eead-switcher-container">
             <div class="eead-switcher-tabs">
-                <div class="eead-switcher-tabs-inner">
+                <div class="eead-switcher-tabs-inner" role="tablist">
                     <?php $this->get_tabs(); ?>
                     <span class="eead-switcher-slider"></span>
                 </div>
@@ -650,7 +650,8 @@ class Switcher extends Widget_Base {
             foreach ($settings['switcher'] as $tab) {
                 $i++;
                 ?>
-                <div class="eead-switcher-tab <?php echo ($i == $active_switch ? 'eead-switcher-active-tab' : ''); ?>" data-switchid="<?php echo esc_attr($i); ?>">
+                <?php $base = 'eead-switcher-' . $this->get_id() . '-' . $i; ?>
+                <div class="eead-switcher-tab <?php echo ($i == $active_switch ? 'eead-switcher-active-tab' : ''); ?>" data-switchid="<?php echo esc_attr($i); ?>" id="<?php echo esc_attr($base . '-tab'); ?>" role="tab" aria-controls="<?php echo esc_attr($base . '-panel'); ?>" aria-selected="<?php echo $i == $active_switch ? 'true' : 'false'; ?>" tabindex="<?php echo $i == $active_switch ? '0' : '-1'; ?>">
                     <?php Icons_Manager::render_icon($tab['icon'], ['aria-hidden' => 'true']); ?>
                     <span><?php echo esc_html($tab['title']); ?></span>
                 </div>
@@ -668,7 +669,8 @@ class Switcher extends Widget_Base {
             foreach ($settings['switcher'] as $tab) {
                 $i++;
                 ?>
-                <div class="animated animated-fast <?php echo esc_attr($settings['content_animation']); ?> eead-switcher-content eead-switcher-content-<?php echo esc_attr($i) . ' ' . ($i == $active_switch ? 'eead-switcher-active-content' : ''); ?>">
+                <?php $base = 'eead-switcher-' . $this->get_id() . '-' . $i; ?>
+                <div class="animated animated-fast <?php echo esc_attr($settings['content_animation']); ?> eead-switcher-content eead-switcher-content-<?php echo esc_attr($i) . ' ' . ($i == $active_switch ? 'eead-switcher-active-content' : ''); ?>" id="<?php echo esc_attr($base . '-panel'); ?>" role="tabpanel" tabindex="0" aria-labelledby="<?php echo esc_attr($base . '-tab'); ?>">
                     <?php
                     if (isset($tab['content_type']) && $tab['content_type'] === 'page' && !empty($tab['page'])) {
                         $page_id = $tab['page'];

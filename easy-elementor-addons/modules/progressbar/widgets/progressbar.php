@@ -89,6 +89,17 @@ class Progressbar extends Widget_Base {
             ]
         );
 
+        $repeater->add_control(
+            'bar_color', [
+                'label' => esc_html__('Bar Color', 'easy-elementor-addons'),
+                'description' => esc_html__('Optional: a colour for this bar only.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} {{CURRENT_ITEM}} .eead-progressbar-length' => 'background: {{VALUE}};',
+                ],
+            ]
+        );
+
         $this->add_control(
             'progressbar_block', [
                 'label' => esc_html__('Add Progress Bars', 'easy-elementor-addons'),
@@ -108,6 +119,16 @@ class Progressbar extends Widget_Base {
         $this->start_controls_section(
             'progressbar_settings', [
                 'label' => esc_html__('Settings', 'easy-elementor-addons')
+            ]
+        );
+
+        $this->add_control(
+            // Not 'animation_duration': Elementor's Motion Effects control already uses that name on every widget.
+            'bar_animation_duration', [
+                'label' => esc_html__('Animation Duration (ms)', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'range' => ['px' => ['min' => 0, 'max' => 5000, 'step' => 100]],
+                'default' => ['size' => 1000],
             ]
         );
 
@@ -459,12 +480,13 @@ class Progressbar extends Widget_Base {
         $settings = $this->get_settings_for_display();
         $progressbars = $settings['progressbar_block'];
         ?>
-        <div class="eead-progressbar-container eead-progressbar-<?php echo esc_attr($settings['progressbar_style']); ?>">
+        <div class="eead-progressbar-container eead-progressbar-<?php echo esc_attr($settings['progressbar_style']); ?>" data-duration="<?php echo esc_attr(isset($settings['bar_animation_duration']['size']) && is_numeric($settings['bar_animation_duration']['size']) ? (int) $settings['bar_animation_duration']['size'] : 1000); ?>">
             <?php
             foreach ($progressbars as $progressbar) {
-                $percentage = $progressbar['progressbar_percentage']['size'];
+                // 0-100 only: a bigger number ran the bar past its track.
+                $percentage = isset($progressbar['progressbar_percentage']['size']) && is_numeric($progressbar['progressbar_percentage']['size']) ? max(0, min(100, (int) round($progressbar['progressbar_percentage']['size']))) : 0;
                 ?>
-                <div class="eead-progress">
+                <div class="eead-progress elementor-repeater-item-<?php echo esc_attr($progressbar['_id']); ?>">
                     <?php
                     switch ($settings['progressbar_style']) {
                         case 'style1':

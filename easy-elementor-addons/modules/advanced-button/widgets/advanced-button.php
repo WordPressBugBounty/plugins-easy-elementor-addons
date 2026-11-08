@@ -112,6 +112,7 @@ class AdvancedButton extends Widget_Base {
                     'g' => esc_html__('Move Text', 'easy-elementor-addons'),
                     'h' => esc_html__('Inclined Slide Down', 'easy-elementor-addons'),
                     'i' => esc_html__('Horizontal Center Out', 'easy-elementor-addons'),
+                    'j' => esc_html__('Shutter In (Top & Bottom)', 'easy-elementor-addons'),
                 ],
                 'prefix_class' => 'eead-ab-button-effect-'
             ]
@@ -173,6 +174,44 @@ class AdvancedButton extends Widget_Base {
             ]
         );
 
+        $this->add_responsive_control(
+            'icon_size', [
+                'label' => esc_html__('Icon Size', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px', 'em'],
+                'range' => [
+                    'px' => [
+                        'min' => 6,
+                        'max' => 100,
+                    ]
+                ],
+                'condition' => [
+                    'button_icon[value]!' => '',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}}' => '--eead-ab-button-icon-size: {{SIZE}}{{UNIT}};'
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'icon_hover_effect', [
+                'label' => esc_html__('Icon Hover Effect', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => '',
+                'options' => [
+                    '' => esc_html__('None', 'easy-elementor-addons'),
+                    'nudge' => esc_html__('Nudge', 'easy-elementor-addons'),
+                    'grow' => esc_html__('Grow', 'easy-elementor-addons'),
+                    'spin' => esc_html__('Spin', 'easy-elementor-addons'),
+                ],
+                'condition' => [
+                    'button_icon[value]!' => '',
+                ],
+                'prefix_class' => 'eead-ab-icon-hover-'
+            ]
+        );
+
         $this->end_controls_section();
 
         $this->start_controls_section(
@@ -211,7 +250,17 @@ class AdvancedButton extends Widget_Base {
                         'icon' => 'eicon-grow',
                     ]
                 ],
-                'prefix_class' => 'eead-ab-button-align-'
+                // Applied through selectors: a responsive prefix_class adds the same
+                // class for every device, so tablet and mobile choices never applied.
+                'selectors_dictionary' => [
+                    'left' => 'flex-direction: row; justify-content: flex-start;',
+                    'center' => 'flex-direction: row; justify-content: center;',
+                    'right' => 'flex-direction: row; justify-content: flex-end;',
+                    'stretch' => 'flex-direction: column; justify-content: center;',
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-ab-button-wrapper' => '{{VALUE}}',
+                ]
             ]
         );
 

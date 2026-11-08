@@ -89,7 +89,7 @@ class WhatsappChat extends Widget_Base {
                 'type' => Controls_Manager::TEXTAREA,
                 'rows' => 2,
                 'default' => esc_html__('Hi! I have a question.', 'easy-elementor-addons'),
-                'description' => esc_html__('Typed into the visitor\'s chat, ready to send.', 'easy-elementor-addons')
+                'description' => esc_html__('Typed into the visitor\'s chat, ready to send. {title} and {url} are replaced with the page being viewed, e.g. "Hi! I have a question about {title}".', 'easy-elementor-addons')
             ]
         );
 
@@ -568,10 +568,29 @@ class WhatsappChat extends Widget_Base {
     private function chat_url($agent) {
         $number = preg_replace('/\D+/', '', (string) $agent['phone']);
         $url = 'https://wa.me/' . $number;
-        if ('' !== trim((string) $agent['message'])) {
-            $url .= '?text=' . rawurlencode($agent['message']);
+        $message = trim((string) $agent['message']);
+        if ('' !== $message) {
+            if (false !== strpos($message, '{title}') || false !== strpos($message, '{url}')) {
+                list($page_title, $page_url) = $this->current_page();
+                $message = str_replace(['{title}', '{url}'], [$page_title, $page_url], $message);
+            }
+            $url .= '?text=' . rawurlencode($message);
         }
         return $url;
+    }
+
+    /** Title and URL of the page being viewed (not the first post of an archive loop). */
+    private function current_page() {
+        if (is_singular()) {
+            $id = get_queried_object_id();
+            $title = get_the_title($id);
+            $url = get_permalink($id);
+        } else {
+            global $wp;
+            $title = wp_get_document_title();
+            $url = home_url(add_query_arg([], isset($wp->request) ? $wp->request : ''));
+        }
+        return [html_entity_decode(wp_strip_all_tags((string) $title), ENT_QUOTES, 'UTF-8'), (string) $url];
     }
 
     private function render_avatar($agent) {
@@ -584,7 +603,7 @@ class WhatsappChat extends Widget_Base {
             foreach (array_slice(preg_split('/\s+/', trim((string) $agent['name'])), 0, 2) as $word) {
                 $initials .= mb_substr($word, 0, 1);
             }
-            echo '<span class="eead-wa-initials">' . esc_html(mb_strtoupper($initials)) . '</span>';
+            echo '<span class="eead-wa-initials" aria-hidden="true">' . esc_html(mb_strtoupper($initials)) . '</span>';
         }
         echo '</span>';
     }
@@ -665,6 +684,9 @@ class WhatsappChat extends Widget_Base {
                                             <span class="eead-wa-agent-name"><?php echo esc_html($agent['name']); ?></span>
                                             <?php if ('' !== $agent['role']) { ?>
                                                 <span class="eead-wa-agent-role"><?php echo esc_html($agent['role']); ?></span>
+                                            <?php } ?>
+                                            <?php if ('yes' === $agent['available']) { ?>
+                                                <span class="elementor-screen-only"><?php esc_html_e('(available)', 'easy-elementor-addons'); ?></span>
                                             <?php } ?>
                                         </span>
                                         <span class="eead-wa-agent-go"><?php Icons_Manager::render_icon($settings['button_icon'], ['aria-hidden' => 'true']); ?></span>

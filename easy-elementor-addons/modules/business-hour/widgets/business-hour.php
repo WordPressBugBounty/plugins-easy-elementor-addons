@@ -202,10 +202,7 @@ class BusinessHour extends Widget_Base {
         $week = $this->set_start_of_week($week);
 
         /** Create control foreach day of week. */
-        $count = 0;
         foreach ($week as $key => $day) {
-            $count++;
-
             /** Header. */
             $this->add_control(
                 "{$key}_header", [
@@ -224,11 +221,8 @@ class BusinessHour extends Widget_Base {
                 ]
             );
 
-            /** Closed. */
-            $default = '';
-            if ($count > 5) {
-                $default = 'yes';
-            }
+            /** Closed: weekends by default, wherever the week starts. */
+            $default = in_array($key, ['sat', 'sun'], true) ? 'yes' : '';
             $this->add_control(
                 "{$key}_closed", [
                     'label' => esc_html__('Closed All Day:', 'easy-elementor-addons'),
@@ -264,6 +258,7 @@ class BusinessHour extends Widget_Base {
                         ]
                     ],
                     'title_field' => '{{ start_time }} - {{ end_time }}',
+                    'description' => esc_html__('An end time earlier than the start time runs past midnight, e.g. 6:00 pm - 2:00 am.', 'easy-elementor-addons'),
                     'condition' => [
                         "{$key}_closed" => '',
                     ],
@@ -371,6 +366,18 @@ class BusinessHour extends Widget_Base {
         $this->start_controls_section(
             'time_zone', [
                 'label' => esc_html__('Time Zone', 'easy-elementor-addons'),
+            ]
+        );
+
+        $this->add_control(
+            'business_hour_style', [
+                'label' => esc_html__('Display Timer', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => [
+                    'default' => esc_html__('No', 'easy-elementor-addons'),
+                    'dynamic' => esc_html__('Yes', 'easy-elementor-addons')
+                ],
+                'default' => 'default',
                 'conditions' => [
                     'relation' => 'or',
                     'terms' => [
@@ -390,20 +397,9 @@ class BusinessHour extends Widget_Base {
         );
 
         $this->add_control(
-            'business_hour_style', [
-                'label' => esc_html__('Display Timer', 'easy-elementor-addons'),
-                'type' => Controls_Manager::SELECT,
-                'options' => [
-                    'default' => esc_html__('No', 'easy-elementor-addons'),
-                    'dynamic' => esc_html__('Yes', 'easy-elementor-addons')
-                ],
-                'default' => 'default',
-            ]
-        );
-
-        $this->add_control(
             'dynamic_timezone', [
                 'label' => esc_html__('Timezone', 'easy-elementor-addons'),
+                'description' => esc_html__('Used for the clock, the open/closed status and the highlighted day.', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SELECT,
                 'default' => 'default',
                 'options' => [
@@ -890,7 +886,12 @@ class BusinessHour extends Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
 
-        $timeNotation = (get_option('time_format') == 'H:i') ? '24h' : '12h';
+        $time_format = get_option('time_format');
+        $timeNotation = (strpos($time_format, 'G') !== false || strpos($time_format, 'H') !== false) ? '24h' : '12h';
+        $display_tz = $this->get_display_timezone();
+        $schedule = $this->get_schedule($settings);
+        $now = new \DateTime('now', $display_tz);
+        $is_open = $this->is_open_at($schedule, (int) $now->format('w'), (int) $now->format('G') * 60 + (int) $now->format('i'));
 
         if ($settings['dynamic_timezone'] == 'custom') {
             $ct_input = (isset($settings['custom_timezone_input']) && !empty($settings['custom_timezone_input'])) ? $settings['custom_timezone_input'] : '+6';
@@ -908,6 +909,11 @@ class BusinessHour extends Widget_Base {
                             "dynamic_timezone_default" => get_option('gmt_offset'),
                             "dynamic_timezone" => $settings['dynamic_timezone'] == 'default' ? get_option('gmt_offset') : $ct_input,
                             "timeNotation" => $timeNotation,
+                            // Status and today's row are recomputed in the browser, so a
+                            // cached page doesn't keep showing the hour it was cached in.
+                            'schedule' => $schedule,
+                            'tz' => $display_tz->getName(),
+                            'offset' => $display_tz->getOffset($now) / 60,
                         ], function ($value) {
                             // Keep a 0 (UTC) offset; only drop empty values.
                             return $value !== null && $value !== '';
@@ -926,11 +932,10 @@ class BusinessHour extends Widget_Base {
                 <div class="eead-bh-header">
                     <?php
                     if ($settings['header_content_type'] == 'date') {
-                        $display_tz = $this->get_display_timezone();
                         ?>
                         <div class="eead-bh-current-time">
                             <?php
-                            echo esc_html(wp_date('g:i a', time(), $display_tz));
+                            echo esc_html(wp_date($time_format, time(), $display_tz));
                             ?>
                         </div>
 
@@ -942,14 +947,9 @@ class BusinessHour extends Widget_Base {
                         <?php
                     } elseif ($settings['header_content_type'] == 'status') {
                         ?>
-                        <div class="eead-bh-open-status">
-                            <?php
-                            if ($this->is_open($settings)) {
-                                echo wp_kses_post($settings['header_open_msg']);
-                            } else {
-                                echo wp_kses_post($settings['header_closed_msg']);
-                            }
-                            ?>
+                        <div class="eead-bh-open-status<?php echo $is_open ? ' eead-bh-is-open' : ' eead-bh-is-closed'; ?>">
+                            <span class="eead-bh-status-open"<?php echo $is_open ? '' : ' hidden'; ?>><?php echo wp_kses_post($settings['header_open_msg']); ?></span>
+                            <span class="eead-bh-status-closed"<?php echo $is_open ? ' hidden' : ''; ?>><?php echo wp_kses_post($settings['header_closed_msg']); ?></span>
                         </div>
                         <?php
                     } elseif ($settings['header_content_type'] == 'text') {
@@ -967,16 +967,17 @@ class BusinessHour extends Widget_Base {
                 <?php
                 $week = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
                 $week = $this->set_start_of_week($week);
-                $active_day = strtolower((new \DateTime('now', $this->get_display_timezone()))->format('D')); // sun (not localized)
+                $active_day = strtolower($now->format('D')); // sun (not localized)
+                $day_index = array_flip(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']);
                 foreach ($week as $day) {
                     ?>
-                    <div class="eead-business-hour-row<?php echo ($day == $active_day) ? ' active-day' : ''; ?>">
+                    <div class="eead-business-hour-row<?php echo ($day == $active_day) ? ' active-day' : ''; ?>" data-day="<?php echo esc_attr($day_index[$day]); ?>">
                         <div class=" eead-business-day">
                             <?php echo wp_kses_post($settings["{$day}day_label"]); ?>
                         </div>
                         <div class="eead-business-time">
                             <?php
-                            if ($settings["{$day}_closed"] === 'yes') {
+                            if ($settings["{$day}_closed"] === 'yes' || empty($settings["{$day}_business_hours"])) {
                                 ?>
                                 <div class="eead-closed-all-day">
                                     <?php echo wp_kses_post($settings["{$day}_closed_day_msg"]); ?>
@@ -1001,11 +1002,10 @@ class BusinessHour extends Widget_Base {
                 <div class="eead-bh-footer">
                     <?php
                     if ($settings['footer_content_type'] == 'date') {
-                        $display_tz = $this->get_display_timezone();
                         ?>
                         <div class="eead-bh-current-time">
                             <?php
-                            echo esc_html(wp_date('g:i a', time(), $display_tz));
+                            echo esc_html(wp_date($time_format, time(), $display_tz));
                             ?>
                         </div>
 
@@ -1017,14 +1017,9 @@ class BusinessHour extends Widget_Base {
                         <?php
                     } elseif ($settings['footer_content_type'] == 'status') {
                         ?>
-                        <div class="eead-bh-open-status">
-                            <?php
-                            if ($this->is_open($settings)) {
-                                echo wp_kses_post($settings['footer_open_msg']);
-                            } else {
-                                echo wp_kses_post($settings['footer_closed_msg']);
-                            }
-                            ?>
+                        <div class="eead-bh-open-status<?php echo $is_open ? ' eead-bh-is-open' : ' eead-bh-is-closed'; ?>">
+                            <span class="eead-bh-status-open"<?php echo $is_open ? '' : ' hidden'; ?>><?php echo wp_kses_post($settings['footer_open_msg']); ?></span>
+                            <span class="eead-bh-status-closed"<?php echo $is_open ? ' hidden' : ''; ?>><?php echo wp_kses_post($settings['footer_closed_msg']); ?></span>
                         </div>
                         <?php
                     } elseif ($settings['footer_content_type'] == 'text') {
@@ -1042,59 +1037,56 @@ class BusinessHour extends Widget_Base {
         <?php
     }
 
-    private function is_open($settings) {
-
-        /** Current time in the timezone the widget displays (minute precision). */
-        $now = new \DateTime('now', $this->get_display_timezone());
-        $now->setTime((int) $now->format('H'), (int) $now->format('i'), 0);
-
-        /** Get current day prefix. */
-        $day = strtolower($now->format('D')); // mon
-
-        /** Check closing day */
-        if ($settings["{$day}_closed"] === 'yes') {
-            return false;
-        }
-
-        if (empty($settings["{$day}_business_hours"]) || !is_array($settings["{$day}_business_hours"])) {
-            return false;
-        }
-
-        /** Check, opened or not? */
-        foreach ($settings["{$day}_business_hours"] as $hours) {
-            $start = $this->get_slot_time($now, isset($hours['start_time']) ? $hours['start_time'] : '');
-            $end = $this->get_slot_time($now, isset($hours['end_time']) ? $hours['end_time'] : '');
-
-            if (!$start || !$end) {
+    /**
+     * Opening slots per weekday (0 = Sunday) as [start, end] minutes after midnight.
+     */
+    private function get_schedule($settings) {
+        $schedule = [];
+        foreach (['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as $i => $day) {
+            $schedule[$i] = [];
+            if (isset($settings["{$day}_closed"]) && $settings["{$day}_closed"] === 'yes') {
                 continue;
             }
-
-            /** If the current time between start_time and end_time - we are opened now. */
-            if ($now > $start && $now < $end) {
-                return true;
+            foreach ((array) (isset($settings["{$day}_business_hours"]) ? $settings["{$day}_business_hours"] : []) as $hours) {
+                $start = $this->get_minutes(isset($hours['start_time']) ? $hours['start_time'] : '');
+                $end = $this->get_minutes(isset($hours['end_time']) ? $hours['end_time'] : '');
+                if ($start !== false && $end !== false) {
+                    $schedule[$i][] = [$start, $end];
+                }
             }
         }
-
-        /** Closed by default. */
-        return false;
+        return $schedule;
     }
 
     /**
-     * Convert a slot time string to a DateTime on the same day/timezone as $now.
+     * An end at or before the start runs past midnight, so the previous day's
+     * late slot can still be open in the small hours. Mirrored in frontend.js.
      */
-    private function get_slot_time($now, $time) {
-        if (!is_string($time) || $time === '') {
+    private function is_open_at($schedule, $dow, $minute) {
+        foreach ($schedule[$dow] as $slot) {
+            if ($minute >= $slot[0] && ($slot[1] > $slot[0] ? $minute < $slot[1] : true)) {
+                return true;
+            }
+        }
+        foreach ($schedule[($dow + 6) % 7] as $slot) {
+            if ($slot[1] <= $slot[0] && $minute < $slot[1]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function get_minutes($time) {
+        if (!is_string($time) || trim($time) === '') {
             return false;
         }
 
-        $formats = array_unique([get_option('time_format'), 'H:i', 'g:i a', 'g:i A']);
+        $formats = array_unique([get_option('time_format'), 'H:i', 'G:i', 'g:i a', 'g:i A', 'h:i a', 'h:i A']);
 
         foreach ($formats as $format) {
-            $parsed = \DateTime::createFromFormat($format, trim($time), $now->getTimezone());
+            $parsed = \DateTime::createFromFormat('!' . $format, trim($time));
             if ($parsed) {
-                $slot = clone $now;
-                $slot->setTime((int) $parsed->format('H'), (int) $parsed->format('i'), 0);
-                return $slot;
+                return (int) $parsed->format('G') * 60 + (int) $parsed->format('i');
             }
         }
 

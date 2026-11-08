@@ -1,4 +1,5 @@
 /*! UIkit 3.5.7 | https://www.getuikit.com | (c) 2014 - 2020 YOOtheme | MIT License */
+/* EEA: global element rules (h5, hr, blockquote, pre, ::selection, ...) removed so the Drop Bar doesn't restyle the theme. */
 /* ========================================================================
    Component: Base
  ========================================================================== */
@@ -286,7 +287,6 @@ h6, */
   line-height: 1.4;
 }
 
-h5,
 .uk-h5 {
   font-size: 16px;
   line-height: 1.4;
@@ -342,7 +342,6 @@ dd {
  * 2. Add the correct text-align in Edge and IE.
  * 3. Style
  */
-hr,
 .uk-hr {
   /* 1 */
   overflow: visible;
@@ -355,79 +354,42 @@ hr,
 }
 
 /* Add margin if adjacent element */
-* + hr,
 * + .uk-hr {
   margin-top: 20px;
 }
 
 /* Address
  ========================================================================== */
-address {
-  font-style: normal;
-}
+/* EEA: removed global element rule (address) */
 
 /* Blockquotes
  ========================================================================== */
-blockquote {
-  margin: 0 0 20px 0;
-  font-size: 1.25rem;
-  line-height: 1.5;
-  font-style: italic;
-  color: #333;
-}
+/* EEA: removed global element rule (blockquote) */
 
 /* Add margin if adjacent element */
-* + blockquote {
-  margin-top: 20px;
-}
+/* EEA: removed global element rule (* + blockquote) */
 
 /*
  * Content
  */
-blockquote p:last-of-type {
-  margin-bottom: 0;
-}
+/* EEA: removed global element rule (blockquote p:last-of-type) */
 
-blockquote footer {
-  margin-top: 10px;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: #666;
-}
+/* EEA: removed global element rule (blockquote footer) */
 
-blockquote footer::before {
-  content: "— ";
-}
+/* EEA: removed global element rule (blockquote footer::before) */
 
 /* Preformatted text
  ========================================================================== */
 /*
  * 1. Contain overflow in all browsers.
  */
-pre {
-  font: 0.875rem / 1.5 Consolas, monaco, monospace;
-  color: #666;
-  -moz-tab-size: 4;
-  tab-size: 4;
-  /* 1 */
-  overflow: auto;
-  padding: 10px;
-  border: 1px solid #e5e5e5;
-  border-radius: 3px;
-  background: #fff;
-}
+/* EEA: removed global element rule (pre) */
 
-pre code {
-  font-family: Consolas, monaco, monospace;
-}
+/* EEA: removed global element rule (pre code) */
 
 /* Selection pseudo-element
  ========================================================================== */
-::selection {
-  background: #39f;
-  color: #fff;
-  text-shadow: none;
-}
+/* EEA: removed global element rule (::selection) */
 
 /* HTML5 elements
  ========================================================================== */
@@ -435,25 +397,17 @@ pre code {
  * 1. Add the correct display in Edge, IE 10+, and Firefox.
  * 2. Add the correct display in IE.
  */
-details,
-main {
-  /* 2 */
-  display: block;
-}
+/* EEA: removed global element rule (details , main) */
 
 /*
  * Add the correct display in all browsers.
  */
-summary {
-  display: list-item;
-}
+/* EEA: removed global element rule (summary) */
 
 /*
  * Add the correct display in IE.
  */
-template {
-  display: none;
-}
+/* EEA: removed global element rule (template) */
 
 /* Pass media breakpoints to JS
  ========================================================================== */

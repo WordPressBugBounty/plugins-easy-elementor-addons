@@ -107,6 +107,16 @@ class Accordion extends Widget_Base {
             ]
         );
 
+        $repeater->add_control(
+            'item_id', [
+                'label' => esc_html__('Item ID', 'easy-elementor-addons'),
+                'description' => esc_html__('Optional. Links to #your-id open this item and scroll to it. Letters, numbers, dashes and underscores only.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'ai' => ['active' => false],
+                'separator' => 'before'
+            ]
+        );
+
         $this->add_control(
             'items', [
                 'label' => esc_html__('Items', 'easy-elementor-addons'),
@@ -134,6 +144,25 @@ class Accordion extends Widget_Base {
             'one_at_a_time', [
                 'label' => esc_html__('Open One Item at a Time', 'easy-elementor-addons'),
                 'description' => esc_html__('Opening an item closes the others.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'return_value' => 'yes',
+                'default' => '',
+            ]
+        );
+
+        $this->add_control(
+            'title_tag', [
+                'label' => esc_html__('Title HTML Tag', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => eead_html_tags(),
+                'default' => 'h3'
+            ]
+        );
+
+        $this->add_control(
+            'faq_schema', [
+                'label' => esc_html__('FAQ Schema', 'easy-elementor-addons'),
+                'description' => esc_html__('Adds FAQPage structured data so search engines can show these items as FAQs. Only text items are included, not Elementor templates.', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
                 'return_value' => 'yes',
                 'default' => '',
@@ -317,7 +346,7 @@ class Accordion extends Widget_Base {
             Group_Control_Typography::get_type(), [
                 'name' => 'title_typography',
                 'label' => esc_html__('Typography', 'easy-elementor-addons'),
-                'selector' => '{{WRAPPER}} .eead-accordion-title h3'
+                'selector' => '{{WRAPPER}} .eead-accordion-title .eead-accordion-title-text'
             ]
         );
 
@@ -601,27 +630,56 @@ class Accordion extends Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         $accordions = $settings['items'];
+        $title_tag = eead_check_allowed_html_tags($settings['title_tag'], 'h3');
+        $has_icon = !empty($settings['accordion_open_icon']['value']);
+        $one_at_a_time = $settings['one_at_a_time'] === 'yes';
+        $opened = false;
+        $faq = [];
         ?>
-        <div class="eead-accordion-container" data-one-at-a-time="<?php echo esc_attr($settings['one_at_a_time'] === 'yes' ? 'yes' : 'no'); ?>">
-            <?php foreach ($accordions as $key => $accordion) { ?>
-                <div class="eead-each-accordion eead-each-accordion-<?php echo esc_attr($key) . (($accordion['keep_open'] == 'yes') ? ' eead-open' : ''); ?>">
-                    <div class="eead-accordion-title" role="button" tabindex="0" aria-expanded="<?php echo esc_attr($accordion['keep_open'] == 'yes' ? 'true' : 'false'); ?>">
-                        <h3><?php echo esc_html($accordion['title']); ?></h3>
-                        <div class="eead-accordion-icon">
-                            <div class="eead-accordion-open-icon">
-                                <?php Icons_Manager::render_icon($settings['accordion_open_icon'], ['aria-hidden' => 'true']); ?>
+        <div class="eead-accordion-container" data-one-at-a-time="<?php echo esc_attr($one_at_a_time ? 'yes' : 'no'); ?>">
+            <?php
+            foreach ($accordions as $key => $accordion) {
+                // With one item at a time, only the first "Show Content" item starts open.
+                $is_open = $accordion['keep_open'] == 'yes' && !($one_at_a_time && $opened);
+                $opened = $opened || $is_open;
+                $uid = $this->get_id() . '-' . $key;
+                $item_id = !empty($accordion['item_id']) ? sanitize_html_class($accordion['item_id']) : '';
+                ?>
+                <div class="eead-each-accordion eead-each-accordion-<?php echo esc_attr($key) . ($is_open ? ' eead-open' : ''); ?>"<?php echo $item_id ? ' id="' . esc_attr($item_id) . '"' : ''; ?>>
+                    <div class="eead-accordion-title" id="eead-accordion-title-<?php echo esc_attr($uid); ?>" role="button" tabindex="0" aria-expanded="<?php echo esc_attr($is_open ? 'true' : 'false'); ?>" aria-controls="eead-accordion-content-<?php echo esc_attr($uid); ?>">
+                        <<?php echo esc_attr($title_tag); ?> class="eead-accordion-title-text"><?php echo esc_html($accordion['title']); ?></<?php echo esc_attr($title_tag); ?>>
+                        <?php if ($has_icon) { ?>
+                            <div class="eead-accordion-icon">
+                                <div class="eead-accordion-open-icon">
+                                    <?php Icons_Manager::render_icon($settings['accordion_open_icon'], ['aria-hidden' => 'true']); ?>
+                                </div>
+                                <div class="eead-accordion-close-icon">
+                                    <?php
+                                    // An emptied close icon keeps the open one, instead of no icon at all.
+                                    Icons_Manager::render_icon(!empty($settings['accordion_close_icon']['value']) ? $settings['accordion_close_icon'] : $settings['accordion_open_icon'], ['aria-hidden' => 'true']);
+                                    ?>
+                                </div>
                             </div>
-                            <div class="eead-accordion-close-icon">
-                                <?php Icons_Manager::render_icon($settings['accordion_close_icon'], ['aria-hidden' => 'true']); ?>
-                            </div>
-                        </div>
+                        <?php } ?>
                     </div>
 
-                    <div class="eead-accordion-content" <?php echo (($accordion['keep_open'] == 'yes') ? 'style="display:block"' : ''); ?>>
+                    <div class="eead-accordion-content" id="eead-accordion-content-<?php echo esc_attr($uid); ?>" role="region" aria-labelledby="eead-accordion-title-<?php echo esc_attr($uid); ?>" <?php echo ($is_open ? 'style="display:block"' : ''); ?>>
                         <div class="eead-accordion-content-scroll">
                             <?php
                             if ($accordion['content_type'] == 'wisiwyg') {
-                                echo wp_kses_post(eead_parse_wysiwyg_content($accordion['wisiwyg_content']));
+                                $content = eead_parse_wysiwyg_content($accordion['wisiwyg_content']);
+                                echo wp_kses_post($content);
+
+                                if ($settings['faq_schema'] === 'yes' && trim($accordion['title']) !== '' && trim(wp_strip_all_tags($content)) !== '') {
+                                    $faq[] = [
+                                        '@type' => 'Question',
+                                        'name' => wp_strip_all_tags($accordion['title']),
+                                        'acceptedAnswer' => [
+                                            '@type' => 'Answer',
+                                            'text' => wp_kses($content, ['a' => ['href' => []], 'br' => [], 'p' => [], 'strong' => [], 'b' => [], 'em' => [], 'i' => [], 'ul' => [], 'ol' => [], 'li' => [], 'h2' => [], 'h3' => [], 'h4' => [], 'h5' => [], 'h6' => []]),
+                                        ],
+                                    ];
+                                }
                             } else if ($accordion['content_type'] == 'elementor_template' && 'publish' === get_post_status((int) $accordion['elementor_template'])) {
                                 echo Plugin::instance()->frontend->get_builder_content_for_display($accordion['elementor_template']); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Elementor-rendered content.
                             }
@@ -632,6 +690,14 @@ class Accordion extends Widget_Base {
             <?php } ?>
         </div>
         <?php
+        if ($faq) {
+            $schema = [
+                '@context' => 'https://schema.org',
+                '@type' => 'FAQPage',
+                'mainEntity' => $faq,
+            ];
+            echo '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) . '</script>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON-encoded with tags hex-escaped.
+        }
     }
 
 }

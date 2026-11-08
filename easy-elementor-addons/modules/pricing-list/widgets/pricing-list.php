@@ -98,6 +98,24 @@ class PricingList extends Widget_Base {
         );
 
         $repeater->add_control(
+            'old_price', [
+                'label' => esc_html__('Original Price', 'easy-elementor-addons'),
+                'description' => esc_html__('Shown crossed out beside the price, for a sale.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'label_block' => true,
+            ]
+        );
+
+        $repeater->add_control(
+            'badge', [
+                'label' => esc_html__('Badge', 'easy-elementor-addons'),
+                'description' => esc_html__('A small tag after the title, e.g. New, Vegan, Spicy, Bestseller.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'label_block' => true,
+            ]
+        );
+
+        $repeater->add_control(
             'description', [
                 'label' => esc_html__('Description', 'easy-elementor-addons'),
                 'type' => Controls_Manager::TEXTAREA,
@@ -112,11 +130,7 @@ class PricingList extends Widget_Base {
                 'label' => esc_html__('Link', 'easy-elementor-addons'),
                 'type' => Controls_Manager::URL,
                 'show_external' => true,
-                'default' => [
-                    'url' => '#',
-                    'is_external' => false,
-                    'nofollow' => false,
-                ]
+                'placeholder' => 'https://your-link.com',
             ]
         );
 
@@ -272,7 +286,8 @@ class PricingList extends Widget_Base {
                     'size' => 200,
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .eead-pricing-list .eead-pl-item-image' => 'flex-basis: {{SIZE}}{{UNIT}};min-width: {{SIZE}}{{UNIT}};',
+                    // A variable, so the image-on-top layout can still reset the width.
+                    '{{WRAPPER}} .eead-pricing-list' => '--eead-pl-img-width: {{SIZE}}{{UNIT}};',
                 ]
             ]
         );
@@ -607,6 +622,36 @@ class PricingList extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'old_price_color', [
+                'label' => esc_html__('Original Price Color', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-pricing-list .eead-pl-old-price' => 'color: {{VALUE}}',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'badge_color', [
+                'label' => esc_html__('Badge Text Color', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-pricing-list .eead-pl-badge' => 'color: {{VALUE}}',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'badge_bg', [
+                'label' => esc_html__('Badge Background', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-pricing-list .eead-pl-badge' => 'background-color: {{VALUE}}',
+                ]
+            ]
+        );
+
         $this->add_group_control(
             Group_Control_Background::get_type(), [
                 'name' => 'price_bg_color',
@@ -817,7 +862,8 @@ class PricingList extends Widget_Base {
                             <?php
                             $has_link = false;
                             $link_key = 'link-' . $index;
-                            if (isset($lists['link']['url']) && !empty($lists['link']['url'])) {
+                            // A bare "#" (the old default) is no link at all.
+                            if (isset($lists['link']['url']) && !empty($lists['link']['url']) && '#' !== trim($lists['link']['url'])) {
                                 $has_link = true;
                                 $this->add_link_attributes($link_key, $lists['link']);
                             }
@@ -827,7 +873,14 @@ class PricingList extends Widget_Base {
                                     <?php
                                     if ($has_link) {
                                         ?>
-                                        <a <?php $this->print_render_attribute_string($link_key); ?>><?php Group_Control_Image_Size::print_attachment_image_html($lists, 'thumb', 'image'); ?></a>
+                                        <?php
+                                        // The title carries the same link: one tab stop per item.
+                                        $this->add_link_attributes($link_key . '-img', $lists['link']);
+                                        if ($lists['title']) {
+                                            $this->add_render_attribute($link_key . '-img', ['tabindex' => '-1', 'aria-hidden' => 'true']);
+                                        }
+                                        ?>
+                                        <a <?php $this->print_render_attribute_string($link_key . '-img'); ?>><?php Group_Control_Image_Size::print_attachment_image_html($lists, 'thumb', 'image'); ?></a>
                                         <?php
                                     } else {
                                         Group_Control_Image_Size::print_attachment_image_html($lists, 'thumb', 'image');
@@ -857,17 +910,32 @@ class PricingList extends Widget_Base {
                                             } else {
                                                 echo esc_html($lists['title']);
                                             }
+                                            if ('' !== trim((string) $lists['badge'])) {
+                                                echo ' <span class="eead-pl-badge">' . esc_html($lists['badge']) . '</span>';
+                                            }
                                             ?>
                                         </<?php echo esc_attr(eead_check_allowed_html_tags($settings['title_tag'])); ?>>
                                     <?php } ?>
 
                                     <?php
-                                    if ($settings['price_position'] == 'style1' && $lists['price']) {
+                                    // "Over the image" needs an image; without one the price goes here.
+                                    $price_here = $lists['price'] && ('style1' === $settings['price_position'] || empty($lists['image']['url']));
+                                    $old_price = trim((string) $lists['old_price']);
+                                    if ('' !== $old_price) {
+                                        ?>
+                                        <span class="eead-pl-prices">
+                                            <del class="eead-pl-old-price"><span class="elementor-screen-only"><?php esc_html_e('Original price:', 'easy-elementor-addons'); ?> </span><?php echo esc_html($old_price); ?></del>
+                                        <?php
+                                    }
+                                    if ($price_here) {
                                         ?>
                                         <div class="eead-pl-item-price">
                                             <?php echo esc_html($lists['price']); ?>
                                         </div>
                                         <?php
+                                    }
+                                    if ('' !== $old_price) {
+                                        echo '</span>';
                                     }
                                     ?>
                                 </div>

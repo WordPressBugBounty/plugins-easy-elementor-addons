@@ -1044,7 +1044,7 @@ class StepFlow extends Widget_Base {
         $settings = $this->get_settings_for_display();
         $marker_id = 'eead-arrow-' . $this->get_id();
         if ($settings['show_direction'] === 'yes') {
-            echo '<span class="eead-step-direction">';
+            echo '<span class="eead-step-direction" aria-hidden="true">';
             switch ($settings['arrow_style']) {
                 case 'style1':
                     echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path marker-end="url(#' . esc_attr($marker_id) . ')" stroke-width="10" stroke="hsl(227, 71%, 57%)" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="rotate(315 400 400)" d="m150 150 500 500"/><defs><marker markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" viewBox="0 0 5 5" orient="auto" id="' . esc_attr($marker_id) . '"><path fill="hsl(227, 71%, 57%)" d="m0 5 1.667-2.5L0 0l5 2.5z"/></marker></defs></svg>';

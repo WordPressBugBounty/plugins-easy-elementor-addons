@@ -97,34 +97,55 @@ class AdminClass {
         ?>
 
         <div class="eead-widget-wrap <?php echo $premium ? 'eead-premium' : ''; ?>" data-main="<?php echo $premium ? 'pro' : 'free'; ?>" data-sub="<?php echo esc_attr($category); ?>">
-            <span>
+            <span class="eead-widget-icon" aria-hidden="true">
                 <?php
-                if ($icon) {
-                    echo '<i class="' . esc_attr($icon) . '"></i>';
+                // Some add-on widgets have no icon, or only the bare "eead-icons-" prefix;
+                // they get their category's icon instead of an empty tile.
+                if (!preg_match('/eead-icons-[a-z0-9]|mdi-|eicon-|fa-/', (string) $icon)) {
+                    $fallback = [
+                        'text' => 'mdi-format-text',
+                        'buttons' => 'mdi-gesture-tap-button',
+                        'images' => 'mdi-image-outline',
+                        'media' => 'mdi-play-box-outline',
+                        'interactive' => 'mdi-tab',
+                        'data' => 'mdi-table-large',
+                        'pricing' => 'mdi-tag-outline',
+                        'proof' => 'mdi-account-star-outline',
+                        'timeline' => 'mdi-timeline-outline',
+                        'navigation' => 'mdi-menu',
+                        'contact' => 'mdi-card-account-phone-outline',
+                        'social' => 'mdi-share-variant-outline',
+                        'scroll' => 'mdi-gesture-swipe-vertical',
+                        'posts' => 'mdi-newspaper-variant-outline',
+                    ];
+                    $icon = isset($fallback[$category]) ? $fallback[$category] : 'mdi-widgets-outline';
                 }
-                echo esc_html($label);
+                echo '<i class="' . esc_attr($icon) . '"></i>';
                 ?>
             </span>
+
+            <span class="eead-widget-info">
+                <span class="eead-widget-name">
+                    <?php echo esc_html($label); ?>
+                    <?php if ($premium) { ?>
+                        <span class="eead-widget-pro-badge"><?php echo esc_html__('Pro', 'easy-elementor-addons'); ?></span>
+                    <?php } ?>
+                </span>
+                <?php
+                // Add-on widgets may ship without a demo page; an empty href would just
+                // reload this screen, so the link is dropped instead.
+                if ($url) {
+                    ?>
+                    <a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener noreferrer" class="eead-widget-demo-link"><?php echo esc_html__('View Demo', 'easy-elementor-addons'); ?></a>
+                    <?php
+                }
+                ?>
+            </span>
+
             <div class="eead-checkbox">
-                <input type="checkbox" class="eead-widget-checkbox" name="widgets" value="<?php echo esc_attr($val); ?>" <?php checked(in_array($val, $eead_widgets), true); ?>>
+                <input type="checkbox" class="eead-widget-checkbox" name="widgets" value="<?php echo esc_attr($val); ?>" aria-label="<?php echo esc_attr($label); ?>" <?php checked(in_array($val, $eead_widgets), true); ?>>
                 <label></label>
             </div>
-
-            <?php
-            if ($premium) {
-                ?>
-                <span class="eead-widget-pro-badge"><?php echo esc_html__('Pro', 'easy-elementor-addons'); ?></span>
-                <?php
-            }
-
-            // Add-on widgets may ship without a demo page; an empty href would just
-            // reload this screen, so the link is dropped instead.
-            if ($url) {
-                ?>
-                <a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener noreferrer" class="eead-widget-demo-link"><?php echo esc_html__('View Demo', 'easy-elementor-addons'); ?></a>
-                <?php
-            }
-            ?>
         </div>
 
         <?php

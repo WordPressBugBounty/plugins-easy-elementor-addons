@@ -121,6 +121,16 @@ class Lottie extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'lottie_label', [
+                'label' => esc_html__('Accessible Description', 'easy-elementor-addons'),
+                'description' => esc_html__('Read by screen readers, e.g. "Rocket launching". Leave empty for a purely decorative animation. Required when the animation is a link.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'label_block' => true,
+                'separator' => 'before',
+            ]
+        );
+
         $this->end_controls_section();
 
         /* Animation Options */
@@ -134,6 +144,29 @@ class Lottie extends Widget_Base {
         $this->add_control(
             'lottie_autoplay', [
                 'label' => esc_html__('Autoplay', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'default' => 'yes',
+            ]
+        );
+
+        $this->add_control(
+            'lottie_trigger', [
+                'label' => esc_html__('Start Playing', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'load',
+                'options' => [
+                    'load' => esc_html__('On Page Load', 'easy-elementor-addons'),
+                    'viewport' => esc_html__('When Scrolled Into View', 'easy-elementor-addons'),
+                ],
+                'condition' => [
+                    'lottie_autoplay' => 'yes'
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'lottie_loop', [
+                'label' => esc_html__('Loop', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
                 'default' => 'yes',
             ]
@@ -204,7 +237,8 @@ class Lottie extends Widget_Base {
                 'type' => Controls_Manager::SELECT,
                 'options' => [
                     '' => esc_html__('None', 'easy-elementor-addons'),
-                    'play' => esc_html__('Play', 'easy-elementor-addons')
+                    'play' => esc_html__('Play', 'easy-elementor-addons'),
+                    'click' => esc_html__('Play on Click', 'easy-elementor-addons')
                 ],
                 'condition' => [
                     'lottie_autoplay!' => 'yes'
@@ -331,6 +365,8 @@ class Lottie extends Widget_Base {
                 'speed' => isset($settings['lottie_speed']['size']) ? $settings['lottie_speed']['size'] : 1,
                 'action' => $settings['lottie_action'],
                 'action_alt' => $settings['lottie_action_alt'],
+                'loop' => 'yes' === $settings['lottie_loop'],
+                'trigger' => 'viewport' === $settings['lottie_trigger'] ? 'viewport' : 'load',
             );
 
             if (!empty($settings['lottie_json']['url'])) {
@@ -345,17 +381,24 @@ class Lottie extends Widget_Base {
                 'data-settings' => wp_json_encode($lottie_settings)
             ]);
 
-            if ($settings['lottie_link_check']) {
+            if ($settings['lottie_link_check'] && !empty($settings['lottie_link']['url'])) {
                 $tag = 'a';
-
-                if (!empty($settings['lottie_link']['url'])) {
-                    $this->add_link_attributes('wrapper', $settings['lottie_link']);
-                }
+                $this->add_link_attributes('wrapper', $settings['lottie_link']);
             }
+
+            $label = trim((string) $settings['lottie_label']);
+            if ('a' === $tag) {
+                if ('' !== $label) {
+                    $this->add_render_attribute('wrapper', 'aria-label', $label);
+                }
+            } elseif ('' !== $label) {
+                $this->add_render_attribute('wrapper', ['role' => 'img', 'aria-label' => $label]);
+            } else {
+                $this->add_render_attribute('wrapper', 'aria-hidden', 'true');
+            }
+            // Empty: a placeholder &nbsp; here added a blank text line above every animation.
             ?>
-            <<?php echo esc_attr($tag); ?> <?php $this->print_render_attribute_string('wrapper'); ?>>
-                &nbsp;
-            </<?php echo esc_attr($tag); ?>>
+            <<?php echo esc_attr($tag); ?> <?php $this->print_render_attribute_string('wrapper'); ?>></<?php echo esc_attr($tag); ?>>
         </div>
         <?php
     }

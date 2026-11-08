@@ -264,9 +264,9 @@ class FeatureList extends Widget_Base {
                 'default' => 'row',
                 'toggle' => false,
                 'selectors_dictionary' => [
-                    'row' => 'text-align:left; flex-direction:row',
-                    'column' => 'text-align:center; flex-direction:column; align-items: center;',
-                    'row-reverse' => 'text-align:right; flex-direction:row-reverse',
+                    'row' => 'text-align:left; flex-direction:row; --eead-fl-line-display:block',
+                    'column' => 'text-align:center; flex-direction:column; align-items: center; --eead-fl-line-display:none',
+                    'row-reverse' => 'text-align:right; flex-direction:row-reverse; --eead-fl-line-display:block',
                 ],
                 'selectors' => [
                     '{{WRAPPER}} .eead-feature-list .eead-fl-item' => '{{VALUE}};',
@@ -289,8 +289,65 @@ class FeatureList extends Widget_Base {
                     ]
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .eead-feature-list .eead-feature-list-items' => 'gap: {{SIZE}}{{UNIT}}',
+                    '{{WRAPPER}} .eead-feature-list .eead-feature-list-items' => 'gap: {{SIZE}}{{UNIT}}; --eead-fl-gap: {{SIZE}}{{UNIT}};',
                 ]
+            ]
+        );
+
+        $this->add_control(
+            'connector', [
+                'label' => esc_html__('Connector Line', 'easy-elementor-addons'),
+                'description' => esc_html__('A line joining the icons, for steps and timelines. Not drawn where the icon sits on top.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'prefix_class' => 'eead-fl-connector-',
+                'render_type' => 'template',
+                'separator' => 'before',
+            ]
+        );
+
+        $this->add_control(
+            'connector_style', [
+                'label' => esc_html__('Line Style', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'solid',
+                'options' => [
+                    'solid' => esc_html__('Solid', 'easy-elementor-addons'),
+                    'dashed' => esc_html__('Dashed', 'easy-elementor-addons'),
+                    'dotted' => esc_html__('Dotted', 'easy-elementor-addons'),
+                ],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-feature-list' => '--eead-fl-line-style: {{VALUE}};',
+                ],
+                'condition' => [
+                    'connector' => 'yes',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'connector_width', [
+                'label' => esc_html__('Line Width', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'range' => ['px' => ['min' => 1, 'max' => 10]],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-feature-list' => '--eead-fl-line-width: {{SIZE}}px;',
+                ],
+                'condition' => [
+                    'connector' => 'yes',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'connector_color', [
+                'label' => esc_html__('Line Color', 'easy-elementor-addons'),
+                'type' => Controls_Manager::COLOR,
+                'selectors' => [
+                    '{{WRAPPER}} .eead-feature-list' => '--eead-fl-line-color: {{VALUE}};',
+                ],
+                'condition' => [
+                    'connector' => 'yes',
+                ],
             ]
         );
 
@@ -770,32 +827,42 @@ class FeatureList extends Widget_Base {
                 foreach ($settings['feature_list'] as $index => $item) {
                     $feature_title_tag = $settings['title_size'];
                     $feature_icon_tag = !empty($item['link']['url']) ? 'a' : 'span';
+                    $connector = 'yes' === $settings['connector'];
 
                     if (!empty($item['link']['url'])) {
                         $this->add_link_attributes('link' . $index, $item['link']);
+                        // The icon repeats the title's link: one tab stop and one
+                        // announced link per item, not an extra unnamed one.
+                        $this->add_link_attributes('icon-link' . $index, $item['link']);
+                        $this->add_render_attribute('icon-link' . $index, [
+                            'tabindex' => '-1',
+                            'aria-hidden' => 'true',
+                        ]);
                     }
                     ?>
                     <li class="eead-fl-item elementor-repeater-item-<?php echo esc_attr($item['_id']); ?>">
+                        <?php if ($connector) { ?><div class="eead-fl-icon-wrap"><?php } ?>
                         <div class="eead-fl-icon-box">
-                            <<?php echo esc_attr($feature_icon_tag); ?> <?php $this->print_render_attribute_string('link' . $index); ?>>
+                            <<?php echo esc_attr($feature_icon_tag); ?> <?php $this->print_render_attribute_string('icon-link' . $index); ?>>
                                 <?php
                                 if ($item['icon_type'] == 'icon' && !empty($item['icon']['value'])) {
                                     Icons_Manager::render_icon($item['icon'], ['aria-hidden' => 'true']);
-                                } else if ($item['icon_type'] == 'image') {
-                                    $this->add_render_attribute(
-                                        'feature_list_image' . $index, [
-                                            'src' => esc_url($item['img']['url']),
-                                            'class' => 'eead-feature-list-img',
-                                            'alt' => esc_attr(get_post_meta($item['img']['id'], '_wp_attachment_image_alt', true)),
-                                        ]
-                                    );
-                                    ?>
-                                        <img <?php $this->print_render_attribute_string('feature_list_image' . $index); ?> />
-                                    <?php
+                                } else if ($item['icon_type'] == 'image' && (!empty($item['img']['id']) || !empty($item['img']['url']))) {
+                                    $alt = !empty($item['img']['id']) ? trim((string) get_post_meta($item['img']['id'], '_wp_attachment_image_alt', true)) : '';
+                                    if ($alt === '') {
+                                        $alt = (string) $item['title'];
+                                    }
+                                    if (!empty($item['img']['id']) && wp_attachment_is_image($item['img']['id'])) {
+                                        // Responsive srcset instead of always the full-size file.
+                                        echo eead_kses_image(wp_get_attachment_image($item['img']['id'], 'full', false, ['class' => 'eead-feature-list-img', 'alt' => $alt])); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                                    } else {
+                                        printf('<img src="%1$s" class="eead-feature-list-img" alt="%2$s" />', esc_url($item['img']['url']), esc_attr($alt));
+                                    }
                                 }
                                 ?>
                             </<?php echo esc_attr($feature_icon_tag); ?>>
                         </div>
+                        <?php if ($connector) { ?></div><?php } ?>
 
                         <div class="eead-fl-content-box">
                             <?php if ($item['title']) { ?>

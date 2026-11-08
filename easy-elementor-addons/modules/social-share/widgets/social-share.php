@@ -176,6 +176,25 @@ class SocialShare extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'copy_link', [
+                'label' => esc_html__('Copy Link', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'label_on' => esc_html__('On', 'easy-elementor-addons'),
+                'label_off' => esc_html__('Off', 'easy-elementor-addons')
+            ]
+        );
+
+        $this->add_control(
+            'native_share', [
+                'label' => esc_html__('Device Share Menu', 'easy-elementor-addons'),
+                'description' => esc_html__('A "Share" button that opens the phone\'s own share sheet (all its apps). Shown only on devices that support it.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'label_on' => esc_html__('On', 'easy-elementor-addons'),
+                'label_off' => esc_html__('Off', 'easy-elementor-addons')
+            ]
+        );
+
         $this->end_controls_section();
 
         $this->start_controls_section(
@@ -484,22 +503,33 @@ class SocialShare extends Widget_Base {
         $show_text = $settings['show_text'];
         $show_icon = $settings['show_icon'];
 
-        $title = rawurlencode(html_entity_decode(wp_strip_all_tags(get_the_title()), ENT_QUOTES, 'UTF-8'));
-        $url = rawurlencode(get_the_permalink());
+        // The page being viewed: on archives and theme-builder templates
+        // get_the_permalink() would be the first post in the loop.
+        if (is_singular()) {
+            $page_url = get_permalink(get_queried_object_id());
+            $page_title = get_the_title(get_queried_object_id());
+        } else {
+            global $wp;
+            $page_url = home_url(add_query_arg([], isset($wp->request) ? $wp->request : ''));
+            $page_title = wp_get_document_title();
+        }
+        $plain_title = html_entity_decode(wp_strip_all_tags($page_title), ENT_QUOTES, 'UTF-8');
+        $title = rawurlencode($plain_title);
+        $url = rawurlencode($page_url);
         $hover_animation = $settings['hover_animation'];
 
         $networks = [
             'facebook' => ['class' => 'facebook', 'icon' => 'icofont-facebook', 'label' => esc_html__('Facebook', 'easy-elementor-addons'), 'href' => 'https://www.facebook.com/sharer/sharer.php?u=' . $url . '&t=' . $title],
-            'twitter' => ['class' => 'twitter', 'icon' => 'icofont-x-twitter', 'label' => esc_html__('Twitter', 'easy-elementor-addons'), 'href' => 'https://x.com/intent/tweet?text=' . $title . '&url=' . $url],
+            'twitter' => ['class' => 'twitter', 'icon' => 'icofont-x-twitter', 'label' => esc_html__('X', 'easy-elementor-addons'), 'href' => 'https://x.com/intent/tweet?text=' . $title . '&url=' . $url],
             'pintrest' => ['class' => 'pinterest', 'icon' => 'icofont-pinterest', 'label' => esc_html__('Pinterest', 'easy-elementor-addons'), 'href' => 'https://pinterest.com/pin/create/button/?url=' . $url],
-            'linkedin' => ['class' => 'linkedin', 'icon' => 'icofont-linkedin', 'label' => esc_html__('Linkedin', 'easy-elementor-addons'), 'href' => 'https://www.linkedin.com/shareArticle?mini=true&url=' . $url . '&title=' . $title],
-            'vkontakte' => ['class' => 'vkontakte', 'icon' => 'icofont-vk', 'label' => esc_html__('Vkontakte', 'easy-elementor-addons'), 'href' => 'https://vk.com/share.php?url=' . $url . '&title=' . $title],
+            'linkedin' => ['class' => 'linkedin', 'icon' => 'icofont-linkedin', 'label' => esc_html__('LinkedIn', 'easy-elementor-addons'), 'href' => 'https://www.linkedin.com/shareArticle?mini=true&url=' . $url . '&title=' . $title],
+            'vkontakte' => ['class' => 'vkontakte', 'icon' => 'icofont-vk', 'label' => esc_html__('VK', 'easy-elementor-addons'), 'href' => 'https://vk.com/share.php?url=' . $url . '&title=' . $title],
             'tumblr' => ['class' => 'tumblr', 'icon' => 'icofont-tumblr', 'label' => esc_html__('Tumblr', 'easy-elementor-addons'), 'href' => 'https://www.tumblr.com/share/link?url=' . $url . '&name=' . $title],
             'blogger' => ['class' => 'blogger', 'icon' => 'icofont-blogger', 'label' => esc_html__('Blogger', 'easy-elementor-addons'), 'href' => 'https://www.blogger.com/blog-this.g?u=' . $url . '&n=' . $title],
             'reddit' => ['class' => 'reddit', 'icon' => 'icofont-reddit', 'label' => esc_html__('Reddit', 'easy-elementor-addons'), 'href' => 'https://reddit.com/submit?url=' . $url . '&title=' . $title],
             'wordpress' => ['class' => 'wordpress', 'icon' => 'icofont-brand-wordpress', 'label' => esc_html__('WordPress', 'easy-elementor-addons'), 'href' => 'https://wordpress.com/press-this.php?u=' . $url . '&t=' . $title],
             'telegram' => ['class' => 'telegram', 'icon' => 'icofont-telegram', 'label' => esc_html__('Telegram', 'easy-elementor-addons'), 'href' => 'https://t.me/share/url?url=' . $url . '&text=' . $title],
-            'whatsapp' => ['class' => 'whatsapp', 'icon' => 'icofont-whatsapp', 'label' => esc_html__('Whatsapp', 'easy-elementor-addons'), 'href' => 'https://api.whatsapp.com/send?text=' . $title . '%20' . $url],
+            'whatsapp' => ['class' => 'whatsapp', 'icon' => 'icofont-whatsapp', 'label' => esc_html__('WhatsApp', 'easy-elementor-addons'), 'href' => 'https://api.whatsapp.com/send?text=' . $title . '%20' . $url],
             'line' => ['class' => 'line', 'icon' => 'icofont-line', 'label' => esc_html__('Line', 'easy-elementor-addons'), 'href' => 'https://lineit.line.me/share/ui?url=' . $url . '&text=' . $title],
             'email' => ['class' => 'email', 'icon' => 'icofont-envelope', 'label' => esc_html__('Email', 'easy-elementor-addons'), 'href' => 'mailto:?subject=' . $title . '&body=' . $url]
         ];
@@ -511,9 +541,26 @@ class SocialShare extends Widget_Base {
                 continue;
             }
 
-            echo '<a target="_blank" rel="noopener noreferrer" class="eead-social-share-link eead-' . esc_attr($network['class']) . ' elementor-animation-' . esc_attr($hover_animation) . '" href="' . esc_url($network['href']) . '">';
-            echo $show_icon == 'yes' ? '<i class="eead-icon ' . esc_attr($network['icon']) . '"></i>' : '';
+            /* translators: %s: network name */
+            $aria = 'email' === $key ? esc_html__('Share by email', 'easy-elementor-addons') : sprintf(esc_html__('Share on %s', 'easy-elementor-addons'), $network['label']);
+            echo '<a target="_blank" rel="noopener noreferrer" class="eead-social-share-link eead-' . esc_attr($network['class']) . ' elementor-animation-' . esc_attr($hover_animation) . '" href="' . esc_url($network['href']) . '" aria-label="' . esc_attr($aria) . '">';
+            echo $show_icon == 'yes' ? '<i class="eead-icon ' . esc_attr($network['icon']) . '" aria-hidden="true"></i>' : '';
             echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html($network['label']) . '</span>' : '';
+            echo '</a>';
+        }
+
+        // Copy Link and the device's own share sheet: script-driven buttons styled like the links.
+        $extras = [];
+        if ('yes' === $settings['copy_link']) {
+            $extras['copy'] = ['icofont-copy', esc_html__('Copy Link', 'easy-elementor-addons')];
+        }
+        if ('yes' === $settings['native_share']) {
+            $extras['native'] = ['icofont-share', esc_html__('Share', 'easy-elementor-addons')];
+        }
+        foreach ($extras as $key => $extra) {
+            echo '<a href="' . esc_url($page_url) . '" role="button" class="eead-social-share-link eead-share-' . esc_attr($key) . ' elementor-animation-' . esc_attr($hover_animation) . '" aria-label="' . esc_attr($extra[1]) . '" data-url="' . esc_url($page_url) . '" data-title="' . esc_attr($plain_title) . '" data-done="' . esc_attr__('Link copied', 'easy-elementor-addons') . '"' . ('native' === $key ? ' hidden' : '') . '>';
+            echo $show_icon == 'yes' ? '<i class="eead-icon ' . esc_attr($extra[0]) . '" aria-hidden="true"></i>' : '';
+            echo $show_text == 'yes' ? '<span class="eead-social-share-text">' . esc_html($extra[1]) . '</span>' : '';
             echo '</a>';
         }
         echo '</div>';

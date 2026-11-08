@@ -261,6 +261,19 @@ class LogoGrid extends Widget_Base {
             ]
         );
 
+        $this->add_responsive_control(
+            'logos_height', [
+                'label' => esc_html__('Logo Height', 'easy-elementor-addons'),
+                'description' => esc_html__('Gives logos of different shapes one height; each logo is fitted inside, never cropped.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SLIDER,
+                'size_units' => ['px'],
+                'range' => ['px' => ['min' => 20, 'max' => 300]],
+                'selectors' => [
+                    '{{WRAPPER}} .eead-logo-grid .eead-grid-item img' => 'height: {{SIZE}}{{UNIT}}; object-fit: contain;',
+                ],
+            ]
+        );
+
         $this->end_controls_section();
 
         /* Style */
@@ -448,7 +461,7 @@ class LogoGrid extends Widget_Base {
                     'size' => 1
                 ],
                 'selectors' => [
-                    '{{WRAPPER}} .eead-logo-grid .eead-grid-item:hover img' => 'opacity: {{SIZE}};',
+                    '{{WRAPPER}} .eead-logo-grid .eead-grid-item:hover img, {{WRAPPER}} .eead-logo-grid .eead-grid-item:focus-within img' => 'opacity: {{SIZE}};',
                 ]
             ]
         );
@@ -535,6 +548,10 @@ class LogoGrid extends Widget_Base {
         <div <?php $this->print_render_attribute_string('logo-grid'); ?>>
             <?php
             $count = 1;
+            // Logos without an image aren't shown; leave them out of the last-row maths.
+            $settings['logos'] = array_values(array_filter((array) $settings['logos'], function ($item) {
+                return !empty($item['logo_image']['url']);
+            }));
             $logo_count = count($settings['logos']);
             $columns = max(1, (int) $settings['columns']);
             $columns_tablet = !empty($settings['columns_tablet']) ? max(1, (int) $settings['columns_tablet']) : 2;
@@ -556,15 +573,25 @@ class LogoGrid extends Widget_Base {
                     ?>
                     <div <?php $this->print_render_attribute_string('logo-item' . $count); ?>>
                         <?php
+                        $has_title = !empty($item['title']);
                         if (!empty($item['link']['url'])) {
                             $this->add_link_attributes('logo-link' . $count, $item['link']);
+                            // With a linked title below, the logo link repeats it: keep a
+                            // single tab stop and a single announced link per logo.
+                            $this->add_link_attributes('logo-img-link' . $count, $item['link']);
+                            if ($has_title) {
+                                $this->add_render_attribute('logo-img-link' . $count, ['tabindex' => '-1', 'aria-hidden' => 'true']);
+                            }
                             ?>
-                            <a <?php $this->print_render_attribute_string('logo-link' . $count); ?>>
+                            <a <?php $this->print_render_attribute_string('logo-img-link' . $count); ?>>
                                 <?php
                         }
 
-                        $image_alt = Control_Media::get_image_alt($item['logo_image']);
-                        $image_url = Group_Control_Image_Size::get_attachment_image_src($item['logo_image']['id'], 'image', $settings);
+                        $image_alt = trim((string) Control_Media::get_image_alt($item['logo_image']));
+                        if ('' === $image_alt && $has_title) {
+                            $image_alt = $item['title'];
+                        }
+                        $image_url = !empty($item['logo_image']['id']) ? Group_Control_Image_Size::get_attachment_image_src($item['logo_image']['id'], 'image', $settings) : '';
 
                         if (!$image_url) {
                             $image_url = $item['logo_image']['url'];

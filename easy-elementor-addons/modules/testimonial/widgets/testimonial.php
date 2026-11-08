@@ -129,6 +129,26 @@ class Testimonial extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'show_empty_stars', [
+                'label' => esc_html__('Show Empty Stars', 'easy-elementor-addons'),
+                'description' => esc_html__('Faded stars make up the five, so 4 reads as 4 out of 5.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'condition' => [
+                    'show_rating' => 'yes',
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'name_tag', [
+                'label' => esc_html__('Name HTML Tag', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => eead_html_tags(),
+                'default' => 'h4',
+            ]
+        );
+
         $this->end_controls_section();
 
         $this->start_controls_section(
@@ -1033,12 +1053,19 @@ class Testimonial extends Widget_Base {
         $settings = $this->get_settings_for_display();
         $stars = '';
         if ($settings['show_rating'] == 'yes') {
-            $rating_count = isset($settings['rating']['size']) ? $settings['rating']['size'] : 5;
+            $rating_count = isset($settings['rating']['size']) && is_numeric($settings['rating']['size']) ? max(0, min(5, (int) $settings['rating']['size'])) : 5;
+            /* translators: %d: rating out of 5 */
+            $label = sprintf(esc_html__('Rated %d out of 5', 'easy-elementor-addons'), $rating_count);
             ?>
-            <div class="eead-testimonial-rating">
+            <div class="eead-testimonial-rating" role="img" aria-label="<?php echo esc_attr($label); ?>">
                 <?php
                 for ($i = 0; $i < $rating_count; $i++) {
-                    $stars .= '<i class="icofont-star"></i>';
+                    $stars .= '<i class="icofont-star" aria-hidden="true"></i>';
+                }
+                if ('yes' === $settings['show_empty_stars']) {
+                    for ($i = $rating_count; $i < 5; $i++) {
+                        $stars .= '<i class="icofont-star eead-testimonial-star-empty" aria-hidden="true"></i>';
+                    }
                 }
                 echo wp_kses_post($stars);
                 ?>
@@ -1049,9 +1076,17 @@ class Testimonial extends Widget_Base {
 
     protected function render_thumb() {
         $settings = $this->get_settings_for_display();
+        if (empty($settings['image']['url'])) {
+            return;
+        }
+        // The person's name stands in for missing alt text.
+        $image = Group_Control_Image_Size::get_attachment_image_html($settings, 'thumb', 'image');
+        if ('' !== trim((string) $settings['name'])) {
+            $image = str_replace('alt=""', 'alt="' . esc_attr($settings['name']) . '"', $image);
+        }
         ?>
         <div class="eead-testimonial-image">
-            <?php Group_Control_Image_Size::print_attachment_image_html($settings, 'thumb', 'image'); ?>
+            <?php echo eead_kses_image($image); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
         </div>
         <?php
     }
@@ -1077,15 +1112,22 @@ class Testimonial extends Widget_Base {
 
     protected function render_name() {
         $settings = $this->get_settings_for_display();
+        if ('' === trim((string) $settings['name'])) {
+            return;
+        }
+        $tag = eead_check_allowed_html_tags($settings['name_tag'], 'h4');
         ?>
-        <h4 class="eead-testimonial-name">
+        <<?php echo esc_attr($tag); ?> class="eead-testimonial-name">
             <?php echo esc_html($settings['name']); ?>
-        </h4>
+        </<?php echo esc_attr($tag); ?>>
         <?php
     }
 
     protected function render_designation() {
         $settings = $this->get_settings_for_display();
+        if ('' === trim((string) $settings['designation'])) {
+            return;
+        }
         ?>
         <div class="eead-testimonial-designation">
             <?php echo esc_html($settings['designation']); ?>

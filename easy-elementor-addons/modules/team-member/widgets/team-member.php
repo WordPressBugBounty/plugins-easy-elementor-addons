@@ -237,6 +237,15 @@ class TeamMember extends Widget_Base {
         );
 
         $this->add_control(
+            'name_tag', [
+                'label' => esc_html__('Name HTML Tag', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'options' => eead_html_tags(),
+                'default' => 'h4',
+            ]
+        );
+
+        $this->add_control(
             'social_icon_display', [
                 'label' => esc_html__('Social Icons Display', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SELECT,
@@ -954,16 +963,25 @@ class TeamMember extends Widget_Base {
         $this->end_controls_section();
     }
 
+    /** The photo, with the member's name as alt text when the image has none. */
+    protected function image_with_alt($settings) {
+        $html = Group_Control_Image_Size::get_attachment_image_html($settings);
+        if ('' !== trim((string) $settings['name'])) {
+            $html = str_replace('alt=""', 'alt="' . esc_attr($settings['name']) . '"', $html);
+        }
+        return $html;
+    }
+
     protected function get_image() {
         $settings = $this->get_settings_for_display();
 
         if (!empty($settings['image']['url'])) {
             if ($settings['link_type'] == 'image' && !empty($settings['link']['url'])) {
                 ?>
-                <a <?php $this->print_render_attribute_string('link'); ?>><?php Group_Control_Image_Size::print_attachment_image_html($settings); ?></a>
+                <a <?php $this->print_render_attribute_string('link'); ?>><?php echo eead_kses_image($this->image_with_alt($settings)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></a>
                 <?php
             } else {
-                Group_Control_Image_Size::print_attachment_image_html($settings);
+                echo eead_kses_image($this->image_with_alt($settings)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             }
         }
     }
@@ -981,6 +999,7 @@ class TeamMember extends Widget_Base {
                         <?php
                         if (!empty($item['social_link']['url']) && !empty($item['social_icon'])) {
                             $this->add_link_attributes('social-link' . $count, $item['social_link']);
+                $this->add_render_attribute('social-link' . $count, 'aria-label', eead_social_label($item['social_link']['url'], $settings['name'], $item['social_icon']));
                             ?>
                             <a <?php $this->print_render_attribute_string('social-link' . $count); ?>>
                                 <?php Icons_Manager::render_icon($item['social_icon'], ['aria-hidden' => 'true']); ?>
@@ -1018,11 +1037,12 @@ class TeamMember extends Widget_Base {
         $this->add_inline_editing_attributes('name', 'none');
         $this->add_render_attribute('name', 'class', 'eead-team-member-name');
 
+        $tag = eead_check_allowed_html_tags($settings['name_tag'], 'h4');
         if ($settings['name'] != '') {
             if ($settings['link_type'] == 'title' && !empty($settings['link']['url'])) {
-                $member_name .= sprintf('<%1$s %2$s><a %3$s>%4$s</a></%1$s>', 'h4', $this->get_render_attribute_string('name'), $this->get_render_attribute_string('link'), esc_html($settings['name']));
+                $member_name .= sprintf('<%1$s %2$s><a %3$s>%4$s</a></%1$s>', $tag, $this->get_render_attribute_string('name'), $this->get_render_attribute_string('link'), esc_html($settings['name']));
             } else {
-                $member_name .= sprintf('<%1$s %2$s>%3$s</%1$s>', 'h4', $this->get_render_attribute_string('name'), esc_html($settings['name']));
+                $member_name .= sprintf('<%1$s %2$s>%3$s</%1$s>', $tag, $this->get_render_attribute_string('name'), esc_html($settings['name']));
             }
         }
         echo wp_kses_post($member_name);

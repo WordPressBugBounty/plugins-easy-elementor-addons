@@ -254,6 +254,74 @@ class StarRating extends Widget_Base {
 
         $this->end_controls_section();
 
+        $this->start_controls_section(
+            'section_schema', [
+                'label' => esc_html__('SEO Rich Results', 'easy-elementor-addons')
+            ]
+        );
+
+        $this->add_control(
+            'schema', [
+                'label' => esc_html__('Rating Structured Data', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => '',
+                'options' => [
+                    '' => esc_html__('Off', 'easy-elementor-addons'),
+                    'aggregate' => esc_html__('Aggregate Rating (e.g. 4.8 from 230 reviews)', 'easy-elementor-addons'),
+                    'review' => esc_html__('Single Review (quote and author above)', 'easy-elementor-addons'),
+                ],
+                'description' => esc_html__('Adds schema.org data so search engines can show the stars. Google does not show stars for reviews a business publishes about itself (Organization, LocalBusiness); use it for products, apps, courses and the like.', 'easy-elementor-addons'),
+            ]
+        );
+
+        $this->add_control(
+            'schema_item_type', [
+                'label' => esc_html__('What Is Rated', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'Product',
+                'options' => [
+                    'Product' => esc_html__('Product', 'easy-elementor-addons'),
+                    'SoftwareApplication' => esc_html__('Software / App', 'easy-elementor-addons'),
+                    'Course' => esc_html__('Course', 'easy-elementor-addons'),
+                    'Book' => esc_html__('Book', 'easy-elementor-addons'),
+                    'Recipe' => esc_html__('Recipe', 'easy-elementor-addons'),
+                    'Event' => esc_html__('Event', 'easy-elementor-addons'),
+                    'LocalBusiness' => esc_html__('Local Business', 'easy-elementor-addons'),
+                    'Organization' => esc_html__('Organization', 'easy-elementor-addons'),
+                    'CreativeWork' => esc_html__('Other', 'easy-elementor-addons'),
+                ],
+                'condition' => [
+                    'schema!' => ''
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'schema_item_name', [
+                'label' => esc_html__('Name of the Rated Item', 'easy-elementor-addons'),
+                'type' => Controls_Manager::TEXT,
+                'dynamic' => ['active' => true],
+                'placeholder' => esc_html__('e.g. Easy Elementor Addons', 'easy-elementor-addons'),
+                'description' => esc_html__('Required: without it nothing is added.', 'easy-elementor-addons'),
+                'condition' => [
+                    'schema!' => ''
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'schema_count', [
+                'label' => esc_html__('Number of Ratings', 'easy-elementor-addons'),
+                'type' => Controls_Manager::NUMBER,
+                'min' => 1,
+                'condition' => [
+                    'schema' => 'aggregate'
+                ]
+            ]
+        );
+
+        $this->end_controls_section();
+
         /* Style: Stars */
         $this->start_controls_section(
             'section_style_stars', [
@@ -563,6 +631,43 @@ class StarRating extends Widget_Base {
         echo '</span>';
     }
 
+    /** schema.org rating data as JSON-LD, when switched on and the rated item is named. */
+    private function render_schema($settings, $rating, $scale) {
+        $type = isset($settings['schema']) ? $settings['schema'] : '';
+        $name = isset($settings['schema_item_name']) ? trim(wp_strip_all_tags((string) $settings['schema_item_name'])) : '';
+        if (!in_array($type, ['aggregate', 'review'], true) || '' === $name) {
+            return;
+        }
+        $item_types = ['Product', 'SoftwareApplication', 'Course', 'Book', 'Recipe', 'Event', 'LocalBusiness', 'Organization', 'CreativeWork'];
+        $data = [
+            '@context' => 'https://schema.org',
+            '@type' => in_array($settings['schema_item_type'], $item_types, true) ? $settings['schema_item_type'] : 'Product',
+            'name' => $name,
+        ];
+        $value = [
+            'ratingValue' => round($rating, 1),
+            'bestRating' => $scale,
+            'worstRating' => 1,
+        ];
+        if ('aggregate' === $type) {
+            $count = isset($settings['schema_count']) ? (int) $settings['schema_count'] : 0;
+            if ($count < 1) {
+                return;
+            }
+            $data['aggregateRating'] = ['@type' => 'AggregateRating'] + $value + ['ratingCount' => $count];
+        } else {
+            $review = ['@type' => 'Review', 'reviewRating' => ['@type' => 'Rating'] + $value];
+            if ('' !== trim((string) $settings['name'])) {
+                $review['author'] = ['@type' => 'Person', 'name' => wp_strip_all_tags($settings['name'])];
+            }
+            if ('' !== trim((string) $settings['quote'])) {
+                $review['reviewBody'] = trim(wp_strip_all_tags($settings['quote']));
+            }
+            $data['review'] = $review;
+        }
+        echo '<script type="application/ld+json">' . wp_json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) . '</script>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON, tags hex-escaped.
+    }
+
     /** Render Layout */
     protected function render() {
         $settings = $this->get_settings_for_display();
@@ -595,6 +700,8 @@ class StarRating extends Widget_Base {
         </div>
         <?php
         $line = ob_get_clean();
+
+        $this->render_schema($settings, $rating, $scale);
 
         if ('review' !== $settings['layout']) {
             echo $line; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built above with escaping.

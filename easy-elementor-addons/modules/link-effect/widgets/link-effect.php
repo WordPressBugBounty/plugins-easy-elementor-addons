@@ -180,6 +180,10 @@ class LinkEffect extends Widget_Base {
                         'icon' => 'eicon-text-align-justify',
                     ]
                 ],
+                // text-align: justify can't widen a single link, so Justified stretches it instead.
+                'selectors_dictionary' => [
+                    'justify' => 'center; --eead-link-width: 100%',
+                ],
                 'selectors' => [
                     '{{WRAPPER}}' => 'text-align: {{VALUE}};',
                 ]
@@ -388,10 +392,9 @@ class LinkEffect extends Widget_Base {
 
         $this->add_render_attribute('eead-link', 'class', ['eead-link', 'eead-link-' . $settings['effect']]);
 
+        // No URL: no href either, so it can't jump to the top of the page.
         if (!empty($settings['link']['url'])) {
             $this->add_link_attributes('eead-link', $settings['link']);
-        } else {
-            $this->add_render_attribute('eead-link', 'href', '#');
         }
 
         if (in_array($settings['effect'], $effect_one)) {
@@ -406,7 +409,8 @@ class LinkEffect extends Widget_Base {
             </span>
 
             <?php if ($settings['effect'] === 'effect-9') { ?>
-                <span>
+                <?php // The second line is decoration that swaps in on hover; read the link text once. ?>
+                <span aria-hidden="true">
                     <?php echo esc_html($link_secondary_text); ?>
                 </span>
             <?php } ?>

@@ -91,6 +91,17 @@ class PopupVideo extends Widget_Base {
         );
 
         $this->add_control(
+            'privacy_mode', [
+                'label' => esc_html__('Privacy-Enhanced Mode', 'easy-elementor-addons'),
+                'description' => esc_html__('Plays the video from youtube-nocookie.com, so YouTube stores no tracking cookies before the visitor plays it.', 'easy-elementor-addons'),
+                'type' => Controls_Manager::SWITCHER,
+                'condition' => [
+                    'video_type' => 'youtube'
+                ]
+            ]
+        );
+
+        $this->add_control(
             'vimeo_url', [
                 'label' => esc_html__('Vimeo Video URL', 'easy-elementor-addons'),
                 'type' => Controls_Manager::TEXT,
@@ -267,7 +278,8 @@ class PopupVideo extends Widget_Base {
             'autoplay', [
                 'label' => esc_html__('Auto Play', 'easy-elementor-addons'),
                 'type' => Controls_Manager::SWITCHER,
-                'description' => esc_html__('Enable MUTE below for Auto Play to work.', 'easy-elementor-addons')
+                'default' => 'yes',
+                'description' => esc_html__('Start playing as soon as the popup opens, so visitors don\'t have to press play twice.', 'easy-elementor-addons')
             ]
         );
 
@@ -909,17 +921,30 @@ class PopupVideo extends Widget_Base {
         }
 
         if ($settings['video_type'] == 'youtube') {
+            // Only real YouTube player values: "false" for start/end/mute was sent as text.
             $video_settings = [
                 'autoplay' => $settings['autoplay'] ? 1 : 0,
                 'controls' => $settings['controls'] ? 1 : 0,
-                'mute' => $settings['mute'] ? true : false,
+                'mute' => $settings['mute'] ? 1 : 0,
                 'loop' => $settings['loop'] ? 1 : 0,
-                'start' => $settings['start'] ? $settings['start'] : false,
-                'end' => $settings['end'] ? $settings['end'] : false
             ];
+            if (is_numeric($settings['start']) && $settings['start'] > 0) {
+                $video_settings['start'] = (int) $settings['start'];
+            }
+            if (is_numeric($settings['end']) && $settings['end'] > 0) {
+                $video_settings['end'] = (int) $settings['end'];
+            }
+            // YouTube only loops a single video when it is also its own playlist.
+            if ($settings['loop'] && preg_match('#(?:youtu\.be/|[?&]v=|/embed/|/shorts/)([A-Za-z0-9_-]{6,})#', (string) $settings['youtube_url'], $loop_id)) {
+                $video_settings['playlist'] = $loop_id[1];
+            }
 
+            $youtube_url = $settings['youtube_url'];
+            if ('yes' === $settings['privacy_mode'] && preg_match('#(?:youtu\.be/|[?&]v=|/embed/|/shorts/)([A-Za-z0-9_-]{6,})#', $youtube_url, $m)) {
+                $youtube_url = 'https://www.youtube-nocookie.com/embed/' . $m[1];
+            }
             $this->add_render_attribute('popup-video', [
-                'href' => esc_url($settings['youtube_url']),
+                'href' => esc_url($youtube_url),
                 'data-settings' => wp_json_encode($video_settings)
             ]);
         } elseif ($settings['video_type'] == 'vimeo') {
@@ -937,13 +962,23 @@ class PopupVideo extends Widget_Base {
                 'data-settings' => wp_json_encode($video_settings)
             ]);
         } elseif ($settings['video_type'] == 'custom') {
+            // No href: lightGallery would read it as an image URL instead of using data-html.
             $this->add_render_attribute('popup-video', [
+                'tabindex' => '0',
                 'data-html' => esc_attr('#eead-custom-video-' . $this->get_id())
+            ]);
+            $video_type = wp_check_filetype((string) wp_parse_url($settings['custom_video']['url'], PHP_URL_PATH));
+            $video_attrs = array_filter([
+                'controls' => true,
+                'autoplay' => !empty($settings['autoplay']),
+                'muted' => !empty($settings['mute']),
+                'loop' => !empty($settings['loop']),
+                'playsinline' => true,
             ]);
             ?>
             <div id="eead-custom-video-<?php echo esc_attr($this->get_id()); ?>" style="display: none;">
-                <video class="lg-video-object lg-html5" controls preload="none">
-                    <source src="<?php echo esc_url($settings['custom_video']['url']); ?>" type="video/mp4">
+                <video class="lg-video-object lg-html5" <?php echo esc_attr(implode(' ', array_keys($video_attrs))); ?> preload="none">
+                    <source src="<?php echo esc_url($settings['custom_video']['url']); ?>" type="<?php echo esc_attr(!empty($video_type['type']) ? $video_type['type'] : 'video/mp4'); ?>">
                     <?php echo esc_html__('Your browser does not support HTML5 video.', 'easy-elementor-addons'); ?>
                 </video>
             </div>
@@ -961,6 +996,12 @@ class PopupVideo extends Widget_Base {
         if ($settings['enable_ripple']) {
             $this->add_render_attribute('popup-video', 'class', 'eead-vp-ripple');
         }
+
+        // Icon and image triggers have no text of their own.
+        $this->add_render_attribute('popup-video', [
+            'role' => 'button',
+            'aria-label' => 'button' === $settings['trigger_type'] && '' !== trim((string) $settings['play_text']) ? $settings['play_text'] : esc_html__('Play video', 'easy-elementor-addons'),
+        ]);
         ?>
 
         <div class="eead-popup-video">
